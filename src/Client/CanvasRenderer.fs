@@ -138,17 +138,8 @@ let items = [
     //  {Dim = {Width = 39; Height = 16; Length = 200} ; Id = "36";Tag ="pink"};
     ]
 
-let renderResult res =
-    renderPlane res.Container
-    scene.remove cubes |> ignore
-    cubes.Clear()
-    for item in res.ItemsPut do
-        renderCube (item.Coord.X |> float) (item.Coord.Y |> float)
-            (item.Coord.Z |> float) (item.Item.Dim.Width |> float)
-            (item.Item.Dim.Height |> float) (item.Item.Dim.Length |> float) item.Item.Tag
-            (res.Container.Dim.Length |> float)
-            (res.Container.Dim.Width |> float)
 
+let init () =
     let addSpottLight x y z =
         let spotLight = THREE.SpotLight.Create(!^ "white")
         spotLight.position.set (x, y, z) |> ignore
@@ -210,3 +201,13 @@ let renderResult res =
 
     renderScene 0.
 
+let renderResult res =
+    renderPlane res.Container
+    scene.remove cubes |> ignore
+    cubes.Clear()
+    for item in res.ItemsPut do
+        renderCube (item.Coord.X |> float) (item.Coord.Y |> float)
+            (item.Coord.Z |> float) (item.Item.Dim.Width |> float)
+            (item.Item.Dim.Height |> float) (item.Item.Dim.Length |> float) item.Item.Tag
+            (res.Container.Dim.Length |> float)
+            (res.Container.Dim.Width |> float)

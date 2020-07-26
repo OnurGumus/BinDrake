@@ -44,6 +44,7 @@ let runCmd container items  =
             (fun _ -> run container items 1000. 0.9)() ResultLoaded
 
 let init () : Model * Cmd<Msg> =
+    CanvasRenderer.init()
     let initialModel = {
         Calculation = NotCalculated
         Container = None
