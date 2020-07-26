@@ -29,6 +29,9 @@
         "webpack": "^4.41.2",
         "webpack-cli": "^3.3.9",
         "webpack-dev-server": "^3.8.2",
-        "whatwg-fetch": "^3.0.0"
+        "whatwg-fetch": "^3.0.0",
+        "three": "^0.118.3",
+        "three-trackballcontrols": "^0.0.8",
+        "three-trackballcontrols-ts": "^0.2.1"
     }
 }

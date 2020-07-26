@@ -35,6 +35,7 @@ let initialCounter = Server.api.initialCounter
 
 // defines the initial state and initial command (= side-effect) of the application
 let init () : Model * Cmd<Msg> =
+    CanvasRenderer.init()
     let initialModel = { Counter = None }
     let loadCountCmd =
         Cmd.OfAsync.perform initialCounter () InitialCountLoaded
