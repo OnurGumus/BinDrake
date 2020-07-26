@@ -20,6 +20,7 @@ type Msg =
     | Increment
     | Decrement
     | InitialCountLoaded of Counter
+    | ResultLoaded of CalcResult
 
 module Server =
 
@@ -31,15 +32,21 @@ module Server =
       Remoting.createApi()
       |> Remoting.withRouteBuilder Route.builder
       |> Remoting.buildProxy<ICounterApi>
-let initialCounter = Server.api.initialCounter
 
+let initialCounter = Server.api.initialCounter
+let run  = Server.api.run
 // defines the initial state and initial command (= side-effect) of the application
 let init () : Model * Cmd<Msg> =
-    CanvasRenderer.init()
+   // let res = BinPacker.run CanvasRenderer.containers CanvasRenderer.items 1000. 0.9
+    //printf "%A" res;
+   // CanvasRenderer.renderResult res
     let initialModel = { Counter = None }
     let loadCountCmd =
         Cmd.OfAsync.perform initialCounter () InitialCountLoaded
-    initialModel, loadCountCmd
+    let runCmd =
+        Cmd.OfAsync.perform
+            (fun _ -> run CanvasRenderer.containers CanvasRenderer.items 1000. 0.9)() ResultLoaded
+    initialModel, runCmd
 
 // The update function computes the next state of the application based on the current state and the incoming events/messages
 // It can also run side-effects (encoded as commands) like calling the server via Http.
@@ -52,6 +59,8 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
     | Some counter, Decrement ->
         let nextModel = { currentModel with Counter = Some { Value = counter.Value - 1 } }
         nextModel, Cmd.none
+    |_ , ResultLoaded res -> CanvasRenderer.renderResult res ; currentModel, Cmd.none
+
     | _, InitialCountLoaded initialCount->
         let nextModel = { Counter = Some initialCount }
         nextModel, Cmd.none

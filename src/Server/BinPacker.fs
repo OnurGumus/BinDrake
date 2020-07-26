@@ -1,24 +1,6 @@
 module BinPacker
+open Shared
 
-[<Struct>]
-type Coordinates = { X: int; Y: int; Z: int }
-
-[<Struct>]
-type Dim =
-    {
-        Width: int
-        Height: int
-        Length: int
-    }
-
-type Container = { Dim: Dim; Coord: Coordinates }
-type Item = { Dim: Dim; Id: string; Tag: string }
-type ContainerTriplet = Container list
-type ItemPut = { Item: Item; Coord: Coordinates }
-type PutResult = (ContainerTriplet list * ItemPut) option
-type ItemsWithCost = { Items: Item list; Cost: float }
-type PutItem = Container -> Item -> PutResult
-type StackItem = (Container list * Item list * ItemPut list)
 let random = System.Random()
 
 let inline rotateZ (item: Item) =
@@ -124,7 +106,7 @@ let mergeContainers  (containers : Container list) =
         else
             let ((i1,c1),(i2,c2)) = merger |> Seq.head
             let newC = mergeContainersf c1 c2
-            printf "%A" containers
+            printfn "%A" containers
             let containers = containers |> removeAt i1 i2
             let mergers = mergersf containers
             let naked = containers |> List.map snd
@@ -415,9 +397,10 @@ let rec putItem tryCount: PutItem =
                             Z = container.Coord.Z
                         }
                 }
-            let t = [config1;config2;config3; config4] |> List.item (random.Next(0,4))
+            let t1 = [config1;config2;config3; config4] |> List.item (random.Next(0,4))
+            let t2 = [config1;config2;config3; config4] |> List.item (random.Next(0,4))
             Some
-                (  [t],
+                (  [t1;t2] |> List.distinct ,
                  //|> List.filter (fun f -> f |> List.isEmpty |> not)
 
                 // |> List.sortBy (fun s -> s |> List.minBy (fun x -> float x.Coord.Z)),
@@ -482,7 +465,6 @@ let calculateCost =
 
                 let stackItems =
                     loopContainers ((containerSet |> List.sortBy (fun s -> s.Coord.Z)) , [])
-                printf "loop"
                 loop
                     ((stackItems@remainingStack)
                      |> List.sortBy (fun (x,y,z) ->  x|> List.minBy (fun l -> l.Coord.Z)),
@@ -540,7 +522,7 @@ let calcCost container items =
             max.Item.Dim.Length + max.Coord.Z
         let sumZCoord =
             (res |> List.sumBy (fun x -> x.Coord.Z + x.Item.Dim.Length))
-        float ((unfitItems |> List.sumBy calcVolume)*1000 + maxZCoord +  100  * sumZCoord) , res
+        float ((unfitItems |> List.sumBy calcVolume)*1000 + maxZCoord ) , res
     | None _ -> Double.MaxValue, []
 
 type GlobalBest = { ItemsPut : ItemPut list; Cost : float}
@@ -590,12 +572,6 @@ let rec calc (container: Container) (itemsWithCost: ItemsWithCost) (globalBest:G
         let c, r, globalBest = loop (calculated, res) globalBest 1
         calc container c globalBest (T * alpha) alpha r
 
-type CalcResult = {
-    ItemsPut : ItemPut list
-    ContainerVol : int
-    ItemsUnput : Item list
-    PutVolume : int
-}
 
 let checkConflict (A:ItemPut) (B:ItemPut) =
     not (B.Coord.X >= A.Coord.X+A.Item.Dim.Width

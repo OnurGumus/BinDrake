@@ -10,7 +10,6 @@
     <Compile Include="Version.fs" />
     <Compile Include="Three.fs" />
     <Compile Include="TrackballControls.fs" />
-    <Compile Include="BinPacker.fs" />
     <Compile Include="CanvasRenderer.fs" />
     <Compile Include="Client.fs" />
   </ItemGroup>
