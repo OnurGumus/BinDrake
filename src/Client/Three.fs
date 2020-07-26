@@ -29,6 +29,7 @@ type [<AllowNullLiteral>] IExports =
         abstract DirectionalLight : DirectionalLightStatic
         abstract AmbientLight : AmbientLightStatic
         abstract Vector2 : Vector2Static
+        abstract Vector3 : Vector3Static
         abstract Mesh : MeshStatic
         abstract BoxGeometry : BoxGeometryStatic
         abstract Clock : ClockStatic
@@ -37,7 +38,7 @@ type [<AllowNullLiteral>] IExports =
         abstract LineBasicMaterial : LineBasicMaterialStatic
         abstract LineSegments : LineSegmentsStatic
         abstract OrthographicCamera : OrthographicCameraStatic
-
+        abstract Box3 : Box3Static
 [<Import("*","three")>]
 let exports : IExports=  jsNative
 
@@ -509,20 +510,20 @@ type [<AllowNullLiteral>] PerspectiveCamera =
     abstract getFilmHeight: unit -> float
     /// <summary>Sets an offset in a larger frustum. This is useful for multi-window or multi-monitor/multi-machine setups.
     /// For example, if you have 3x2 monitors and each monitor is 1920x1080 and the monitors are in grid like this:
-    /// 
+    ///
     /// 		 +---+---+---+
     /// 		 | A | B | C |
     /// 		 +---+---+---+
     /// 		 | D | E | F |
     /// 		 +---+---+---+
-    /// 
+    ///
     /// then for each monitor you would call it like this:
-    /// 
+    ///
     /// 		 const w = 1920;
     /// 		 const h = 1080;
     /// 		 const fullWidth = w * 3;
     /// 		 const fullHeight = h * 2;
-    /// 
+    ///
     /// 		 // A
     /// 		 camera.setViewOffset( fullWidth, fullHeight, w * 0, h * 0, w, h );
     /// 		 // B
@@ -1070,13 +1071,13 @@ type [<AllowNullLiteral>] Geometry =
     /// To signal an update in this array, Geometry.uvsNeedUpdate needs to be set to true.
     abstract faceVertexUvs: ResizeArray<ResizeArray<ResizeArray<Vector2>>> with get, set
     /// Array of morph targets. Each morph target is a Javascript object:
-    /// 
+    ///
     /// 		 { name: "targetName", vertices: [ new THREE.Vector3(), ... ] }
-    /// 
+    ///
     /// Morph vertices match number and order of primary vertices.
     abstract morphTargets: ResizeArray<MorphTarget> with get, set
     /// Array of morph normals. Morph normals have similar structure as morph targets, each normal set is a Javascript object:
-    /// 
+    ///
     /// 		 morphNormal = { name: "NormalName", normals: [ new THREE.Vector3(), ... ] }
     abstract morphNormals: ResizeArray<MorphNormals> with get, set
     /// Array of skinning weights, matching number and order of vertices.
@@ -3173,7 +3174,7 @@ type [<AllowNullLiteral>] MeshLambertMaterialParameters =
     abstract skinning: bool option with get, set
     abstract morphTargets: bool option with get, set
     abstract morphNormals: bool option with get, set
- 
+
 
 type [<AllowNullLiteral>] MeshLambertMaterial =
     inherit Material
@@ -4498,13 +4499,13 @@ type [<AllowNullLiteral>] TriangleStatic =
 
 
 /// ( interface Vector<T> )
-/// 
+///
 /// Abstract interface of {@link https://github.com/mrdoob/three.js/blob/master/src/math/Vector2.js|Vector2},
 /// {@link https://github.com/mrdoob/three.js/blob/master/src/math/Vector3.js|Vector3}
 /// and {@link https://github.com/mrdoob/three.js/blob/master/src/math/Vector4.js|Vector4}.
-/// 
+///
 /// Currently the members of Vector is NOT type safe because it accepts different typed vectors.
-/// 
+///
 /// Those definitions will be changed when TypeScript innovates Generics to be type safe.
 type [<AllowNullLiteral>] Vector =
     abstract setComponent: index: float * value: float -> Vector
@@ -4514,7 +4515,7 @@ type [<AllowNullLiteral>] Vector =
     /// copy(v:T):T;
     abstract copy: v: Vector -> Vector
     /// NOTE: The second argument is deprecated.
-    /// 
+    ///
     /// add(v:T):T;
     abstract add: v: Vector -> Vector
     /// addVectors(a:T, b:T):T;
@@ -4541,11 +4542,11 @@ type [<AllowNullLiteral>] Vector =
     /// normalize():T;
     abstract normalize: unit -> Vector
     /// NOTE: Vector4 doesn't have the property.
-    /// 
+    ///
     /// distanceTo(v:T):number;
     abstract distanceTo: v: Vector -> float
     /// NOTE: Vector4 doesn't have the property.
-    /// 
+    ///
     /// distanceToSquared(v:T):number;
     abstract distanceToSquared: v: Vector -> float
     /// setLength(l:number):T;
@@ -4558,7 +4559,7 @@ type [<AllowNullLiteral>] Vector =
     abstract clone: unit -> Vector
 
 /// 2D vector.
-/// 
+///
 /// ( class Vector2 implements Vector<Vector2> )
 type [<AllowNullLiteral>] Vector2 =
     inherit Vector
@@ -4700,7 +4701,7 @@ type [<AllowNullLiteral>] Vector2 =
     abstract random: unit -> Vector2
 
 /// 2D vector.
-/// 
+///
 /// ( class Vector2 implements Vector<Vector2> )
 type [<AllowNullLiteral>] Vector2Static =
     [<Emit "new $0($1...)">] abstract Create: ?x: float * ?y: float -> Vector2
@@ -4852,7 +4853,7 @@ type [<AllowNullLiteral>] Vector3Static =
 
 
 /// 4D vector.
-/// 
+///
 /// ( class Vector4 implements Vector<Vector4> )
 type [<AllowNullLiteral>] Vector4 =
     inherit Vector
@@ -4953,7 +4954,7 @@ type [<AllowNullLiteral>] Vector4 =
     abstract random: unit -> Vector4
 
 /// 4D vector.
-/// 
+///
 /// ( class Vector4 implements Vector<Vector4> )
 type [<AllowNullLiteral>] Vector4Static =
     [<Emit "new $0($1...)">] abstract Create: ?x: float * ?y: float * ?z: float * ?w: float -> Vector4
@@ -5425,7 +5426,7 @@ type [<AllowNullLiteral>] WebGLRenderer =
     /// Render a scene or an object using a camera.
     /// The render is done to a previously specified {@link WebGLRenderTarget#renderTarget .renderTarget} set by calling
     /// {@link WebGLRenderer#setRenderTarget .setRenderTarget} or to the canvas as usual.
-    /// 
+    ///
     /// By default render buffers are cleared before rendering but you can prevent this by setting the property
     /// {@link WebGLRenderer#autoClear autoClear} to false. If you want to prevent only certain buffers being cleared
     /// you can set either the {@link WebGLRenderer#autoClearColor autoClearColor},

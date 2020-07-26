@@ -25,20 +25,26 @@ renderer.shadowMap?enabled <- true
 
 let axes = THREE.AxesHelper.Create(20.)
 scene.add (axes) |> ignore
-let L = 1300.
-let W = 245.
-let planeGeometry = THREE.PlaneGeometry.Create(L, W)
+//let L = 1300.
+//let W = 245.
+let currentContainer = ResizeArray<Three.Object3D>()
+let renderPlane (container:Container)  =
+    scene.remove currentContainer |> ignore
+    let planeGeometry =
+        THREE.PlaneGeometry
+            .Create(container.Dim.Length |> float, container.Dim.Width|>float)
 
-let planeMaterial =
-    THREE.MeshLambertMaterial.Create(jsOptions<_> (fun x -> x.color <- Some !^ "red"))
+    let planeMaterial =
+        THREE.MeshLambertMaterial.Create(jsOptions<_> (fun x -> x.color <- Some !^ "red"))
 
-let plane =
-    THREE.Mesh.Create(planeGeometry, planeMaterial)
+    let plane =
+        THREE.Mesh.Create(planeGeometry, planeMaterial)
 
-plane.receiveShadow <- true
-plane.rotation.x <- -0.5 * Math.PI
-plane.position.set (0., 0., 0.) |> ignore
-scene.add plane |> ignore
+    plane.receiveShadow <- true
+    plane.rotation.x <- -0.5 * Math.PI
+    plane.position.set (0., 0., 0.) |> ignore
+    scene.add plane |> ignore
+    currentContainer.Add plane
 
 
 let cubeMaterial =
@@ -52,7 +58,7 @@ let lineMaterial =
     THREE.LineBasicMaterial.Create(jsOptions<Three.LineBasicMaterialParameters>
         (fun x->  x.color <- Some !^ "black") )
 let cubes = ResizeArray<Three.Object3D>()
-let renderCube x y z width height length (color:string) =
+let renderCube x y z width height length (color:string) L W =
     let cubeMaterial =
         THREE.MeshLambertMaterial.Create(jsOptions<Three.MeshLambertMaterialParameters>
             (fun x -> x.color <- Some !^ color ; x.wireframe<- Some false   ))
@@ -66,12 +72,17 @@ let renderCube x y z width height length (color:string) =
     cube.add wireFrame |> ignore
 
     cube.castShadow <- true
+    // let container = currentContainer.[0] :?> Three.Mesh<Three.PlaneGeometry,_>
+    // let v = THREE.Vector3.Create()
+    // let cont = THREE.Box3.Create().setFromObject(container).getSize(v)
+    // let L = cont.x
+    // let W = cont.z
     cube.position.set ( z - (L - length) /2. , y + height / 2. , (W - width) / 2. - x) |> ignore
     scene.add cube |> ignore
     cubes.Add cube
 
 
-let containers = {Dim = {Width =int W; Height = 150; Length = int L}; Coord = {X =0; Y =0; Z =0 }}
+let containers = {Dim = {Width =int 245; Height = 150; Length = int 1300}; Coord = {X =0; Y =0; Z =0 }}
 let items = [
     {Dim = {Width = 100; Height = 100; Length = 14} ;Id = "big1" ; Tag ="#880000"};
       {Dim = {Width = 100; Height = 46; Length = 100} ; Id = "big2";Tag ="blue"};
@@ -128,11 +139,15 @@ let items = [
     ]
 
 let renderResult res =
+    renderPlane res.Container
     scene.remove cubes |> ignore
     cubes.Clear()
     for item in res.ItemsPut do
         renderCube (item.Coord.X |> float) (item.Coord.Y |> float)
-            (item.Coord.Z |> float) (item.Item.Dim.Width |> float) (item.Item.Dim.Height |> float) (item.Item.Dim.Length |> float) item.Item.Tag
+            (item.Coord.Z |> float) (item.Item.Dim.Width |> float)
+            (item.Item.Dim.Height |> float) (item.Item.Dim.Length |> float) item.Item.Tag
+            (res.Container.Dim.Length |> float)
+            (res.Container.Dim.Width |> float)
 
     let addSpottLight x y z =
         let spotLight = THREE.SpotLight.Create(!^ "white")

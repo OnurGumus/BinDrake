@@ -591,5 +591,10 @@ let run  (container: Container) (items: Item list) (T: float) (alpha:float) =
        for item2 in itemsPut do
            if item1.Item.Id <> item2.Item.Id && checkConflict item1 item2 then
                 printfn "Items conflc %A %A" item1 item2
-    { ItemsPut = itemsPut; ContainerVol = volumeContainer; ItemsUnput = itemsUnput; PutVolume = putVolume }
+    {   ItemsPut = itemsPut;
+        ContainerVol = volumeContainer;
+        ItemsUnput = itemsUnput;
+        PutVolume = putVolume;
+        Container = container
+    }
 
