@@ -51,9 +51,8 @@ let wireframeMaterial =
 let lineMaterial =
     THREE.LineBasicMaterial.Create(jsOptions<Three.LineBasicMaterialParameters>
         (fun x->  x.color <- Some !^ "black") )
-
+let cubes = ResizeArray<Three.Object3D>()
 let renderCube x y z width height length (color:string) =
-
     let cubeMaterial =
         THREE.MeshLambertMaterial.Create(jsOptions<Three.MeshLambertMaterialParameters>
             (fun x -> x.color <- Some !^ color ; x.wireframe<- Some false   ))
@@ -69,6 +68,8 @@ let renderCube x y z width height length (color:string) =
     cube.castShadow <- true
     cube.position.set ( z - (L - length) /2. , y + height / 2. , (W - width) / 2. - x) |> ignore
     scene.add cube |> ignore
+    cubes.Add cube
+
 
 let containers = {Dim = {Width =int W; Height = 150; Length = int L}; Coord = {X =0; Y =0; Z =0 }}
 let items = [
@@ -127,6 +128,8 @@ let items = [
     ]
 
 let renderResult res =
+    scene.remove cubes |> ignore
+    cubes.Clear()
     for item in res.ItemsPut do
         renderCube (item.Coord.X |> float) (item.Coord.Y |> float)
             (item.Coord.Z |> float) (item.Item.Dim.Width |> float) (item.Item.Dim.Height |> float) (item.Item.Dim.Length |> float) item.Item.Tag
@@ -160,7 +163,7 @@ let renderResult res =
     dLight2.position.set (400., 400., -900.) |> ignore
     scene.add dLight2 |> ignore
 
-    camera.position.set (1200., 600., -530.) |> ignore
+    camera.position.set (500., 550., -700.) |> ignore
     camera.lookAt (!^scene.position)
 
 
