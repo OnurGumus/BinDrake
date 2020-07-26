@@ -47,7 +47,13 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
 
 
 let view (model : Model) (dispatch : Msg -> unit) =
-    button [ OnClick (fun _ -> CalculateRequested |> dispatch ) ] [ str "Calculate"]
+
+    button
+        [
+            OnClick (fun _ -> CalculateRequested |> dispatch )
+            Disabled (match model with | Calculating _ -> true | _ -> false)
+        ]
+        [ str "Calculate"]
 
 #if DEBUG
 open Elmish.Debug
