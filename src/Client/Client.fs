@@ -45,15 +45,15 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
 
     | _, _ -> currentModel, Cmd.none
 
+open Feliz
 
 let view (model : Model) (dispatch : Msg -> unit) =
 
-    button
-        [
-            OnClick (fun _ -> CalculateRequested |> dispatch )
-            Disabled (match model with | Calculating _ -> true | _ -> false)
-        ]
-        [ str "Calculate"]
+    Html.button [
+        prop.onClick (fun _ -> CalculateRequested |> dispatch )
+        prop.disabled (match model with | Calculating _ -> true | _ -> false)
+        prop.text "Calculate"
+    ]
 
 #if DEBUG
 open Elmish.Debug
