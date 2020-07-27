@@ -114,9 +114,12 @@ open Feliz
 open Fable.Core.JsInterop
 let view (model : Model) (dispatch : Msg -> unit) =
     Html.div[
+        prop.className "card"
         prop.children[
             Html.div[
+                prop.className "card-body"
                 prop.children[
+                    Html.h4[ prop.className "card-title"; prop.text "Container dimensions" ]
                     Html.label[
                         prop.htmlFor "container-width"
                         prop.text "Width"
@@ -141,15 +144,19 @@ let view (model : Model) (dispatch : Msg -> unit) =
                         prop.name "container-length"
                         prop.onInput(fun ev -> ev.target?value |> string |> ContainerLengthChanged |> dispatch )
                     ]
+                    let calcDisabled =
+                        (match model.Calculation, model.Container, model.ItemAddModels with
+                                | _ ,_ ,items when items |> List.exists(fun x-> x.Items.Length = 0) -> true
+                                | _ ,_ ,[] -> true
+                                | _, None,_ -> true
+                                | Calculating, _,_ -> true
+                                | _ -> false)
                     Html.button [
                         prop.onClick (fun _ -> CalculateRequested |> dispatch )
-                        prop.disabled
-                            (match model.Calculation, model.Container, model.ItemAddModels with
-                            | _ ,_ ,items when items |> List.exists(fun x-> x.Items.Length = 0) -> true
-                            | _ ,_ ,[] -> true
-                            | _, None,_ -> true
-                            | Calculating, _,_ -> true
-                            | _ -> false)
+                        prop.style[style.opacity 1.]
+                        prop.disabled calcDisabled
+                        if calcDisabled then
+                            prop.custom("popover-top","Fill all the data")
                         prop.text "Calculate"
                     ]
                     Html.button [

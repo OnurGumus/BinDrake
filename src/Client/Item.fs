@@ -14,6 +14,7 @@ type Model = {
     ItemHeight : int option
     ItemLength : int option
     Quantity :int option
+    Color : string
     Id : string
 }
 type Msg =
@@ -22,6 +23,7 @@ type Msg =
     | LengthChanged of string
     | QuantityChanged of string
     | RemoveItem
+let r = Random()
 
 let init id : Model * Cmd<Msg> =
     let initialModel = {
@@ -31,6 +33,7 @@ let init id : Model * Cmd<Msg> =
         ItemHeight = None
         ItemLength = None
         Quantity = None
+        Color =  sprintf "rgb(%i,%i,%i)" (r.Next(256)) (r.Next(256)) (r.Next(256))
     }
     initialModel, Cmd.none
 
@@ -39,16 +42,11 @@ let (|Int|_|) (s:string) =
     | true, v when v > 0 && v < 10000 -> Some v
     | _ -> None
 
-let r = Random()
 let fillContainer (model:Model) =
     match model.ItemLength, model.ItemHeight, model.ItemWidth , model.Quantity with
     | Some l, Some h, Some w , Some q->
-        let tag = sprintf "rgb(%i,%i,%i)" (r.Next(256)) (r.Next(256)) (r.Next(256))
-        { model with Items  = [
-                                for i = 1 to q do
-                                        { Dim = { Width = w; Height = h; Length =l}; Id = model.Id + i.ToString(); Tag= tag }
-            ]
-        }
+
+        { model with Items  = [ for i = 1 to q do  { Dim = { Width = w; Height = h; Length =l}; Id = model.Id + i.ToString(); Tag= model.Color }]}
     | _ -> { model with Items = [] }
 
 let update (msg : Msg) (model : Model) : Model * Cmd<Msg> =
@@ -76,42 +74,56 @@ open Feliz
 
 let view (model : Model) (dispatch : Msg -> unit) =
     Html.div[
+        prop.className "card"
+        prop.children[
+            Html.div[
+                    prop.className "card-body"
+                    prop.children[
+                        Html.h4[ prop.className "card-title"; prop.text "Item dimensions" ]
 
-        Html.div[
-                prop.children[
-                    Html.label[
-                        prop.htmlFor "item-width"
-                        prop.text "Width"
+                        Html.label[
+                            prop.htmlFor "item-width"
+                            prop.text "Width"
+                        ]
+                        Html.input[
+                            prop.name "item-width"
+                            prop.onInput(fun ev -> ev.target?value |> string |> WidthChanged |> dispatch )
+                        ]
+                        Html.label[
+                            prop.htmlFor "item-height"
+                            prop.text "Height"
+                        ]
+                        Html.input[
+                            prop.name "item-height"
+                            prop.onInput(fun ev -> ev.target?value |> string |> HeightChanged |> dispatch )
+                        ]
+                        Html.label[
+                            prop.htmlFor "item-length"
+                            prop.text "Length"
+                        ]
+                        Html.input[
+                            prop.name "item-length"
+                            prop.onInput(fun ev -> ev.target?value |> string |> LengthChanged |> dispatch )
+                        ]
+                        Html.label[
+                            prop.htmlFor "item-quantity"
+                            prop.text "Quantity"
+                        ]
+                        Html.input[
+                            prop.name "item-quantity"
+                            prop.onInput(fun ev -> ev.target?value |> string |> QuantityChanged |> dispatch )
+                        ]
+                        Html.label[
+                            prop.htmlFor "item-color"
+                            prop.text "Color"
+                        ]
+                        Html.input[
+                            prop.name "item-quantity"
+                            prop.readOnly true
+                            prop.style [ style.backgroundColor (model.Color)]
+                        ]
                     ]
-                    Html.input[
-                        prop.name "item-width"
-                        prop.onInput(fun ev -> ev.target?value |> string |> WidthChanged |> dispatch )
-                    ]
-                    Html.label[
-                        prop.htmlFor "item-height"
-                        prop.text "Height"
-                    ]
-                    Html.input[
-                        prop.name "item-height"
-                        prop.onInput(fun ev -> ev.target?value |> string |> HeightChanged |> dispatch )
-                    ]
-                    Html.label[
-                        prop.htmlFor "item-length"
-                        prop.text "Length"
-                    ]
-                    Html.input[
-                        prop.name "item-length"
-                        prop.onInput(fun ev -> ev.target?value |> string |> LengthChanged |> dispatch )
-                    ]
-                    Html.label[
-                        prop.htmlFor "item-quantity"
-                        prop.text "Quantity"
-                    ]
-                    Html.input[
-                        prop.name "item-quantity"
-                        prop.onInput(fun ev -> ev.target?value |> string |> QuantityChanged |> dispatch )
-                    ]
-                ]
+            ]
+            Html.button[ prop.text "remove"; prop.onClick(fun _ -> dispatch RemoveItem)]
         ]
-        Html.button[ prop.text "remove"; prop.onClick(fun _ -> dispatch RemoveItem)]
     ]

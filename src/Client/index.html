@@ -1,8 +1,11 @@
 ﻿<!doctype html>
 <html>
 <head>
-    <title>SAFE Template</title>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css">
+    <title>Bin Packer</title>
     <style>
         #myCanvas{
             width: 50% !important;
@@ -15,9 +18,12 @@
     </style>
 
     <link rel="shortcut icon" type="image/png" href="/favicon.png"/>
+
 </head>
 <body>
-    <canvas id="myCanvas"></canvas>
-    <div id="elmish-app"></div>
+    <div class="border border-primary" style="display: contents;">
+        <canvas  id="myCanvas"></canvas>
+    </div>
+    <div class="border border-primary" id="elmish-app"></div>
 </body>
 </html>
