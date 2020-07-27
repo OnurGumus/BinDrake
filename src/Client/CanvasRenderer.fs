@@ -11,7 +11,7 @@ let THREE = Three.exports
 let scene = THREE.Scene.Create()
 
 let camera =
-    THREE.PerspectiveCamera.Create(45., window.innerWidth / window.innerHeight, 0.1, 2000.)
+    THREE.PerspectiveCamera.Create(45., window.innerWidth / window.innerHeight, 0.1, 4000.)
 
 let opt =
     jsOptions<Three.WebGLRendererParameters>
@@ -24,11 +24,14 @@ renderer.setSize (window.innerWidth, window.innerHeight)
 renderer.shadowMap?enabled <- true
 
 let axes = THREE.AxesHelper.Create(20.)
-scene.add (axes) |> ignore
+//scene.add (axes) |> ignore
 //let L = 1300.
 //let W = 245.
 let currentContainer = ResizeArray<Three.Object3D>()
 let renderPlane (container:Container)  =
+    let x = System.Math.Max(1,System.Math.Min(20,50000/(container.Dim.Width * container.Dim.Length ))) |> float
+    printf "%A" x
+    camera.position.set (500./x, 550./x, -700./x) |> ignore
     scene.remove currentContainer |> ignore
     let planeGeometry =
         THREE.PlaneGeometry
@@ -191,7 +194,6 @@ let init () =
     let trackballControls = initTrackballControls (camera, renderer)
     let clock = THREE.Clock.Create()
 
-    let mutable step = 0.
 
     let rec renderScene _ =
         trackballControls.update (clock.getDelta ())

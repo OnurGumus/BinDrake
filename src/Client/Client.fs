@@ -20,6 +20,7 @@ type Model = {
     ContainerWidth : int option
     ContainerHeight : int option
     ContainerLength : int option
+    ItemAddModels : ItemAdd.Model list
 }
 type Msg =
     | ResultLoaded of CalcResult
@@ -27,6 +28,8 @@ type Msg =
     | ContainerHeightChanged of string
     | ContainerLengthChanged of string
     | CalculateRequested
+    | ItemAddMsg of (string*ItemAdd.Msg)
+    | AddItem
 
 module Server =
 
@@ -51,76 +54,119 @@ let init () : Model * Cmd<Msg> =
         ContainerWidth = None
         ContainerHeight = None
         ContainerLength = None
+        ItemAddModels = []
     }
     initialModel, Cmd.none
 
+let inline replace1 list a b = list |> List.map (fun x -> if x = a then b else x)
+
 let (|Int|_|) (s:string) =
     match Int32.TryParse s with
-    | true, v when v > 0 -> Some v
+    | true, v when v > 0 && v <3000-> Some v
     | _ -> None
+
+
 let org = { X = 0; Y= 0; Z = 0;}
 let fillContainer (model:Model) =
     match model.ContainerLength, model.ContainerHeight, model.ContainerWidth with
     | Some l, Some h, Some w ->
         { model with Container = Some { Dim = { Width = w; Height = h; Length =l}; Coord=org }}
-    | _ -> model
-let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
-    match currentModel, msg with
+    | _ ->{ model with Container = None }
+
+let update (msg : Msg) (model : Model) : Model * Cmd<Msg> =
+    match model, msg with
     |_, ContainerWidthChanged (Int i) ->
-        {currentModel with ContainerWidth = Some i} |> fillContainer, Cmd.none
+        {model with ContainerWidth = Some i} |> fillContainer, Cmd.none
+    |_, ContainerWidthChanged _ ->
+        {model with ContainerWidth = None} |> fillContainer, Cmd.none
     |_, ContainerHeightChanged (Int i) ->
-        {currentModel with ContainerHeight = Some i} |> fillContainer, Cmd.none
+        {model with ContainerHeight = Some i} |> fillContainer, Cmd.none
+    |_, ContainerHeightChanged _ ->
+        {model with ContainerHeight = None} |> fillContainer , Cmd.none
     |_, ContainerLengthChanged (Int i) ->
-        {currentModel with ContainerLength = Some i} |> fillContainer, Cmd.none
+        {model with ContainerLength = Some i} |> fillContainer, Cmd.none
+     |_, ContainerLengthChanged _ ->
+        {model with ContainerLength = None} |> fillContainer , Cmd.none
+    | _ , AddItem ->
+        let id = Guid.NewGuid().ToString()
+        let subm , subc = ItemAdd.init(id)
+        {model with ItemAddModels = (subm::model.ItemAddModels) |> List.rev}, Cmd.map(fun m -> ItemAddMsg(id,m) ) subc
+    |_ , ItemAddMsg (id , ItemAdd.RemoveItem ) ->
+            let newd = model.ItemAddModels |> List.filter(fun i -> i.Id <> id)
+            {model with ItemAddModels = (newd)} ,Cmd.none
+    |_ , ItemAddMsg (id , msg ) ->
+            let existing = model.ItemAddModels |> List.find (fun i -> i.Id = id)
+            let subm , subc  = ItemAdd.update msg existing
+            let newd = replace1 model.ItemAddModels  existing subm
+            {model with ItemAddModels = (newd)} ,Cmd.map(fun m -> ItemAddMsg(id,m) ) subc
 
     |_ , ResultLoaded res ->
         CanvasRenderer.renderResult res ;
-        {currentModel with Calculation = (Calculated res)} , Cmd.none
+        {model with Calculation = (Calculated res)} , Cmd.none
     |{Container = Some c}, CalculateRequested ->
-        {currentModel with Calculation = Calculating},
-            runCmd c CanvasRenderer.items
+        let items = model.ItemAddModels |> List.collect(fun i -> i.Items)
+        {model with Calculation = Calculating},
+            runCmd c items
 
-    | _, _ -> currentModel, Cmd.none
+    | _, _ -> model, Cmd.none
 
 open Feliz
 open Fable.Core.JsInterop
 let view (model : Model) (dispatch : Msg -> unit) =
     Html.div[
         prop.children[
-            Html.label[
-                prop.htmlFor "container-width"
-                prop.text "Width"
+            Html.div[
+                prop.children[
+                    Html.label[
+                        prop.htmlFor "container-width"
+                        prop.text "Width"
+                    ]
+                    Html.input[
+                        prop.name "container-width"
+                        prop.onInput(fun ev -> ev.target?value |> string |> ContainerWidthChanged |> dispatch )
+                    ]
+                    Html.label[
+                        prop.htmlFor "container-height"
+                        prop.text "Height"
+                    ]
+                    Html.input[
+                        prop.name "container-height"
+                        prop.onInput(fun ev -> ev.target?value |> string |> ContainerHeightChanged |> dispatch )
+                    ]
+                    Html.label[
+                        prop.htmlFor "container-length"
+                        prop.text "Length"
+                    ]
+                    Html.input[
+                        prop.name "container-length"
+                        prop.onInput(fun ev -> ev.target?value |> string |> ContainerLengthChanged |> dispatch )
+                    ]
+                    Html.button [
+                        prop.onClick (fun _ -> CalculateRequested |> dispatch )
+                        prop.disabled
+                            (match model.Calculation, model.Container, model.ItemAddModels with
+                            | _ ,_ ,items when items |> List.exists(fun x-> x.Items.Length = 0) -> true
+                            | _ ,_ ,[] -> true
+                            | _, None,_ -> true
+                            | Calculating, _,_ -> true
+                            | _ -> false)
+                        prop.text "Calculate"
+                    ]
+                    Html.button [
+                        prop.onClick (fun _ -> AddItem |> dispatch )
+                        prop.disabled
+                            (match model.Calculation with
+                            | Calculating -> true
+                            | _ -> false)
+                        prop.text "Add item"
+                    ]
+                ]
             ]
-            Html.input[
-                prop.name "container-width"
-                prop.onInput(fun ev -> ev.target?value |> string |> ContainerWidthChanged |> dispatch )
-            ]
-            Html.label[
-                prop.htmlFor "container-height"
-                prop.text "Height"
-            ]
-            Html.input[
-                prop.name "container-height"
-                prop.onInput(fun ev -> ev.target?value |> string |> ContainerHeightChanged |> dispatch )
-            ]
-            Html.label[
-                prop.htmlFor "container-length"
-                prop.text "Length"
-            ]
-            Html.input[
-                prop.name "container-length"
-                prop.onInput(fun ev -> ev.target?value |> string |> ContainerLengthChanged |> dispatch )
-            ]
-            Html.button [
-                prop.onClick (fun _ -> CalculateRequested |> dispatch )
-                prop.disabled
-                    (match model.Calculation, model.Container with
-                    | _, None -> true
-                    | Calculating, _ -> true
-                    | _ -> false)
-                prop.text "Calculate"
-            ]
+            for item in model.ItemAddModels do
+                ItemAdd.view item ((fun m -> ItemAddMsg(item.Id,m) ) >> dispatch)
         ]
+
+
     ]
 
 #if DEBUG
