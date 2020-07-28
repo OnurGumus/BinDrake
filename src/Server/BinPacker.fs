@@ -480,7 +480,7 @@ let calculateCost =
 
             | _, _ -> None
 
-        loop ([ containers, items,[] ], 80)
+        loop ([ containers, items,[] ], 800)
 
 let calcVolume (item: Item) =
     item.Dim.Width * item.Dim.Height * item.Dim.Length
@@ -514,6 +514,7 @@ let inline mutate (itemsPut:ItemPut list) (items: Item list) =
 
 let TMin = 0.01
 open System
+open System.Diagnostics
 
 let inline findUnfitItems itemsPut (items:Item list) =
     let itemsPutIds = itemsPut |> List.map(fun d -> d.Item.Id)
@@ -534,8 +535,8 @@ let calcCost container items =
 
 type GlobalBest = { ItemsPut : ItemPut list; Cost : float}
 
-let rec calc (container: Container) (itemsWithCost: ItemsWithCost) (globalBest:GlobalBest) (T: float) (alpha:float) result =
-    if TMin >= T then
+let rec calc (container: Container) (itemsWithCost: ItemsWithCost) (globalBest:GlobalBest) (T: float) (alpha:float) result (sw : Stopwatch)=
+    if TMin >= T || sw.ElapsedMilliseconds > 30000L then
         globalBest
     else
         let items = itemsWithCost.Items
@@ -577,7 +578,7 @@ let rec calc (container: Container) (itemsWithCost: ItemsWithCost) (globalBest:G
                 loop (nextItem, res) globalBest2 (count - 1)
 
         let c, r, globalBest = loop (calculated, res) globalBest 1
-        calc container c globalBest (T * alpha) alpha r
+        calc container c globalBest (T * alpha) alpha r sw
 
 
 let checkConflict (A:ItemPut) (B:ItemPut) =
@@ -590,7 +591,7 @@ let checkConflict (A:ItemPut) (B:ItemPut) =
 
 let run  (container: Container) (items: Item list) (T: float) (alpha:float) =
     let itemsWithCost = { Items = items |> List.map rotateToMinZ ; Cost = 0.}
-    let itemsPut = (calc container itemsWithCost { ItemsPut = []; Cost = Double.MaxValue } T alpha []).ItemsPut
+    let itemsPut = (calc container itemsWithCost { ItemsPut = []; Cost = Double.MaxValue } T alpha [] (Stopwatch.StartNew())).ItemsPut
     let volumeContainer = container.Dim.Height * container.Dim.Width * container.Dim.Length
     let itemsUnput = findUnfitItems itemsPut items
     let putVolume = itemsUnput |> List.sumBy calcVolume
