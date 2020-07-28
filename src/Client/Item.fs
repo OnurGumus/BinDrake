@@ -86,7 +86,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     prop.className "card-body"
                     prop.children[
                         Html.h4[ prop.className "card-title"; prop.text "Item dimensions" ]
-
+                        Html.h5[ prop.text "Enter integers between 1 and 10000"]
                         Html.label[
                             prop.htmlFor "item-width"
                             prop.text "Width"
@@ -139,6 +139,6 @@ let view (model : Model) (dispatch : Msg -> unit) =
                         ]
                     ]
             ]
-            Html.button[ prop.text "remove"; prop.onClick(fun _ -> dispatch RemoveItem)]
+            Html.button[ prop.className "btn-small"; prop.text "remove"; prop.onClick(fun _ -> dispatch RemoveItem)]
         ]
     ]

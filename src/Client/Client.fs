@@ -120,6 +120,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                 prop.className "card-body"
                 prop.children[
                     Html.h4[ prop.className "card-title"; prop.text "Container dimensions" ]
+                    Html.h5[ prop.text "Enter integers between 1 and 3000"]
                     Html.label[
                         prop.htmlFor "container-width"
                         prop.text "Width"
@@ -152,6 +153,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                                 | Calculating, _,_ -> true
                                 | _ -> false)
                     Html.button [
+                        prop.className "btn-small"
                         prop.onClick (fun _ -> CalculateRequested |> dispatch )
                         prop.style[style.opacity 1.]
                         prop.disabled calcDisabled
@@ -166,6 +168,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                             | Calculating -> true
                             | _ -> false)
                         prop.text "Add item"
+                        prop.className "btn-small"
                     ]
                 ]
             ]
