@@ -85,16 +85,16 @@ let renderCube x y z width height length (color:string) L W =
     cubes.Add cube
 
 
-let containers = {Dim = {Width =int 245; Height = 150; Length = int 1300}; Coord = {X =0; Y =0; Z =0 }}
-let items = [
-    {Dim = {Width = 100; Height = 100; Length = 14} ;Id = "big1" ; Tag ="#880000"};
-      {Dim = {Width = 100; Height = 46; Length = 100} ; Id = "big2";Tag ="blue"};
-      {Dim = {Width = 45; Height = 37; Length = 30} ; Id = "small1";Tag ="pink"};
-      {Dim = {Width = 45; Height = 19; Length = 30} ; Id = "small22";Tag ="lime"};
-         {Dim = {Width = 100; Height = 56; Length = 100} ;Id = "big3" ; Tag ="green"};
-      {Dim = {Width = 100; Height = 88; Length = 39} ; Id = "big4";Tag ="blue"};
-     {Dim = {Width = 45; Height = 27; Length = 30} ; Id = "2";Tag ="pink"};
-     {Dim = {Width = 45; Height = 89; Length = 30} ; Id = "3";Tag ="lime"};
+// let containers = {Dim = {Width =int 245; Height = 150; Length = int 1300}; Coord = {X =0; Y =0; Z =0 }}
+// let items = [
+//     {Dim = {Width = 100; Height = 100; Length = 14} ;Id = "big1" ; Tag ="#880000"};
+//       {Dim = {Width = 100; Height = 46; Length = 100} ; Id = "big2";Tag ="blue"};
+//       {Dim = {Width = 45; Height = 37; Length = 30} ; Id = "small1";Tag ="pink"};
+//       {Dim = {Width = 45; Height = 19; Length = 30} ; Id = "small22";Tag ="lime"};
+//          {Dim = {Width = 100; Height = 56; Length = 100} ;Id = "big3" ; Tag ="green"};
+//       {Dim = {Width = 100; Height = 88; Length = 39} ; Id = "big4";Tag ="blue"};
+//      {Dim = {Width = 45; Height = 27; Length = 30} ; Id = "2";Tag ="pink"};
+//      {Dim = {Width = 45; Height = 89; Length = 30} ; Id = "3";Tag ="lime"};
     //       {Dim = {Width = 100; Height = 100; Length = 100} ;Id = "1" ; Tag ="green"};
     // {Dim = {Width = 100; Height = 95; Length = 47} ; Id = "4";Tag ="blue"};
     //  {Dim = {Width = 45; Height = 100; Length = 30} ; Id = "5";Tag ="pink"};
@@ -139,7 +139,7 @@ let items = [
     //       {Dim = {Width = 50; Height = 150; Length = 200} ; Id = "34";Tag ="yellow"};
     //  {Dim = {Width = 39; Height = 150; Length = 24} ; Id = "35";Tag ="aqua"};
     //  {Dim = {Width = 39; Height = 16; Length = 200} ; Id = "36";Tag ="pink"};
-    ]
+   // ]
 
 
 let init () =

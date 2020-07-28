@@ -16,16 +16,19 @@ type Model = {
     Quantity :int option
     Color : string
     Id : string
+    NoTop : bool
 }
 type Msg =
     | WidthChanged of string
     | HeightChanged of string
     | LengthChanged of string
     | QuantityChanged of string
+    | NoTopChanged of bool
     | RemoveItem
 let r = Random()
 
 let init id : Model * Cmd<Msg> =
+    printf "init"
     let initialModel = {
         Id = id
         Items = []
@@ -33,6 +36,7 @@ let init id : Model * Cmd<Msg> =
         ItemHeight = None
         ItemLength = None
         Quantity = None
+        NoTop = false
         Color =  sprintf "rgb(%i,%i,%i)" (r.Next(256)) (r.Next(256)) (r.Next(256))
     }
     initialModel, Cmd.none
@@ -46,7 +50,7 @@ let fillContainer (model:Model) =
     match model.ItemLength, model.ItemHeight, model.ItemWidth , model.Quantity with
     | Some l, Some h, Some w , Some q->
 
-        { model with Items  = [ for i = 1 to q do  { Dim = { Width = w; Height = h; Length =l}; Id = model.Id + i.ToString(); Tag= model.Color }]}
+        { model with Items  = [ for i = 1 to q do  { Dim = { Width = w; Height = h; Length =l}; Id = model.Id + i.ToString(); Tag= model.Color; NoTop = model.NoTop }]}
     | _ -> { model with Items = [] }
 
 let update (msg : Msg) (model : Model) : Model * Cmd<Msg> =
@@ -65,8 +69,10 @@ let update (msg : Msg) (model : Model) : Model * Cmd<Msg> =
         {model with ItemLength = None} |> fillContainer, Cmd.none
     |_, QuantityChanged (Int i) ->
         {model with Quantity = Some i} |> fillContainer, Cmd.none
-     |_, QuantityChanged _ ->
+    |_, QuantityChanged _ ->
         {model with Quantity = None } |> fillContainer, Cmd.none
+    |_ , NoTopChanged b ->
+         {model with NoTop = b } |> fillContainer, Cmd.none
     | _ ->
         model,Cmd.none
 
@@ -114,11 +120,20 @@ let view (model : Model) (dispatch : Msg -> unit) =
                             prop.onInput(fun ev -> ev.target?value |> string |> QuantityChanged |> dispatch )
                         ]
                         Html.label[
+                            prop.htmlFor "item-notop"
+                            prop.text "Nothing on Top"
+                        ]
+                        Html.input[
+                            prop.name "item-notop"
+                            prop.type' "checkbox"
+                            prop.onCheckedChange(fun ev -> ev |> NoTopChanged |> dispatch )
+                        ]
+                        Html.label[
                             prop.htmlFor "item-color"
                             prop.text "Color"
                         ]
                         Html.input[
-                            prop.name "item-quantity"
+                            prop.name "item-color"
                             prop.readOnly true
                             prop.style [ style.backgroundColor (model.Color)]
                         ]

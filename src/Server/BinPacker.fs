@@ -14,6 +14,7 @@ let inline rotateZ (item: Item) =
     }
 
 let inline rotateY (item: Item) =
+    if item.NoTop then item else
     { item with
         Dim =
             {
@@ -24,6 +25,7 @@ let inline rotateY (item: Item) =
     }
 
 let inline rotateX (item: Item) =
+    if item.NoTop then item else
     { item with
         Dim =
             {
@@ -137,28 +139,29 @@ let mergeContainers  (containers : Container list) =
 
 
 
-let rec putItem tryCount: PutItem =
-    fun container item ->
+let rec putItem (rootContainer:Container)  tryCount :PutItem =
+    fun container item  ->
         let remainingWidth = container.Dim.Width - item.Dim.Width
         let remainingHeight = container.Dim.Height - item.Dim.Height
         let remainingLength = container.Dim.Length - item.Dim.Length
-
-        if (remainingHeight < 0)
+        if item.NoTop && container.Coord.Y + container.Dim.Height < rootContainer.Dim.Height then
+            None
+        elif (remainingHeight < 0)
            || remainingLength < 0
            || remainingWidth < 0 then
             if tryCount > 0 then
                 if tryCount = 3 then
                     let item = item |> rotateZ
 
-                    putItem (tryCount - 1) container item
+                    putItem rootContainer (tryCount - 1) container item
                 else if tryCount = 2 then
                     let item = item |> rotateY
 
-                    putItem (tryCount - 1) container item
+                    putItem rootContainer (tryCount - 1) container item
                 else
                     let item = item |> rotateX
 
-                    putItem (tryCount - 1) container item
+                    putItem rootContainer (tryCount - 1) container item
 
             else
                 None
@@ -217,6 +220,7 @@ let rec putItem tryCount: PutItem =
                     s.Dim.Width > 0
                     && s.Dim.Height > 0
                     && s.Dim.Length > 0)
+                |> List.filter(fun s -> (item.NoTop && s.Coord.Y > 0)|>not)
                 |> List.sortBy (fun s -> s.Coord.Z)
 
             let config2 =
@@ -273,6 +277,7 @@ let rec putItem tryCount: PutItem =
                     s.Dim.Width > 0
                     && s.Dim.Height > 0
                     && s.Dim.Length > 0)
+                |> List.filter(fun s -> (item.NoTop && s.Coord.Y > 0)|>not)
                 |> List.sortBy (fun s -> s.Coord.Z)
 
             let config3 =
@@ -329,6 +334,7 @@ let rec putItem tryCount: PutItem =
                     s.Dim.Width > 0
                     && s.Dim.Height > 0
                     && s.Dim.Length > 0)
+                |> List.filter(fun s -> (item.NoTop && s.Coord.Y > 0)|>not)
                 |> List.sortBy (fun s -> s.Coord.Z)
 
             let config4 =
@@ -385,6 +391,7 @@ let rec putItem tryCount: PutItem =
                     s.Dim.Width > 0
                     && s.Dim.Height > 0
                     && s.Dim.Length > 0)
+                |> List.filter(fun s -> (item.NoTop && s.Coord.Y > 0)|>not)
                 |> List.sortBy (fun s -> s.Coord.Z)
 
             let itemPut =
@@ -513,7 +520,7 @@ let inline findUnfitItems itemsPut (items:Item list) =
     items |> List.filter(fun i ->  itemsPutIds |> List.contains i.Id |> not)
 
 let calcCost container items =
-    match calculateCost (putItem 3) [ container ] (items |> List.sortByDescending calcVolume) with
+    match calculateCost (putItem container 3) [ container ] (items |> List.sortByDescending calcVolume) with
     | Some res ->
 
         let unfitItems = findUnfitItems res items// printf "%A" unfitItems

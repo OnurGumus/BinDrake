@@ -90,7 +90,7 @@ let update (msg : Msg) (model : Model) : Model * Cmd<Msg> =
     | _ , AddItem ->
         let id = Guid.NewGuid().ToString()
         let subm , subc = ItemAdd.init(id)
-        {model with ItemAddModels = (subm::model.ItemAddModels) |> List.rev}, Cmd.map(fun m -> ItemAddMsg(id,m) ) subc
+        {model with ItemAddModels = (model.ItemAddModels@[subm])}, Cmd.map(fun m -> ItemAddMsg(id,m) ) subc
     |_ , ItemAddMsg (id , ItemAdd.RemoveItem ) ->
             let newd = model.ItemAddModels |> List.filter(fun i -> i.Id <> id)
             {model with ItemAddModels = (newd)} ,Cmd.none

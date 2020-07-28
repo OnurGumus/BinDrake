@@ -11,7 +11,7 @@ type Dim =
     }
 
 type Container = { Dim: Dim; Coord: Coordinates }
-type Item = { Dim: Dim; Id: string; Tag: string }
+type Item = { Dim: Dim; Id: string; Tag: string ; NoTop:bool}
 type ContainerTriplet = Container list
 type ItemPut = { Item: Item; Coord: Coordinates }
 type PutResult = (ContainerTriplet list * ItemPut) option
