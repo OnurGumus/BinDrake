@@ -145,6 +145,7 @@ let renderCube x y z width height length (color:string) L W =
     //  {Dim = {Width = 39; Height = 16; Length = 200} ; Id = "36";Tag ="pink"};
    // ]
 
+let mutable demoMode2 = false
 
 let init () =
     let addSpottLight x y z =
@@ -207,26 +208,32 @@ let init () =
             renderer.setSize(width, height, false);
         needResize
 
-
-    let rec renderScene _ =
+    let rec renderScene time =
+        let time = time * 0.001
         trackballControls.update (clock.getDelta ())
         if (resizeRendererToDisplaySize(renderer)) then
             let canvas = renderer.domElement;
             camera.aspect <- canvas.clientWidth / canvas.clientHeight;
             camera.updateProjectionMatrix();
-
+        if demoMode2 then
+            cubes |> Seq.indexed |> Seq.iter (fun (ndx, ob) ->
+                let speed = 0.1 + float(ndx) * 0.05;
+                let rot = time * speed;
+                ob?rotation?x <- rot;
+                ob?rotation?y <- rot; )
         renderer.render (scene, camera)
         window.requestAnimationFrame (renderScene)|> ignore
 
     renderScene 0.
 
-let renderResult res =
-    renderPlane res.Container
+let renderResult container items demoMode =
+    demoMode2 <- demoMode
+    renderPlane container
     scene.remove cubes |> ignore
     cubes.Clear()
-    for item in res.ItemsPut do
+    for (item : ItemPut) in items do
         renderCube (item.Coord.X |> float) (item.Coord.Y |> float)
             (item.Coord.Z |> float) (item.Item.Dim.Width |> float)
             (item.Item.Dim.Height |> float) (item.Item.Dim.Length |> float) item.Item.Tag
-            (res.Container.Dim.Length |> float)
-            (res.Container.Dim.Width |> float)
+            (container.Dim.Length |> float)
+            (container.Dim.Width |> float)

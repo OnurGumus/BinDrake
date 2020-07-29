@@ -48,6 +48,20 @@ let runCmd container items  =
 
 let init () : Model * Cmd<Msg> =
     CanvasRenderer.init()
+    let colors =["green";"blue";"red";"pink";"yellow";"aqua";"orange";"white";"purple";"lime"]
+    let boxes : ItemPut list =
+        [
+            for i = 0 to 9 do
+                {  Coord ={ X = i * 10; Y = Math.Abs(5-i)  * 10; Z = Math.Abs(5-i) * 10};
+                    Item = { Dim = { Width  = 10; Height = 10; Length = 10}; Tag = colors.[i]; Id = i.ToString(); NoTop = false }}
+            for i = 0 to 9 do
+                {  Coord ={ X =  (i * 10); Y = Math.Abs(5-i)  * 10; Z = 90 - Math.Abs(5-i) * 10};
+                    Item = { Dim = { Width  = 10; Height = 10; Length = 10}; Tag = colors.[i]; Id = i.ToString(); NoTop = false }}
+
+        ]
+    let container :Container =  { Dim = { Width  = 100; Height = 100; Length = 100}; Coord ={ X =0; Y =0; Z = 0}}
+    CanvasRenderer.renderResult container boxes true
+
     let initialModel = {
         Calculation = NotCalculated
         Container = None
@@ -101,7 +115,7 @@ let update (msg : Msg) (model : Model) : Model * Cmd<Msg> =
             {model with ItemAddModels = (newd)} ,Cmd.map(fun m -> ItemAddMsg(id,m) ) subc
 
     |_ , ResultLoaded res ->
-        CanvasRenderer.renderResult res ;
+        CanvasRenderer.renderResult res.Container res.ItemsPut false;
         {model with Calculation = (Calculated res)} , Cmd.none
     |{Container = Some c}, CalculateRequested ->
         let items = model.ItemAddModels |> List.collect(fun i -> i.Items)
@@ -145,13 +159,13 @@ let view (model : Model) (dispatch : Msg -> unit) =
                         prop.name "container-length"
                         prop.onInput(fun ev -> ev.target?value |> string |> ContainerLengthChanged |> dispatch )
                     ]
-                    let calcDisabled =
+                    let calcDisabled, buttonText =
                         (match model.Calculation, model.Container, model.ItemAddModels with
-                                | _ ,_ ,items when items |> List.exists(fun x-> x.Items.Length = 0) -> true
-                                | _ ,_ ,[] -> true
-                                | _, None,_ -> true
-                                | Calculating, _,_ -> true
-                                | _ -> false)
+                                | _ ,_ ,items when items |> List.exists(fun x-> x.Items.Length = 0) -> true, "Complete item data"
+                                | _ ,_ ,[]
+                                | _, None,_ -> true, "Click 'Add item' button"
+                                | Calculating, _,_ -> true, "Calculating..."
+                                | _ -> false, "Calculate")
                     Html.button [
                         prop.className "btn-small"
                         prop.onClick (fun _ -> CalculateRequested |> dispatch )
@@ -159,7 +173,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                         prop.disabled calcDisabled
                         if calcDisabled then
                             prop.custom("popover-top","Fill all the data")
-                        prop.text "Calculate"
+                        prop.text buttonText
                     ]
                     Html.button [
                         prop.onClick (fun _ -> AddItem |> dispatch )
