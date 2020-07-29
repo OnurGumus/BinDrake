@@ -29,8 +29,12 @@ let axes = THREE.AxesHelper.Create(20.)
 //let W = 245.
 let currentContainer = ResizeArray<Three.Object3D>()
 let renderPlane (container:Container)  =
-    let x = System.Math.Max(1,System.Math.Min(20,50000/(container.Dim.Width * container.Dim.Length ))) |> float
+    let x =
+        (System.Math.Max(1,System.Math.Min(20,50000/(container.Dim.Width * container.Dim.Length )))
+        |> float )/1.5
+
     printf "%A" x
+    //camera.zoom <- 20.
     camera.position.set (500./x, 550./x, -700./x) |> ignore
     scene.remove currentContainer |> ignore
     let planeGeometry =
@@ -194,12 +198,25 @@ let init () =
     let trackballControls = initTrackballControls (camera, renderer)
     let clock = THREE.Clock.Create()
 
+    let resizeRendererToDisplaySize(renderer:Three.Renderer) =
+        let  canvas = renderer.domElement;
+        let width = canvas.clientWidth;
+        let height = canvas.clientHeight;
+        let needResize = canvas.width <> width || canvas.height <> height;
+        if (needResize) then
+            renderer.setSize(width, height, false);
+        needResize
+
 
     let rec renderScene _ =
         trackballControls.update (clock.getDelta ())
-        window.requestAnimationFrame (renderScene)
-        |> ignore
+        if (resizeRendererToDisplaySize(renderer)) then
+            let canvas = renderer.domElement;
+            camera.aspect <- canvas.clientWidth / canvas.clientHeight;
+            camera.updateProjectionMatrix();
+
         renderer.render (scene, camera)
+        window.requestAnimationFrame (renderScene)|> ignore
 
     renderScene 0.
 
