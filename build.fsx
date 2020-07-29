@@ -18,6 +18,7 @@ let serverPath = Path.getFullName "./src/Server"
 let clientPath = Path.getFullName "./src/Client"
 let clientDeployPath = Path.combine clientPath "deploy"
 let deployDir = Path.getFullName "./deploy"
+let clientDeployReleasePath = "clientFiles" |> Path.combine deployDir
 
 let release = ReleaseNotes.load "RELEASE_NOTES.md"
 
@@ -35,13 +36,16 @@ let platformTool tool winTool =
 let nodeTool = platformTool "node" "node.exe"
 let yarnTool = platformTool "yarn" "yarn.cmd"
 
-let runTool cmd args workingDir =
-    let arguments = args |> String.split ' ' |> Arguments.OfArgs
-    Command.RawCommand (cmd, arguments)
+let runTool procStart cmd args workingDir =
+    let arguments =
+        args
+        |> String.split ' '
+        |> Arguments.OfArgs
+    RawCommand(cmd, arguments)
     |> CreateProcess.fromCommand
     |> CreateProcess.withWorkingDirectory workingDir
     |> CreateProcess.ensureExitCode
-    |> Proc.run
+    |> procStart
     |> ignore
 
 let runDotNet cmd workingDir =
@@ -65,6 +69,7 @@ Target.create "Clean" (fun _ ->
 )
 
 Target.create "InstallClient" (fun _ ->
+    let runTool = runTool Proc.run
     printfn "Node version:"
     runTool nodeTool "--version" __SOURCE_DIRECTORY__
     printfn "Yarn version:"
@@ -73,6 +78,7 @@ Target.create "InstallClient" (fun _ ->
 )
 
 Target.create "Build" (fun _ ->
+    let runTool = runTool Proc.run
     runDotNet "build" serverPath
     Shell.regexReplaceInFileWithEncoding
         "let app = \".+\""
@@ -82,7 +88,19 @@ Target.create "Build" (fun _ ->
     runTool yarnTool "webpack-cli -p" __SOURCE_DIRECTORY__
 )
 
+Target.create "BuildServerOnlyRelease"
+    (fun _ ->
+        Shell.cleanDir deployDir
+        runDotNet ("publish --configuration release --output " + deployDir) serverPath)
+
+Target.create "BuildRelease" (fun _ ->
+    let runTool = runTool Proc.run
+    runTool yarnTool "webpack-cli -p" __SOURCE_DIRECTORY__
+    printf "source: %A target:%A" clientDeployPath clientDeployReleasePath
+    Shell.copyDir clientDeployReleasePath clientDeployPath (fun _ -> true))
+
 Target.create "Run" (fun _ ->
+    let runTool = runTool Proc.run
     let server = async {
         runDotNet "watch run" serverPath
     }
@@ -123,5 +141,7 @@ open Fake.Core.TargetOperators
 "Clean"
     ==> "InstallClient"
     ==> "Run"
+
+"Clean" ==> "InstallClient" ==> "BuildServerOnlyRelease" ==> "BuildRelease"
 
 Target.runOrDefaultWithArguments "Build"

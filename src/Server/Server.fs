@@ -19,7 +19,7 @@ let tryGetEnv = System.Environment.GetEnvironmentVariable >> function null | "" 
 #if DEBUG
 let publicPath = Path.GetFullPath "../Client/public"
 #else
-let publicPath = Path.GetFullPath "./Client"
+let publicPath = Path.GetFullPath "./clientFiles"
 #endif
 let port =
     "SERVER_PORT"
