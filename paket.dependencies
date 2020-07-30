@@ -6,6 +6,10 @@ group Server
     nuget FSharp.Core
     nuget Giraffe
     nuget Fable.Remoting.Giraffe
+    nuget Serilog.Sinks.ApplicationInsights
+    nuget Serilog.Sinks.Console
+    nuget Destructurama.FSharp >= 1.1.1-dev-00033
+
 
 group Client
     source https://api.nuget.org/v3/index.json

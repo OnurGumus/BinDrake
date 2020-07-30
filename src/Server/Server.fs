@@ -10,7 +10,9 @@ open Microsoft.Extensions.DependencyInjection
 open FSharp.Control.Tasks.V2
 open Giraffe
 open Shared
-
+open Serilog
+open Serilog.Sinks.SystemConsole
+open Microsoft.ApplicationInsights.Extensibility
 open Fable.Remoting.Server
 open Fable.Remoting.Giraffe
 
@@ -45,6 +47,12 @@ let configureApp (app : IApplicationBuilder) =
 let configureServices (services : IServiceCollection) =
     services.AddGiraffe() |> ignore
 
+Log.Logger <-
+          LoggerConfiguration().MinimumLevel.Information()
+            .WriteTo.ApplicationInsights(TelemetryConfiguration.CreateDefault(), TelemetryConverter.Traces)
+            .Destructure.FSharpTypes()
+            .WriteTo.Console()
+            .CreateLogger();
 WebHost
     .CreateDefaultBuilder()
     .UseWebRoot(publicPath)

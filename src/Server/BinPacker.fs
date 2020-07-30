@@ -557,7 +557,7 @@ let rec calc (container: Container) (itemsWithCost: ItemsWithCost) (globalBest:G
                 let nbrCost, nbrRes = calcCost container nbr
 
                 let nextItem, res , globalBest2=
-                    printfn "costs: %f-%f" calculated.Cost nbrCost
+                    Serilog.Log.Information (sprintf "costs: %f-%f" calculated.Cost nbrCost)
                     if nbrCost < calculated.Cost then
                         { Items = nbr; Cost = nbrCost }, nbrRes,
                             if nbrCost < globalBest.Cost then
@@ -599,10 +599,13 @@ let run  (container: Container) (items: Item list) (T: float) (alpha:float) =
        for item2 in itemsPut do
            if item1.Item.Id <> item2.Item.Id && checkConflict item1 item2 then
                 printfn "Items conflc %A %A" item1 item2
-    {   ItemsPut = itemsPut;
-        ContainerVol = volumeContainer;
-        ItemsUnput = itemsUnput;
-        PutVolume = putVolume;
-        Container = container
-    }
+    let res =
+        {   ItemsPut = itemsPut;
+            ContainerVol = volumeContainer;
+            ItemsUnput = itemsUnput;
+            PutVolume = putVolume;
+            Container = container
+        }
+    Serilog.Log.Information ("Result={@res}", res)
+    res
 
