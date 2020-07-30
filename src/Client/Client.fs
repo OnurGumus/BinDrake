@@ -127,6 +127,7 @@ let update (msg : Msg) (model : Model) : Model * Cmd<Msg> =
 open Feliz
 open Fable.Core.JsInterop
 let view (model : Model) (dispatch : Msg -> unit) =
+    React.fragment [
     Html.div[
         prop.className "card"
         prop.children[
@@ -135,46 +136,26 @@ let view (model : Model) (dispatch : Msg -> unit) =
                 prop.children[
                     Html.h4[ prop.className "card-title"; prop.text "Container dimensions" ]
                     Html.h5[ prop.text "Enter integers between 1 and 3000"]
-                    Html.label[
-                        prop.htmlFor "container-width"
-                        prop.text "Width"
-                    ]
+
                     Html.input[
                         prop.name "container-width"
+                        prop.placeholder "width"
                         prop.onInput(fun ev -> ev.target?value |> string |> ContainerWidthChanged |> dispatch )
                     ]
-                    Html.label[
-                        prop.htmlFor "container-height"
-                        prop.text "Height"
-                    ]
+
                     Html.input[
                         prop.name "container-height"
+                        prop.placeholder "height"
                         prop.onInput(fun ev -> ev.target?value |> string |> ContainerHeightChanged |> dispatch )
                     ]
-                    Html.label[
-                        prop.htmlFor "container-length"
-                        prop.text "Length"
-                    ]
+
                     Html.input[
                         prop.name "container-length"
+                        prop.placeholder "length"
                         prop.onInput(fun ev -> ev.target?value |> string |> ContainerLengthChanged |> dispatch )
                     ]
-                    let calcDisabled, buttonText =
-                        (match model.Calculation, model.Container, model.ItemAddModels with
-                                | _ ,_ ,items when items |> List.exists(fun x-> x.Items.Length = 0) -> true, "Complete item data"
-                                | _ ,_ ,[]
-                                | _, None,_ -> true, "Click 'Add item' button"
-                                | Calculating, _,_ -> true, "Calculating..."
-                                | _ -> false, "Calculate")
-                    Html.button [
-                        prop.className "btn-small"
-                        prop.onClick (fun _ -> CalculateRequested |> dispatch )
-                        prop.style[style.opacity 1.]
-                        prop.disabled calcDisabled
-                        if calcDisabled then
-                            prop.custom("popover-top","Fill all the data")
-                        prop.text buttonText
-                    ]
+
+
                     Html.button [
                         prop.onClick (fun _ -> AddItem |> dispatch )
                         prop.disabled
@@ -186,13 +167,30 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     ]
                 ]
             ]
-            for item in model.ItemAddModels do
-                ItemAdd.view item ((fun m -> ItemAddMsg(item.Id,m) ) >> dispatch)
+
         ]
 
 
     ]
-
+    for item in model.ItemAddModels do
+        ItemAdd.view item ((fun m -> ItemAddMsg(item.Id,m) ) >> dispatch)
+    let calcDisabled, buttonText =
+                        (match model.Calculation, model.Container, model.ItemAddModels with
+                                | _ ,_ ,items when items |> List.exists(fun x-> x.Items.Length = 0) -> true, "Complete item data"
+                                | _ ,_ ,[]
+                                | _, None,_ -> true, "Click 'Add item' button"
+                                | Calculating, _,_ -> true, "Calculating..."
+                                | _ -> false, "Calculate")
+    Html.button [
+                        prop.className "btn-small"
+                        prop.onClick (fun _ -> CalculateRequested |> dispatch )
+                        prop.style[style.opacity 1.]
+                        prop.disabled calcDisabled
+                        if calcDisabled then
+                            prop.custom("popover-top","Fill all the data")
+                        prop.text buttonText
+                    ]
+    ]
 #if DEBUG
 open Elmish.Debug
 open Elmish.HMR

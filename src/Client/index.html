@@ -5,15 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css">
-    <title>Bin Packer</title>
+    <title>Bindrake - 3D Bin Packing Calculator</title>
+    <meta name="description" content="Place your boxes to container and do fast bin packing calculation if boxes fit."/>
     <style>
-        #myCanvas{
-            width: 50% !important;
-        }
+
         body{
             display:flex;
-            flex-wrap: wrap;
+
             font-size:16px !important;
+            flex-direction: column;
+        }
+
+        button{
+            background-color:chartreuse
+        }
+        input{
+            width: 7ch;
+            display: inline;
+        }
+        input[type="checkbox"]{
+            width: unset;
+            display: inline;
+        }
+        h4{
+            font-size: 1.1;
+        }
+        .card,.card-body{
+            padding:0!important;
+        }
+        .card{
+            margin-bottom: 1em;;
+        }
+
+        @media only screen and (min-width: 600px) {
+            body {
+                flex-direction: row;
+            }
+            #myCanvas{
+                flex:1 1 50%;
+                width: 50%!important;
+            }
+            #elmish-app{
+            flex:1 1 50%;
+
+        }
         }
     </style>
 
@@ -31,9 +66,9 @@
 
 </head>
 <body>
-    <div class="border border-primary" style="display: contents;">
-        <canvas  id="myCanvas"></canvas>
-    </div>
-    <div class="border border-primary" id="elmish-app"></div>
+    <div   class="border border-primary" id="elmish-app"></div>
+
+    <canvas id="myCanvas"></canvas>
+
 </body>
 </html>

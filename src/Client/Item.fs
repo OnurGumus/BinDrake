@@ -85,60 +85,52 @@ let view (model : Model) (dispatch : Msg -> unit) =
             Html.div[
                     prop.className "card-body"
                     prop.children[
-                        Html.h4[ prop.className "card-title"; prop.text "Item dimensions" ]
-                        Html.h5[ prop.text "Enter integers between 1 and 10000"]
-                        Html.label[
-                            prop.htmlFor "item-width"
-                            prop.text "Width"
-                        ]
+                        Html.div[
+                        Html.h5[ prop.text "Item dimensions (between 1 and 10000)"; prop.style[style.display.inlineFlex]]
+                        Html.button[ prop.className "btn-small"; prop.style[style.marginLeft 110; style.marginBottom 10];
+                            prop.text "remove"; prop.onClick(fun _ -> dispatch RemoveItem)]]
                         Html.input[
                             prop.name "item-width"
+                            prop.placeholder "width"
                             prop.onInput(fun ev -> ev.target?value |> string |> WidthChanged |> dispatch )
                         ]
-                        Html.label[
-                            prop.htmlFor "item-height"
-                            prop.text "Height"
-                        ]
+
                         Html.input[
+                            prop.placeholder "height"
                             prop.name "item-height"
                             prop.onInput(fun ev -> ev.target?value |> string |> HeightChanged |> dispatch )
                         ]
-                        Html.label[
-                            prop.htmlFor "item-length"
-                            prop.text "Length"
-                        ]
+
                         Html.input[
                             prop.name "item-length"
+                            prop.placeholder "length"
                             prop.onInput(fun ev -> ev.target?value |> string |> LengthChanged |> dispatch )
                         ]
-                        Html.label[
-                            prop.htmlFor "item-quantity"
-                            prop.text "Quantity"
-                        ]
+
                         Html.input[
                             prop.name "item-quantity"
+                            prop.placeholder "quan."
                             prop.onInput(fun ev -> ev.target?value |> string |> QuantityChanged |> dispatch )
                         ]
                         Html.label[
                             prop.htmlFor "item-notop"
-                            prop.text "Nothing on Top"
+                            prop.text "Nothing on Top:"
                         ]
                         Html.input[
                             prop.name "item-notop"
                             prop.type' "checkbox"
                             prop.onCheckedChange(fun ev -> ev |> NoTopChanged |> dispatch )
                         ]
-                        Html.label[
-                            prop.htmlFor "item-color"
-                            prop.text "Color"
-                        ]
+
                         Html.input[
+                            prop.style[style.width 500]
                             prop.name "item-color"
+                            prop.placeholder "Color"
                             prop.readOnly true
                             prop.style [ style.backgroundColor (model.Color)]
                         ]
                     ]
             ]
-            Html.button[ prop.className "btn-small"; prop.text "remove"; prop.onClick(fun _ -> dispatch RemoveItem)]
+
         ]
     ]
