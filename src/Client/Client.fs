@@ -622,7 +622,7 @@ let viewC =
                 Html.b "How to use:"
                 Html.ul
                     [
-                        prop.style[style.listStyleType.circle]
+                        prop.style[style.listStyleType.disc; style.marginLeft (length.em 1); style.custom("font-size","smaller") ]
                         let items =
                             [
                                 "Enter container dimensions."
@@ -743,7 +743,7 @@ let viewC =
                                                                         Html.span [
                                                                             prop.style [ style.color.white ]
                                                                             prop.text
-                                                                                "Packs your bins for minimum length in the container"
+                                                                                "3D Bin Packer"
                                                                         ]
                                                                     ]
                                                                 Bulma.panelBlock.div [ content ]
