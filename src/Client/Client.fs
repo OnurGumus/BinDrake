@@ -35,7 +35,6 @@ type ContainerItem =
 
 type Model =
     {
-        CalcResult: CalcResult option
         Calculation: Calculation
         Container: Container option
         ContainerItem: ContainerItem option
@@ -147,7 +146,6 @@ let init () =
         ContainerItem = None
         RowItems = [ newRowItem () ]
         TotalVolume = None
-        CalcResult = None
     },
     Cmd.none
 
@@ -196,7 +194,9 @@ let update (msg: Msg) model =
             },
             Cmd.none
         | ResultLoaded c ->
-            { model with CalcResult = Some c },
+            { model with
+                Calculation = Calculated c
+            },
             Cmd.ofSub (fun _ -> CanvasRenderer.renderResult c.Container c.ItemsPut false)
 
         | ContainerUpdated c -> { model with ContainerItem = c }, Cmd.none
@@ -256,11 +256,13 @@ type RowProp =
         AddRow: (unit -> unit) option
         Remove: (unit -> unit) option
         Key: string
+        Disabled: bool
     }
 
 type ContainerProp =
     {
         ContainerUpdated: ContainerItem option -> unit
+        Disabled: bool
     }
 
 module Container =
@@ -372,6 +374,7 @@ module Container =
                                                 prop.children
                                                     [
                                                         input.number [
+                                                            prop.readOnly props.Disabled
                                                             prop.maxLength 5
                                                             prop.max 100000
                                                             input.isSmall
@@ -477,6 +480,7 @@ module Row =
                 let removeButton =
                     Bulma.button.button [
                         button.isSmall
+                        prop.disabled props.Disabled
                         color.isDanger
                         prop.text "Remove"
                         match props.Remove with
@@ -487,6 +491,7 @@ module Row =
                 let addButton =
                     Bulma.button.button [
                         button.isSmall
+                        prop.disabled props.Disabled
                         color.isPrimary
                         prop.text "Add more"
                         match props.AddRow with
@@ -518,6 +523,7 @@ module Row =
                                                 | "Stackable" ->
                                                     input.checkbox [
                                                         input.isSmall
+                                                        prop.readOnly props.Disabled
                                                         prop.defaultChecked true
                                                         prop.onCheckedChange (fun e ->
                                                             dispatch' "Stackable" (e.ToString()))
@@ -534,6 +540,7 @@ module Row =
                                                 | _ ->
                                                     input.number [
                                                         prop.maxLength 5
+                                                        prop.readOnly props.Disabled
                                                         prop.max 100000
                                                         input.isSmall
                                                         prop.placeholder col
@@ -553,7 +560,10 @@ module Row =
              (fun props -> props.Key))
 
 let view (model: Model) dispatch =
-    printf "%A" model
+    let isCalculating =
+        match model.Calculation with
+        | Calculating -> true
+        | _ -> false
 
     let rowItems =
         [
@@ -570,6 +580,7 @@ let view (model: Model) dispatch =
                         AddRow = addRow
                         Key = key
                         Remove = remove
+                        Disabled = isCalculating
                     }
         ]
 
@@ -587,6 +598,7 @@ let view (model: Model) dispatch =
             Container.view
                 {
                     ContainerUpdated = fun r -> dispatch (ContainerUpdated(r))
+                    Disabled = isCalculating
                 }
 
             Bulma.label [
@@ -595,6 +607,7 @@ let view (model: Model) dispatch =
             ]
             Html.div [
                 prop.className "table"
+                prop.disabled isCalculating
                 prop.children [
                     Html.div [
                         prop.className "tr"
@@ -647,9 +660,12 @@ let view (model: Model) dispatch =
                  || model.TotalVolume.IsNone)
 
             Bulma.button.button [
-                prop.disabled isinvalid
+                prop.disabled (isinvalid || isCalculating)
                 color.isPrimary
-                prop.text (if isinvalid then "First fill the form correctly" else "Calculate")
+                prop.text
+                    (if isCalculating then "Calculating... (Max 30 sec)"
+                     else if isinvalid then "First fill the form correctly"
+                     else "Calculate")
                 prop.onClick (fun _ -> dispatch CalculateRequested)
             ]
         ]
