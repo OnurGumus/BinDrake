@@ -558,13 +558,23 @@ module Row =
 
              ),
              (fun props -> props.Key))
-
-let view (model: Model) dispatch =
+open Fable.Core
+let viewC = React.functionComponent(fun (props: {|model: Model;  dispatch:Msg->unit|}) ->
+    let model = props.model
+    let dispatch = props.dispatch
     let isCalculating =
         match model.Calculation with
         | Calculating -> true
         | _ -> false
+    let (counterValue, setCounterValue) = React.useState(30)
+    let subscribeToTimer() =
+        // start the ticking
+        setCounterValue 30
+        let subscriptionId =JS.setTimeout (fun _ -> if isCalculating then setCounterValue (counterValue - 1)) 1000
+        // return IDisposable with cleanup code
+        { new IDisposable with member this.Dispose() = JS.clearTimeout(subscriptionId) }
 
+    React.useEffect(subscribeToTimer, [|box isCalculating|])
     let rowItems =
         [
             for i, (_, key) in model.RowItems |> List.indexed do
@@ -663,7 +673,7 @@ let view (model: Model) dispatch =
                 prop.disabled (isinvalid || isCalculating)
                 color.isPrimary
                 prop.text
-                    (if isCalculating then "Calculating... (Max 30 sec)"
+                    (if isCalculating then sprintf "Calculating... (Max %i sec)" counterValue
                      else if isinvalid then "First fill the form correctly"
                      else "Calculate")
                 prop.onClick (fun _ -> dispatch CalculateRequested)
@@ -701,8 +711,9 @@ let view (model: Model) dispatch =
                                 ]
                         ]
                 ]
-        ]
-
+        ])
+let view model dispatch =
+    viewC {|model = model; dispatch = dispatch|}
 #if DEBUG
 open Elmish.Debug
 open Elmish.HMR

@@ -4,6 +4,7 @@ open Shared
 let random = System.Random()
 
 let inline rotateZ (item: Item) =
+    if item.NoTop then item else
     { item with
         Dim =
             {
@@ -14,7 +15,7 @@ let inline rotateZ (item: Item) =
     }
 
 let inline rotateY (item: Item) =
-    if item.NoTop then item else
+
     { item with
         Dim =
             {
