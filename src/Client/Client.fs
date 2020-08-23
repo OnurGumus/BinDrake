@@ -737,7 +737,7 @@ let viewC =
                                                 prop.children
                                                     [
                                                         Bulma.panel [
-                                                            spacing.mt6
+                                                            spacing.mt1
                                                             prop.children [
                                                                 Bulma.panelHeading
                                                                     [
