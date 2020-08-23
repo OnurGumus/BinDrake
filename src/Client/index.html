@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css">
     <title>Bindrake - 3D Bin Packing Calculator</title>
     <meta name="description" content="Place your boxes to container and do fast bin packing calculation if boxes fit."/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.0/css/bulma.min.css">
+
     <style>
 
         body{
@@ -49,6 +50,40 @@
             flex:1 1 50%;
 
         }
+        }
+        .panel-heading{
+            background-color:#bd3a3a !important;
+        }
+        .table {
+            display: table;
+            margin: 1em 0;
+        }
+
+        .tr {
+            display: table-row;
+        }
+
+        .td {
+            display: table-cell;
+            text-align: center;
+        }
+
+        .th {
+            background-color: #f5fb6199;
+        }
+        .table {
+            border-collapse: collapse;
+        }
+
+        .table,
+        .th,
+        .td {
+            border: 1px solid gray;
+        }
+        .output{
+            background-color: #96ff2f;
+            border-radius: 6px;
+            padding: 5px;
         }
     </style>
 

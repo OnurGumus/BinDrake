@@ -6,3 +6,6 @@ group Client
     Fable.Elmish.HMR
     Fable.Remoting.Client
     Feliz
+    Fable.Validation
+    Feliz.Bulma
+    Feliz.UseElmish

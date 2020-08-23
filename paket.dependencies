@@ -24,6 +24,10 @@ group Client
     nuget Fable.React
     nuget Fable.Remoting.Client
     nuget Feliz
+    nuget Fable.Validation
+    nuget Fable.Validation
+    nuget Feliz.Bulma
+    nuget Feliz.UseElmish
 
 group Build
     source https://api.nuget.org/v3/index.json
