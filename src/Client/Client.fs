@@ -525,8 +525,7 @@ module Row =
                                                         input.isSmall
                                                         prop.readOnly props.Disabled
                                                         prop.defaultChecked true
-                                                        prop.onCheckedChange (fun e ->
-                                                            dispatch' "Stack" (e.ToString()))
+                                                        prop.onCheckedChange (fun e -> dispatch' "Stack" (e.ToString()))
                                                     ]
                                                 | "Color" ->
                                                     input.text [
@@ -558,162 +557,207 @@ module Row =
 
              ),
              (fun props -> props.Key))
+
 open Fable.Core
-let viewC = React.functionComponent(fun (props: {|model: Model;  dispatch:Msg->unit|}) ->
-    let model = props.model
-    let dispatch = props.dispatch
-    let isCalculating =
-        match model.Calculation with
-        | Calculating -> true
-        | _ -> false
-    let (counterValue, setCounterValue) = React.useState(30)
-    let subscribeToTimer() =
-        // start the ticking
-        setCounterValue 30
-        let subscriptionId =JS.setTimeout (fun _ -> if isCalculating then setCounterValue (counterValue - 1)) 1000
-        // return IDisposable with cleanup code
-        { new IDisposable with member this.Dispose() = JS.clearTimeout(subscriptionId) }
+open Browser.Dom
+open Fable.Core.JsInterop
+let viewC =
+    React.functionComponent (fun (props: {| model: Model
+                                            dispatch: Msg -> unit |}) ->
+        let model = props.model
+        let dispatch = props.dispatch
 
-    React.useEffect(subscribeToTimer, [|box isCalculating|])
-    let rowItems =
-        [
-            for i, (_, key) in model.RowItems |> List.indexed do
-                let addRow =
-                    if i = model.RowItems.Length - 1 then Some(fun () -> dispatch AddRow) else None
+        let isCalculating =
+            match model.Calculation with
+            | Calculating -> true
+            | _ -> false
 
-                let remove =
-                    if model.RowItems.Length > 1 then Some(fun _ -> dispatch (RemoveItem key)) else None
+        let (counterValue, setCounterValue) = React.useState (30)
 
-                Row.view
-                    {
-                        RowUpdated = fun r -> dispatch (RowUpdated(key, r))
-                        AddRow = addRow
-                        Key = key
-                        Remove = remove
-                        Disabled = isCalculating
-                    }
-        ]
+        let scollDown() =
+            match model.Calculation with
+            | Calculated _ ->
+                let element = document.querySelector("#myCanvas");
+                element?scrollIntoView({| behavior= "smooth"; block= "end"|});
+            | _ -> ()
+            { new IDisposable with
+                member this.Dispose() = ()
+            }
+        React.useEffect(scollDown, [|box isCalculating|])
 
-    let content =
-        field.div [
-            Html.p [
-                prop.style [ style.fontWeight.bold ]
-                prop.text "All dimensions are between 1 and 10000 and quantity must be an integer."
+        let subscribeToTimer () =
+            // start the ticking
+            setCounterValue 30
+
+            let subscriptionId =
+                JS.setTimeout (fun _ -> if isCalculating then setCounterValue (counterValue - 1)) 1000
+            // return IDisposable with cleanup code
+            { new IDisposable with
+                member this.Dispose() = JS.clearTimeout (subscriptionId)
+            }
+
+        React.useEffect (subscribeToTimer, [| box isCalculating |])
+
+        let rowItems =
+            [
+                for i, (_, key) in model.RowItems |> List.indexed do
+                    let addRow =
+                        if i = model.RowItems.Length - 1 then Some(fun () -> dispatch AddRow) else None
+
+                    let remove =
+                        if model.RowItems.Length > 1 then Some(fun _ -> dispatch (RemoveItem key)) else None
+
+                    Row.view
+                        {
+                            RowUpdated = fun r -> dispatch (RowUpdated(key, r))
+                            AddRow = addRow
+                            Key = key
+                            Remove = remove
+                            Disabled = isCalculating
+                        }
             ]
-            br []
-            Bulma.label [
-                prop.text "Enter CONTAINER dimensions:"
-                control.isSmall
-            ]
-            Container.view
-                {
-                    ContainerUpdated = fun r -> dispatch (ContainerUpdated(r))
-                    Disabled = isCalculating
-                }
 
-            Bulma.label [
-                prop.text "Enter ITEM dimensions:"
-                control.isSmall
-            ]
-            Html.div [
-                prop.className "table"
-                prop.disabled isCalculating
-                prop.children [
-                    Html.div [
-                        prop.className "tr"
+        let content =
+            field.div [
+                Html.b "How to use:"
+                Html.ul
+                    [
+                        prop.style[style.listStyleType.circle]
+                        let items =
+                            [
+                                "Enter container dimensions."
+                                "Enter item dimensions."
+                                "Add as many items as you want."
+                                "All dimensions must be between 1 and 10000 and integer."
+                                "Click calculate and wait up to 30 sec."
+                                "Bin paker will try to fir the items and minimize the length."
+                                "Review the result in 3D!"
+                            ]
                         prop.children
                             [
-                                for col in cols do
-                                    Html.div [
-                                        prop.classes [ "td"; "th" ]
-                                        prop.children
-                                            [
-                                                Bulma.label [
-                                                    control.isSmall
-                                                    prop.text col
-                                                ]
-                                            ]
+                                for item in items do
+                                    Html.li [
+                                        prop.text item
                                     ]
                             ]
                     ]
-                    rowItems |> ofList
+                br []
+                Bulma.label [
+                    prop.text "Enter CONTAINER dimensions:"
+                    control.isSmall
                 ]
-            ]
+                Container.view
+                    {
+                        ContainerUpdated = fun r -> dispatch (ContainerUpdated(r))
+                        Disabled = isCalculating
+                    }
 
-            let line (title: string) (v: int option) =
-                React.fragment [
-                    br []
-                    Bulma.label title
-                    control.div
-                        [
-                            Html.output [
-                                if title.StartsWith "Chargable" && v.IsSome
-                                then prop.className "output"
-                                prop.text
-                                    (v
-                                     |> Option.map (string)
-                                     |> Option.defaultValue "Please complete the form.")
-                            ]
-                        ]
+                Bulma.label [
+                    prop.text "Enter ITEM dimensions:"
+                    control.isSmall
                 ]
-
-            [
-                let items = [ ("Total Volume:", model.TotalVolume) ]
-
-                for t, v in items do
-                    line t v
-            ]
-            |> ofList
-
-            let isinvalid =
-                (model.ContainerItem.IsNone
-                 || model.TotalVolume.IsNone)
-
-            Bulma.button.button [
-                prop.disabled (isinvalid || isCalculating)
-                color.isPrimary
-                prop.text
-                    (if isCalculating then sprintf "Calculating... (Max %i sec)" counterValue
-                     else if isinvalid then "First fill the form correctly"
-                     else "Calculate")
-                prop.onClick (fun _ -> dispatch CalculateRequested)
-            ]
-        ]
-
-    Bulma.container
-        [
-            prop.children
-                [
-                    Bulma.columns
-                        [
+                Html.div [
+                    prop.className "table"
+                    prop.disabled isCalculating
+                    prop.children [
+                        Html.div [
+                            prop.className "tr"
                             prop.children
                                 [
-                                    Bulma.column
-                                        [
+                                    for col in cols do
+                                        Html.div [
+                                            prop.classes [ "td"; "th" ]
                                             prop.children
                                                 [
-                                                    Bulma.panel [
-                                                        spacing.mt6
-                                                        prop.children [
-                                                            Bulma.panelHeading
-                                                                [
-                                                                    Html.span [
-                                                                        prop.style [ style.color.white ]
-                                                                        prop.text
-                                                                            "Packs your bins for minimum length in the container"
-                                                                    ]
-                                                                ]
-                                                            Bulma.panelBlock.div [ content ]
-                                                        ]
+                                                    Bulma.label [
+                                                        control.isSmall
+                                                        prop.text col
                                                     ]
                                                 ]
                                         ]
                                 ]
                         ]
+                        rowItems |> ofList
+                    ]
                 ]
-        ])
+
+                let line (title: string) (v: int option) =
+                    React.fragment [
+                        br []
+                        Bulma.label title
+                        control.div
+                            [
+                                Html.output [
+                                    if title.StartsWith "Chargable" && v.IsSome
+                                    then prop.className "output"
+                                    prop.text
+                                        (v
+                                         |> Option.map (string)
+                                         |> Option.defaultValue "Please complete the form.")
+                                ]
+                            ]
+                    ]
+
+                [
+                    let items = [ ("Total Volume:", model.TotalVolume) ]
+
+                    for t, v in items do
+                        line t v
+                ]
+                |> ofList
+
+                let isinvalid =
+                    (model.ContainerItem.IsNone
+                     || model.TotalVolume.IsNone)
+
+                Bulma.button.button [
+                    prop.disabled (isinvalid || isCalculating)
+                    color.isPrimary
+                    prop.text
+                        (if isCalculating
+                         then sprintf "Calculating... (Max %i sec)" counterValue
+                         else if isinvalid
+                         then "First fill the form correctly"
+                         else "Calculate")
+                    prop.onClick (fun _ -> dispatch CalculateRequested)
+                ]
+            ]
+
+        Bulma.container
+            [
+                prop.children
+                    [
+                        Bulma.columns
+                            [
+                                prop.children
+                                    [
+                                        Bulma.column
+                                            [
+                                                prop.children
+                                                    [
+                                                        Bulma.panel [
+                                                            spacing.mt6
+                                                            prop.children [
+                                                                Bulma.panelHeading
+                                                                    [
+                                                                        Html.span [
+                                                                            prop.style [ style.color.white ]
+                                                                            prop.text
+                                                                                "Packs your bins for minimum length in the container"
+                                                                        ]
+                                                                    ]
+                                                                Bulma.panelBlock.div [ content ]
+                                                            ]
+                                                        ]
+                                                    ]
+                                            ]
+                                    ]
+                            ]
+                    ]
+            ])
+
 let view model dispatch =
-    viewC {|model = model; dispatch = dispatch|}
+    viewC {| model = model; dispatch = dispatch |}
 #if DEBUG
 open Elmish.Debug
 open Elmish.HMR
