@@ -9,6 +9,7 @@ open System
 open Feliz.Bulma
 open Feliz
 open Feliz.Bulma.Bulma
+open Browser.Types
 
 type Calculation =
     | NotCalculated
@@ -34,6 +35,7 @@ type ContainerItem =
 
 type Model =
     {
+        CalcResult: CalcResult option
         Calculation: Calculation
         Container: Container option
         ContainerItem: ContainerItem option
@@ -145,6 +147,7 @@ let init () =
         ContainerItem = None
         RowItems = [ newRowItem () ]
         TotalVolume = None
+        CalcResult = None
     },
     Cmd.none
 
@@ -192,7 +195,44 @@ let update (msg: Msg) model =
                     |> List.map (fun ((_, oldKey) as old) -> if oldKey = key then (row, key) else old)
             },
             Cmd.none
+        | ResultLoaded c ->
+            { model with CalcResult = Some c },
+            Cmd.ofSub (fun _ -> CanvasRenderer.renderResult c.Container c.ItemsPut false)
+
         | ContainerUpdated c -> { model with ContainerItem = c }, Cmd.none
+        | CalculateRequested _ ->
+            let c = model.ContainerItem.Value
+
+            let container: Container =
+                {
+                    Coord = { X = 0; Y = 0; Z = 0 }
+                    Dim =
+                        {
+                            Width = c.Width
+                            Height = c.Height
+                            Length = c.Length
+                        }
+                }
+
+            let items: list<Item> =
+                [
+                    for rowItem, key in model.RowItems do
+                        let r = rowItem.Value
+                        for i = 1 to r.Quantity do
+                            yield {
+                                      Tag = r.Color
+                                      Id = key + i.ToString()
+                                      NoTop = not (r.Stackable)
+                                      Dim =
+                                          {
+                                              Width = r.Width
+                                              Height = r.Height
+                                              Length = r.Length
+                                          }
+                                  }
+                ]
+
+            { model with Calculation = Calculating }, runCmd container items
 
     let totalVolume =
         match model.RowItems with
@@ -336,6 +376,7 @@ module Container =
                                                             prop.max 100000
                                                             input.isSmall
                                                             prop.placeholder col
+                                                            prop.onChange (fun (e: Event) -> dispatch' col e.Value)
                                                         ]
                                                     ]
                                             ]
@@ -447,7 +488,7 @@ module Row =
                     Bulma.button.button [
                         button.isSmall
                         color.isPrimary
-                        prop.text "Add"
+                        prop.text "Add more"
                         match props.AddRow with
                         | Some addRow -> prop.onClick (fun _ -> addRow ())
                         | _ -> prop.style [ style.visibility.hidden ]
@@ -477,8 +518,9 @@ module Row =
                                                 | "Stackable" ->
                                                     input.checkbox [
                                                         input.isSmall
-                                                        prop.onChange (fun (e: Browser.Types.Event) ->
-                                                            dispatch' col e.Value)
+                                                        prop.defaultChecked true
+                                                        prop.onCheckedChange (fun e ->
+                                                            dispatch' "Stackable" (e.ToString()))
                                                     ]
                                                 | "Color" ->
                                                     input.text [
@@ -599,13 +641,16 @@ let view (model: Model) dispatch =
                     line t v
             ]
             |> ofList
-            let isinvalid = (model.ContainerItem.IsNone && model.TotalVolume.IsNone)
-            Bulma.button.button[
+
+            let isinvalid =
+                (model.ContainerItem.IsNone
+                 || model.TotalVolume.IsNone)
+
+            Bulma.button.button [
                 prop.disabled isinvalid
                 color.isPrimary
-                prop.text (if isinvalid then "First fill the form correctly" else"Calculate")
-                prop.onClick(fun _ -> dispatch CalculateRequested)
-
+                prop.text (if isinvalid then "First fill the form correctly" else "Calculate")
+                prop.onClick (fun _ -> dispatch CalculateRequested)
             ]
         ]
 
@@ -629,7 +674,7 @@ let view (model: Model) dispatch =
                                                                     Html.span [
                                                                         prop.style [ style.color.white ]
                                                                         prop.text
-                                                                            "Air freight volumetric (chargeable weight) calculator"
+                                                                            "Packs your bins for minimum length in the container"
                                                                     ]
                                                                 ]
                                                             Bulma.panelBlock.div [ content ]
