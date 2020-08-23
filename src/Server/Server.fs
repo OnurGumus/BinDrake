@@ -12,6 +12,7 @@ open Giraffe
 open Shared
 open Serilog
 open Serilog.Sinks.SystemConsole
+open Serilog.Sinks.File
 open Microsoft.ApplicationInsights.Extensibility
 open Fable.Remoting.Server
 open Fable.Remoting.Giraffe
@@ -50,6 +51,7 @@ let configureServices (services : IServiceCollection) =
 Log.Logger <-
           LoggerConfiguration().MinimumLevel.Information()
             .WriteTo.ApplicationInsights(TelemetryConfiguration.CreateDefault(), TelemetryConverter.Traces)
+            .WriteTo.File("log.txt", rollingInterval= RollingInterval.Day)
             .Destructure.FSharpTypes()
             .WriteTo.Console()
             .CreateLogger();
