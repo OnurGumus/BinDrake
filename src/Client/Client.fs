@@ -561,6 +561,7 @@ module Row =
 open Fable.Core
 open Browser.Dom
 open Fable.Core.JsInterop
+
 let viewC =
     React.functionComponent (fun (props: {| model: Model
                                             dispatch: Msg -> unit |}) ->
@@ -572,31 +573,31 @@ let viewC =
             | Calculating -> true
             | _ -> false
 
-        let (counterValue, setCounterValue) = React.useState (30)
+        let (counterValue, setCounterValue) = React.useState (35)
 
-        let scollDown() =
+        let scollDown () =
             match model.Calculation with
-            | Calculated _ ->
-                let element = document.querySelector("#myCanvas");
-                element?scrollIntoView({| behavior= "smooth"; block= "end"|});
+            | Calculated { ItemsPut = itemsPut } when itemsPut.Length > 0 ->
+                let element = document.querySelector ("#myCanvas")
+                element?scrollIntoView ({| behavior = "smooth"; block = "end" |})
             | _ -> ()
             { new IDisposable with
                 member this.Dispose() = ()
             }
-        React.useEffect(scollDown, [|box isCalculating|])
+
+        React.useEffect (scollDown, [| box isCalculating |])
 
         let subscribeToTimer () =
             // start the ticking
-            setCounterValue 30
 
             let subscriptionId =
-                JS.setTimeout (fun _ -> if isCalculating then setCounterValue (counterValue - 1)) 1000
+                JS.setTimeout (fun _ -> printf "%A" counterValue; if isCalculating then setCounterValue (counterValue - 1)) 1000
             // return IDisposable with cleanup code
             { new IDisposable with
                 member this.Dispose() = JS.clearTimeout (subscriptionId)
             }
 
-        React.useEffect (subscribeToTimer, [| box isCalculating |])
+        React.useEffect (subscribeToTimer)
 
         let rowItems =
             [
@@ -620,28 +621,31 @@ let viewC =
         let content =
             field.div [
                 Html.b "How to use:"
-                Html.ul
-                    [
-                        prop.style[style.listStyleType.disc; style.marginLeft (length.em 1); style.custom("fontSize","smaller") ]
-                        let items =
-                            [
-                                "Enter container and item dimensions."
-                                "Dimensions must be between 1 and 10000 and integer."
-                                "Add as many items as you want."
-                                "All dimensions are unitless."
-                                "Assume all units are the same."
-                                "Click calculate and wait up to 30 sec."
-                                "Bin packer will try to fit the items and minimize the length."
-                                "Review the result in 3D!"
-                            ]
-                        prop.children
-                            [
-                                for item in items do
-                                    Html.li [
-                                        prop.text item
-                                    ]
-                            ]
+                Html.ul [
+                    prop.style [
+                        style.listStyleType.disc
+                        style.marginLeft (length.em 1)
+                        style.custom ("fontSize", "smaller")
                     ]
+
+                    let items =
+                        [
+                            "Enter container and item dimensions."
+                            "Dimensions must be between 1 and 10000 and integer."
+                            "Add as many items as you want."
+                            "All dimensions are unitless."
+                            "Assume all units are the same."
+                            "Click calculate and wait up to 35 sec."
+                            "Bin packer will try to fit the items and minimize the length."
+                            "Review the result in 3D!"
+                        ]
+
+                    prop.children
+                        [
+                            for item in items do
+                                Html.li [ prop.text item ]
+                        ]
+                ]
                 br []
                 Bulma.label [
                     prop.text "Enter CONTAINER dimensions:"
@@ -720,7 +724,49 @@ let viewC =
                          else if isinvalid
                          then "First fill the form correctly"
                          else "Calculate")
-                    prop.onClick (fun _ -> dispatch CalculateRequested)
+                    prop.onClick (fun _ -> setCounterValue 35; dispatch CalculateRequested)
+                ]
+                Html.span[
+                    spacing.my1
+                    prop.children[
+                        match model.Calculation with
+                        | Calculated c ->
+
+                            match c.ItemsUnput, c.ItemsPut with
+                            | [], _ ->
+                                Bulma.label [
+                                    prop.style[style.color "green"]
+                                    prop.text "All items put successfully!"
+                                ]
+                            | _, [] ->
+                                Bulma.label [
+                                    prop.style[style.color "red"]
+                                    prop.text "Items did not fit!"
+                                ]
+                            | items, _ ->
+                                let g = items |> List.groupBy (fun x -> x.Tag)
+                                React.fragment [
+                                    Bulma.label "Could not fit the following items:"
+                                    Html.ul
+                                        [
+                                            prop.children
+                                                [
+                                                    for key, values in g do
+                                                        yield Html.li
+                                                                  [
+                                                                      prop.children [
+                                                                          Bulma.label [
+                                                                              prop.text "_"
+                                                                              prop.style [ style.backgroundColor key ]
+                                                                          ]
+                                                                          Bulma.label (sprintf "x%i" values.Length)
+                                                                      ]
+                                                                  ]
+                                                ]
+                                        ]
+                                ]
+                        | _ -> Html.none
+                    ]
                 ]
             ]
 
@@ -743,8 +789,7 @@ let viewC =
                                                                     [
                                                                         Html.span [
                                                                             prop.style [ style.color.white ]
-                                                                            prop.text
-                                                                                "3D Bin Packer"
+                                                                            prop.text "3D Bin Packer"
                                                                         ]
                                                                     ]
                                                                 Bulma.panelBlock.div [ content ]
