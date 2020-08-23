@@ -154,8 +154,8 @@ let cols =
         "Height"
         "Width"
         "Length"
-        "Quantity"
-        "Stackable"
+        "Quant."
+        "Stack"
         "Color"
         ""
         ""
@@ -482,7 +482,7 @@ module Row =
                         button.isSmall
                         prop.disabled props.Disabled
                         color.isDanger
-                        prop.text "Remove"
+                        prop.text "X"
                         match props.Remove with
                         | Some remove -> prop.onClick (fun _ -> remove ())
                         | _ -> prop.style [ style.visibility.hidden ]
@@ -493,7 +493,7 @@ module Row =
                         button.isSmall
                         prop.disabled props.Disabled
                         color.isPrimary
-                        prop.text "Add more"
+                        prop.text "Add"
                         match props.AddRow with
                         | Some addRow -> prop.onClick (fun _ -> addRow ())
                         | _ -> prop.style [ style.visibility.hidden ]
@@ -503,8 +503,8 @@ module Row =
                     match col with
                     | "Height" -> HeightChanged v
                     | "Width" -> WidthChanged v
-                    | "Quantity" -> QuantityChanged v
-                    | "Stackable" -> StackableChanged(Boolean.Parse v)
+                    | "Quant." -> QuantityChanged v
+                    | "Stack" -> StackableChanged(Boolean.Parse v)
                     | "Length" -> LengthChanged v
                     | other -> failwith other
                     |> dispatch
@@ -520,13 +520,13 @@ module Row =
                                         [
                                             if i < cols.Length - 2 then
                                                 match col with
-                                                | "Stackable" ->
+                                                | "Stack" ->
                                                     input.checkbox [
                                                         input.isSmall
                                                         prop.readOnly props.Disabled
                                                         prop.defaultChecked true
                                                         prop.onCheckedChange (fun e ->
-                                                            dispatch' "Stackable" (e.ToString()))
+                                                            dispatch' "Stack" (e.ToString()))
                                                     ]
                                                 | "Color" ->
                                                     input.text [
