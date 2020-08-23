@@ -579,7 +579,7 @@ let viewC =
             match model.Calculation with
             | Calculated { ItemsPut = itemsPut } when itemsPut.Length > 0 ->
                 let element = document.querySelector ("#myCanvas")
-                element?scrollIntoView ({| behavior = "smooth"; block = "end" |})
+                element?scrollIntoView ({| behavior = "smooth"; block = "start" |})
             | _ -> ()
             { new IDisposable with
                 member this.Dispose() = ()
