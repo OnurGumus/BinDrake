@@ -622,15 +622,16 @@ let viewC =
                 Html.b "How to use:"
                 Html.ul
                     [
-                        prop.style[style.listStyleType.disc; style.marginLeft (length.em 1); style.custom("font-size","smaller") ]
+                        prop.style[style.listStyleType.disc; style.marginLeft (length.em 1); style.custom("fontSize","smaller") ]
                         let items =
                             [
-                                "Enter container dimensions."
-                                "Enter item dimensions."
+                                "Enter container and item dimensions."
+                                "Dimensions must be between 1 and 10000 and integer."
                                 "Add as many items as you want."
-                                "All dimensions must be between 1 and 10000 and integer."
+                                "All dimensions are unitless."
+                                "Assume all units are the same."
                                 "Click calculate and wait up to 30 sec."
-                                "Bin paker will try to fir the items and minimize the length."
+                                "Bin packer will try to fit the items and minimize the length."
                                 "Review the result in 3D!"
                             ]
                         prop.children
