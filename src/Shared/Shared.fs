@@ -1,4 +1,5 @@
 namespace Shared
+open System
 [<Struct>]
 type Coordinates = { X: int; Y: int; Z: int }
 
@@ -9,15 +10,18 @@ type Dim =
         Height: int
         Length: int
     }
-
+[<Struct>]
 type Container = { Dim: Dim; Coord: Coordinates }
+[<Struct>]
 type Item = { Dim: Dim; Id: string; Tag: string ; NoTop:bool}
 type ContainerTriplet = Container list
+[<Struct>]
 type ItemPut = { Item: Item; Coord: Coordinates }
 type PutResult = (ContainerTriplet list * ItemPut) option
+[<Struct>]
 type ItemsWithCost = { Items: Item list; Cost: float }
 type PutItem = Container -> Item -> PutResult
-type StackItem = (Container list * Item list * ItemPut list)
+type StackItem = ValueTuple<Container list, Item list, ItemPut list>
 type Counter = { Value : int }
 type CalcResult = {
     ItemsPut : ItemPut list
