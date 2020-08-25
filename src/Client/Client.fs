@@ -63,7 +63,7 @@ module Server =
 let run = Server.api.run
 
 let runCmd container items =
-    Cmd.OfAsync.perform (fun _ -> run container items 1000. 0.9) () ResultLoaded
+    Cmd.OfAsync.perform (fun _ -> run container items 10000000000. 0.99) () ResultLoaded
 
 let newRowItem () = (None, Guid.NewGuid().ToString())
 
@@ -578,7 +578,7 @@ let viewC =
         let scollDown () =
             match model.Calculation with
             | Calculated { ItemsPut = itemsPut } when itemsPut.Length > 0 ->
-                let element = document.querySelector ("#myCanvas")
+                let element = document.querySelector ("#calculate-button")
                 element?scrollIntoView ({| behavior = "smooth"; block = "start" |})
             | _ -> ()
             { new IDisposable with
@@ -630,12 +630,11 @@ let viewC =
 
                     let items =
                         [
-                            "Enter container and item dimensions."
-                            "Dimensions must be between 1 and 10000 and integer."
+                            "Enter container and item dimensions between 1 and 10000, no decimals."
                             "Add as many items as you want."
+                            "If the item is not stackable uncheck stack for that item."
                             "All dimensions are unitless."
-                            "Assume all units are the same."
-                            "Click calculate and wait up to 35 sec."
+                            "Click calculate and wait up to 65 sec."
                             "Bin packer will try to fit the items and minimize the length."
                             "Review the result in 3D!"
                         ]
@@ -718,13 +717,14 @@ let viewC =
                 Bulma.button.button [
                     prop.disabled (isinvalid || isCalculating)
                     color.isPrimary
+                    prop.id "calculate-button"
                     prop.text
                         (if isCalculating
                          then sprintf "Calculating... (Max %i sec)" counterValue
                          else if isinvalid
                          then "First fill the form correctly"
                          else "Calculate")
-                    prop.onClick (fun _ -> setCounterValue 35; dispatch CalculateRequested)
+                    prop.onClick (fun _ -> setCounterValue 65; dispatch CalculateRequested)
                 ]
                 Html.span[
                     spacing.my1
@@ -741,7 +741,7 @@ let viewC =
                             | _, [] ->
                                 Bulma.label [
                                     prop.style[style.color "red"]
-                                    prop.text "Items did not fit!"
+                                    prop.text "Unable to fit all items"
                                 ]
                             | items, _ ->
                                 let g = items |> List.groupBy (fun x -> x.Tag)
