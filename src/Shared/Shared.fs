@@ -21,7 +21,7 @@ type PutResult = (ContainerTriplet list * ItemPut) option
 [<Struct>]
 type ItemsWithCost = { Items: Item list; Cost: float }
 type PutItem = Container -> Item -> PutResult
-type StackItem = ValueTuple<Container list, Item list, ItemPut list>
+type StackItem = Container list * Item list * ItemPut list
 type Counter = { Value : int }
 type CalcResult = {
     ItemsPut : ItemPut list
