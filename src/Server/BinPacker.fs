@@ -484,22 +484,23 @@ let rec putItem (rootContainer: Container) tryCount: PutItem =
                 }
 
             let t1 =
-                [ config1; config2; config3; config4 ]
-                |> List.item (random.Next(0, 4))
+                [ config2; config1;  config3; config4  ]|> List.item (random.Next(0, 4))
 
             let t2 =
-                [ config1; config2; config3; config4 ]
-                |> List.item (random.Next(0, 4))
+                [ config1; config2; config3; config4 ] |> List.item (random.Next(0, 4))
+            let sets =
+                if item.NoTop then [config2;config1]
+                else
+                    [t1;t2]
 
             let res =
                 ValueSome
-                    (struct ([ t1; t2 ]
+                    (struct (sets
                              |> List.distinct
                              |> List.filter (fun f -> f |> List.isEmpty |> not),
 
                              //    |> List.sortBy (fun s -> (s |> List.minBy (fun x -> float x.Coord.Z)).Coord.Z ),
                              itemPut))
-
             res
 
 let checkConflictI itemsPut =
@@ -779,37 +780,56 @@ let runInner (rootContainer: Container) (containers: Container list) (items: Ite
                 EmptyContainers = globalBest.ContainerSet
             }
 
-        Serilog.Log.Information("Result {@result}", res)
         res
     with e ->
         printfn "%A" e
         reraise ()
 
 let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) =
+    let batchCount = 20
     let rec loop (containers: Container list) (items: Item list) (results: CalcResult list) =
+        let containers = containers |> List.sortBy(fun c -> ((c.Coord.Z), -(c.Dim.Height)))
+        // printfn "Containers %A" containers
+        // printfn "==============="
+        let batchCount =
+            if items.Length > 0  && items.Head.NoTop then 1 else batchCount
         let currentItems, remainingItems =
-            if items.Length > 20 then items |> List.splitAt 20 else items, []
+            if items.Length > batchCount then items |> List.splitAt batchCount else items, []
+        // let nonStackableCount = currentItems |> List.filter (fun x -> x.NoTop) |> List.length
+        // printfn "nonstack:%A:" items
+        // let currentItems, remainingItems =
+        //     if nonStackableCount > 3 then
 
+        //         if items.Length > 3 then items |> List.splitAt 3 else items, []
+        //     else
+        //         currentItems, remainingItems
+        // printfn "================"
+        // printfn "current:%A-remain:%A" currentItems remainingItems
+        // printfn "================"
         let res =
             runInner rootContainer containers currentItems T alpha
         let results = res :: results
         let newItems = res.ItemsUnput @ remainingItems
         match newItems with
         | [] ->
-            {
-                Container = rootContainer
-                ContainerVol = 100
-                EmptyContainers = []
-                ItemsPut =
-                    results
-                    |> List.map (fun c -> c.ItemsPut)
-                    |> List.fold (@) []
-                ItemsUnput =
-                    results
-                    |> List.map (fun c -> c.ItemsUnput)
-                    |> List.fold (@) []
-                PutVolume = 100
-            }
+            let res =
+                {
+                    Container = rootContainer
+                    ContainerVol = 100
+                    EmptyContainers = []
+                    ItemsPut =
+                        results
+                        |> List.map (fun c -> c.ItemsPut)
+                        |> List.fold (@) []
+                    ItemsUnput =
+                        results
+                        |> List.map (fun c -> c.ItemsUnput)
+                        |> List.fold (@) []
+                    PutVolume = 100
+                }
+            Serilog.Log.Information("Result {@result}", res)
+            res
+
         | _ -> loop (res.EmptyContainers |> mergeContainers) newItems results
 
-    loop [ rootContainer ] items []
+    loop [ rootContainer ] (items |> List.sortByDescending(fun c -> c |> calcVolume)) []
