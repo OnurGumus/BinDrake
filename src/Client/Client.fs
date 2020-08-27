@@ -297,8 +297,8 @@ module Container =
     let validate (formData: FormData) =
         all
         <| fun t ->
-            let floatCheck = numericCheck t int 0 100_00
-            let intCheck = numericCheck t int 0 100_00
+            let floatCheck = numericCheck t int 0 2000
+            let intCheck = numericCheck t int 0 2000
             {
                 Width = floatCheck "width" formData.Width
                 Height = floatCheck "height" formData.Height
@@ -375,8 +375,8 @@ module Container =
                                                     [
                                                         input.number [
                                                             prop.readOnly props.Disabled
-                                                            prop.maxLength 5
-                                                            prop.max 100000
+                                                            prop.maxLength 4
+                                                            prop.max 2000
                                                             input.isSmall
                                                             prop.placeholder col
                                                             prop.onChange (fun (e: Event) -> dispatch' col e.Value)
@@ -434,8 +434,8 @@ module Row =
     let validate (formData: FormData) =
         all
         <| fun t ->
-            let floatCheck = numericCheck t int 0 100_00
-            let intCheck = numericCheck t int 0 100_00
+            let floatCheck = numericCheck t int 0 2000
+            let intCheck = numericCheck t int 0 2000
             {
                 Width = floatCheck "width" formData.Width
                 Height = floatCheck "height" formData.Height
@@ -540,7 +540,7 @@ module Row =
                                                     input.number [
                                                         prop.maxLength 5
                                                         prop.readOnly props.Disabled
-                                                        prop.max 100000
+                                                        prop.max 2000
                                                         input.isSmall
                                                         prop.placeholder col
                                                         prop.onChange (fun (e: Browser.Types.Event) ->
@@ -630,11 +630,11 @@ let viewC =
 
                     let items =
                         [
-                            "Enter container and item dimensions between 1 and 10000, no decimals."
+                            "Enter container and item dimensions between 1 and 2000, no decimals."
                             "Add as many items as you want."
                             "If the item is not stackable uncheck stack for that item."
                             "All dimensions are unitless."
-                            "Click calculate and wait up to 65 sec."
+                            "Click calculate and wait up to 120 sec."
                             "Bin packer will try to fit the items and minimize the length."
                             "Review the result in 3D!"
                         ]
@@ -724,7 +724,7 @@ let viewC =
                          else if isinvalid
                          then "First fill the form correctly"
                          else "Calculate")
-                    prop.onClick (fun _ -> setCounterValue 65; dispatch CalculateRequested)
+                    prop.onClick (fun _ -> setCounterValue 120; dispatch CalculateRequested)
                 ]
                 Html.span[
                     spacing.my1
@@ -755,11 +755,18 @@ let viewC =
                                                         yield Html.li
                                                                   [
                                                                       prop.children [
-                                                                          Bulma.label [
-                                                                              prop.text "_"
-                                                                              prop.style [ style.backgroundColor key ]
+                                                                          Html.span [
+                                                                              prop.text " x "
+                                                                              prop.style [
+                                                                                  style.backgroundColor key;
+                                                                                  style.color.white; style.width (length.ch 1)
+                                                                                  style.display.inlineBlock
+                                                                              ]
                                                                           ]
-                                                                          Bulma.label (sprintf "x%i" values.Length)
+                                                                          Html.span [
+                                                                              prop.text  (sprintf "%i items not fit with this color" values.Length)
+                                                                          ]
+
                                                                       ]
                                                                   ]
                                                 ]
