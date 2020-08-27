@@ -497,7 +497,7 @@ let calculateCost =
                          counter - 1)
             | ( cs ,_, itemPuts)::_, _ -> Some (cs,itemPuts)
             | _, _ -> None
-        loop ([ containers, items,[] ], 400)
+        loop ([ containers, items,[] ], 800)
 
 let calcVolume (item: Item) =
     item.Dim.Width * item.Dim.Height * item.Dim.Length
