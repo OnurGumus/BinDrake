@@ -79,7 +79,7 @@ Target.create "InstallClient" (fun _ ->
 
 Target.create "Build" (fun _ ->
     let runTool = runTool Proc.run
-    runDotNet "build" serverPath
+    runDotNet "build --configuration release " serverPath
     Shell.regexReplaceInFileWithEncoding
         "let app = \".+\""
        ("let app = \"" + release.NugetVersion + "\"")
