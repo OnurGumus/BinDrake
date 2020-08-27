@@ -60,7 +60,7 @@ WebHost
     .CreateDefaultBuilder()
     .UseWebRoot(publicPath)
     .UseContentRoot(publicPath)
-    .UseKestrel(fun x-> x.Limits.KeepAliveTimeout <- System.TimeSpan.FromMinutes(100.))
+   // .UseKestrel(fun x-> x.Limits.KeepAliveTimeout <- System.TimeSpan.FromMinutes(100.))
     .Configure(Action<IApplicationBuilder> configureApp)
     .ConfigureServices(configureServices)
     .UseUrls("http://0.0.0.0:" + port.ToString() + "/")
