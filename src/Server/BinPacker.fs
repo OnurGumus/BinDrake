@@ -618,13 +618,14 @@ let run  (container: Container) (items: Item list) (T: float) (alpha:float) =
            if item1.Item.Id <> item2.Item.Id && checkConflict item1 item2 then
                 printfn "Items conflc %A %A" item1 item2
     printfn "%A" globalBest.ContainerSet
-    printfn "afte m%A" (mergeContainers globalBest.ContainerSet)
+    let res =
+        {   ItemsPut = itemsPut;
+            ContainerVol = volumeContainer;
+            ItemsUnput = itemsUnput;
+            PutVolume = putVolume;
+            Container = container
 
-    {   ItemsPut = itemsPut;
-        ContainerVol = volumeContainer;
-        ItemsUnput = itemsUnput;
-        PutVolume = putVolume;
-        Container = container
-
-    }
+        }
+    Serilog.Log.Information ("Result {@result}", res)
+    res
     with e -> printfn "%A" e; reraise();
