@@ -815,11 +815,11 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
         let results = res :: results
         let newItems = res.ItemsUnput @ remainingItems
         let retryCount = if res.ItemsPut.IsEmpty then retryCount - 1 else  retryCount
-        let batchCount =
-            if res.ItemsUnput.Length > 0 then
-                batchCount / 2
-            else
-                Math.Max(defaultBatchSize,batchCount * 2)
+        // let batchCount =
+        //     if res.ItemsUnput.Length > 0 then
+        //         batchCount / 2
+        //     else
+        //         Math.Max(defaultBatchSize,batchCount * 2)
         match newItems, retryCount with
         | _, 0
         | [], _ ->
