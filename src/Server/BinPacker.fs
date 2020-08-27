@@ -785,7 +785,7 @@ let runInner (rootContainer: Container) (containers: Container list) (items: Ite
     with e ->
         printfn "%A" e
         reraise ()
-let defaultBatchSize = 5
+let defaultBatchSize = 20
 let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) =
     let rec loop (containers: Container list) (items: Item list) (results: CalcResult list) batchCount retryCount =
         printf "loop"
@@ -844,5 +844,22 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
             res
 
         | _ -> loop (res.EmptyContainers |> mergeContainers) newItems results batchCount retryCount
+    let rec outerLoop items retryCount  =
+        printf "outer loop"
+        let res = loop [ rootContainer ] (items |> List.sortByDescending(fun c -> c |> calcVolume)) [] defaultBatchSize 6
+        match res.ItemsUnput, retryCount with
+        | _ , 0 -> res
+        | [] ,_ -> res
+        | _ ->
+            outerLoop
+                (items
+                    |> mutate res.ItemsPut
+                    |> mutate res.ItemsPut
+                    |> mutate res.ItemsPut
+                    |> mutate res.ItemsPut
+                    |> mutate res.ItemsPut
+                    |> mutate res.ItemsPut
+                    |> mutate res.ItemsPut) (retryCount - 1)
+    outerLoop items 20
 
-    loop [ rootContainer ] (items |> List.sortByDescending(fun c -> c |> calcVolume)) [] defaultBatchSize 6
+
