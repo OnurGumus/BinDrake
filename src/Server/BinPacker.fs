@@ -1,4 +1,5 @@
 module BinPacker
+
 open Shared
 open System
 
@@ -6,16 +7,18 @@ let random = System.Random()
 
 module Rotate =
     let inline rotateZ (item: Item) =
-        if item.NoTop then item else
+        if item.NoTop then
+            item
+        else
 
-        { item with
-            Dim =
-                {
-                    Height = item.Dim.Width
-                    Width = item.Dim.Height
-                    Length = item.Dim.Length
-                }
-        }
+            { item with
+                Dim =
+                    {
+                        Height = item.Dim.Width
+                        Width = item.Dim.Height
+                        Length = item.Dim.Length
+                    }
+            }
 
     let inline rotateY (item: Item) =
         { item with
@@ -28,123 +31,168 @@ module Rotate =
         }
 
     let inline rotateX (item: Item) =
-        if item.NoTop then item else
-        { item with
-            Dim =
-                {
-                    Height = item.Dim.Length
-                    Width = item.Dim.Width
-                    Length = item.Dim.Height
-                }
-        }
+        if item.NoTop then
+            item
+        else
+            { item with
+                Dim =
+                    {
+                        Height = item.Dim.Length
+                        Width = item.Dim.Width
+                        Length = item.Dim.Height
+                    }
+            }
+
     let rotateToMinZ item =
-            let x = item |> rotateX
-            let y = item |> rotateY
-            [item;x;y ] |> List.minBy(fun d -> d.Dim.Length)
+        let x = item |> rotateX
+        let y = item |> rotateY
+        [ item; x; y ]
+        |> List.minBy (fun d -> d.Dim.Length)
 
     let inline randomRotate item: Item =
-            let r = random.NextDouble()
-            if r < 0.333 then rotateZ item
-            elif r < 0.666 then rotateY item
-            else rotateX item
+        let r = random.NextDouble()
+        if r < 0.333 then rotateZ item
+        elif r < 0.666 then rotateY item
+        else rotateX item
 
 
 
-let dimToVolume (d:Dim)=
-    d.Width * d.Height * d.Length
+let dimToVolume (d: Dim) = d.Width * d.Height * d.Length
 
 module Conflict =
-    let checkConflictC (A:Container) (B:Container) =
-        not (B.Coord.X >= A.Coord.X+A.Dim.Width
-            || B.Coord.X+B.Dim.Width <= A.Coord.X
-            || B.Coord.Y >= A.Coord.Y+A.Dim.Height
-            || B.Coord.Y+B.Dim.Height <= A.Coord.Y
-            || B.Coord.Z >= A.Coord.Z+A.Dim.Length
-            || B.Coord.Z+B.Dim.Length <= A.Coord.Z)
-    let containerssCheck (containers : Container list) =
+    let checkConflictC (A: Container) (B: Container) =
+        not
+            (B.Coord.X
+             >= A.Coord.X
+             + A.Dim.Width
+             || B.Coord.X + B.Dim.Width <= A.Coord.X
+             || B.Coord.Y >= A.Coord.Y + A.Dim.Height
+             || B.Coord.Y + B.Dim.Height <= A.Coord.Y
+             || B.Coord.Z >= A.Coord.Z + A.Dim.Length
+             || B.Coord.Z + B.Dim.Length <= A.Coord.Z)
+
+    let containerssCheck (containers: Container list) =
         for item1 in containers do
-           for item2 in containers do
-               if item1 <> item2 && checkConflictC item1 item2 then
+            for item2 in containers do
+                if item1 <> item2 && checkConflictC item1 item2 then
                     printfn "contianer conflc %A %A" item1 item2
                     failwith "conf"
 
-    let checkConflict (A:ItemPut) (B:ItemPut) =
-                        not (B.Coord.X >= A.Coord.X+A.Item.Dim.Width
-                            || B.Coord.X+B.Item.Dim.Width <= A.Coord.X
-                            || B.Coord.Y >= A.Coord.Y+A.Item.Dim.Height
-                            || B.Coord.Y+B.Item.Dim.Height <= A.Coord.Y
-                            || B.Coord.Z >= A.Coord.Z+A.Item.Dim.Length
-                            || B.Coord.Z+B.Item.Dim.Length <= A.Coord.Z)
+    let checkConflict (A: ItemPut) (B: ItemPut) =
+        not
+            (B.Coord.X
+             >= A.Coord.X
+             + A.Item.Dim.Width
+             || B.Coord.X + B.Item.Dim.Width <= A.Coord.X
+             || B.Coord.Y >= A.Coord.Y + A.Item.Dim.Height
+             || B.Coord.Y + B.Item.Dim.Height <= A.Coord.Y
+             || B.Coord.Z >= A.Coord.Z + A.Item.Dim.Length
+             || B.Coord.Z + B.Item.Dim.Length <= A.Coord.Z)
 
-let mergeContainers  (containers : Container list) =
+let mergeContainers (containers: Container list) =
     let containers = containers |> List.indexed
+
     let mergersZ containers =
-        seq {for (i1,c1:Container) in containers do
+        seq {
+            for (i1, c1: Container) in containers do
                 for (i2, c2) in containers do
                     if (i1 <> i2) then
                         if c1.Coord.X = c2.Coord.X
-                            && c1.Coord.Y = c2.Coord.Y
-                            && c1.Dim.Width = c2.Dim.Width
-                            && c2.Dim.Height = c1.Dim.Height
-                            && c2.Coord.Z = c1.Coord.Z + c1.Dim.Length then
-                            ((i1,c1),(i2,c2))}
+                           && c1.Coord.Y = c2.Coord.Y
+                           && c1.Dim.Width = c2.Dim.Width
+                           && c2.Dim.Height = c1.Dim.Height
+                           && c2.Coord.Z = c1.Coord.Z + c1.Dim.Length then
+                            ((i1, c1), (i2, c2))
+        }
 
 
 
-    let mergeContainersZ (c1: Container)  (c2:Container) =
-        {   Dim = { Width = c1.Dim.Width; Height = c1.Dim.Height ; Length = c1.Dim.Length + c2.Dim.Length }
-            Coord = c1.Coord }
+    let mergeContainersZ (c1: Container) (c2: Container) =
+        {
+            Dim =
+                {
+                    Width = c1.Dim.Width
+                    Height = c1.Dim.Height
+                    Length = c1.Dim.Length + c2.Dim.Length
+                }
+            Coord = c1.Coord
+        }
 
     let mergersY containers =
-        seq {for (i1,c1:Container) in containers do
+        seq {
+            for (i1, c1: Container) in containers do
                 for (i2, c2) in containers do
                     if (i1 <> i2) then
                         if c1.Coord.X = c2.Coord.X
-                            && c1.Coord.Z = c2.Coord.Z
-                            && c1.Dim.Length = c2.Dim.Length
-                            && c2.Dim.Width = c1.Dim.Width
-                            && c2.Coord.Y = c1.Coord.Y + c1.Dim.Height then
-                            ((i1,c1),(i2,c2))}
+                           && c1.Coord.Z = c2.Coord.Z
+                           && c1.Dim.Length = c2.Dim.Length
+                           && c2.Dim.Width = c1.Dim.Width
+                           && c2.Coord.Y = c1.Coord.Y + c1.Dim.Height then
+                            ((i1, c1), (i2, c2))
+        }
 
 
 
-    let mergeContainersY (c1: Container)  (c2:Container) =
-        {   Dim = { Length = c1.Dim.Length; Width = c1.Dim.Width ; Height = c1.Dim.Height + c2.Dim.Height }
-            Coord = c1.Coord }
+    let mergeContainersY (c1: Container) (c2: Container) =
+        {
+            Dim =
+                {
+                    Length = c1.Dim.Length
+                    Width = c1.Dim.Width
+                    Height = c1.Dim.Height + c2.Dim.Height
+                }
+            Coord = c1.Coord
+        }
 
     let mergersX containers =
-        seq {for (i1,c1:Container) in containers do
+        seq {
+            for (i1, c1: Container) in containers do
                 for (i2, c2) in containers do
                     if (i1 <> i2) then
                         if c1.Coord.Y = c2.Coord.Y
-                            && c1.Coord.Z = c2.Coord.Z
-                            && c1.Dim.Length = c2.Dim.Length
-                            && c2.Dim.Height = c1.Dim.Height
-                            && c2.Coord.X = c1.Coord.X + c1.Dim.Width then
-                            ((i1,c1),(i2,c2))}
+                           && c1.Coord.Z = c2.Coord.Z
+                           && c1.Dim.Length = c2.Dim.Length
+                           && c2.Dim.Height = c1.Dim.Height
+                           && c2.Coord.X = c1.Coord.X + c1.Dim.Width then
+                            ((i1, c1), (i2, c2))
+        }
 
 
 
-    let mergeContainersX (c1: Container)  (c2:Container) =
-        {   Dim = { Length = c1.Dim.Length; Height = c1.Dim.Height ; Width = c1.Dim.Width + c2.Dim.Width }
-            Coord = c1.Coord }
+    let mergeContainersX (c1: Container) (c2: Container) =
+        {
+            Dim =
+                {
+                    Length = c1.Dim.Length
+                    Height = c1.Dim.Height
+                    Width = c1.Dim.Width + c2.Dim.Width
+                }
+            Coord = c1.Coord
+        }
+
     let removeAt index1 index2 input =
         input
         |> List.mapi (fun i el -> (i <> index1 && i <> index2, el))
-        |> List.filter fst |> List.map snd
+        |> List.filter fst
+        |> List.map snd
 
     let rec containerLoop merger containers mergeContainersf mergersf added =
-        if merger |> Seq.isEmpty then containers@(added |> List.indexed)
+        if merger |> Seq.isEmpty then
+            containers @ (added |> List.indexed)
         else
-            let ((i1,c1),(i2,c2)) = merger |> Seq.head
+            let ((i1, c1), (i2, c2)) = merger |> Seq.head
             let newC = mergeContainersf c1 c2
             let prev = containers.Length
             let containers = containers |> removeAt i1 i2
-            let containers = containers |> List.map snd |> List.indexed
+
+            let containers =
+                containers |> List.map snd |> List.indexed
+
             let mergers = mergersf containers
-            containerLoop mergers ((containers)) mergeContainersf mergersf (newC::added)
+            containerLoop mergers ((containers)) mergeContainersf mergersf (newC :: added)
 
     let init = mergersZ containers
+
     let containers =
         containerLoop init containers mergeContainersZ mergersZ []
         |> List.map snd
@@ -153,29 +201,32 @@ let mergeContainers  (containers : Container list) =
     let init = mergersY containers
 
     let containers =
-         containerLoop init containers mergeContainersY mergersY []
-         |> List.map snd
-         |> List.indexed
+        containerLoop init containers mergeContainersY mergersY []
+        |> List.map snd
+        |> List.indexed
 
     let init = mergersX containers
+
     let containers =
-         containerLoop init containers mergeContainersX mergersX []
+        containerLoop init containers mergeContainersX mergersX []
         |> List.map snd
 
     //containers |> Conflict.containerssCheck
 
     containers
 
-let rec putItem (rootContainer:Container)  tryCount :PutItem =
-    fun container item  ->
+let rec putItem (rootContainer: Container) tryCount: PutItem =
+    fun container item ->
         let remainingWidth = container.Dim.Width - item.Dim.Width
         let remainingHeight = container.Dim.Height - item.Dim.Height
         let remainingLength = container.Dim.Length - item.Dim.Length
-        if item.NoTop && container.Coord.Y + container.Dim.Height < rootContainer.Dim.Height then
+        if item.NoTop
+           && container.Coord.Y
+           + container.Dim.Height < rootContainer.Dim.Height then
             ValueNone
         elif (remainingHeight < 0)
-           || remainingLength < 0
-           || remainingWidth < 0 then
+             || remainingLength < 0
+             || remainingWidth < 0 then
             if tryCount > 0 then
                 if tryCount = 3 then
                     let item = item |> Rotate.rotateZ
@@ -247,7 +298,7 @@ let rec putItem (rootContainer:Container)  tryCount :PutItem =
                     s.Dim.Width > 0
                     && s.Dim.Height > 0
                     && s.Dim.Length > 0)
-                |> List.filter(fun s -> (item.NoTop && s.Coord.Y > 0)|>not)
+                |> List.filter (fun s -> (item.NoTop && s.Coord.Y > 0) |> not)
                 |> List.sortBy (fun s -> s.Coord.Z)
 
             let config2 =
@@ -299,12 +350,12 @@ let rec putItem (rootContainer:Container)  tryCount :PutItem =
                             }
                     }
 
-                [ topBlock; sideBlock;  remainingBlock ]
+                [ topBlock; sideBlock; remainingBlock ]
                 |> List.filter (fun s ->
                     s.Dim.Width > 0
                     && s.Dim.Height > 0
                     && s.Dim.Length > 0)
-                |> List.filter(fun s -> (item.NoTop && s.Coord.Y > 0)|>not)
+                |> List.filter (fun s -> (item.NoTop && s.Coord.Y > 0) |> not)
                 |> List.sortBy (fun s -> s.Coord.Z)
 
             let config3 =
@@ -356,12 +407,12 @@ let rec putItem (rootContainer:Container)  tryCount :PutItem =
                             }
                     }
 
-                [  topBlock; sideBlock; remainingBlock ]
+                [ topBlock; sideBlock; remainingBlock ]
                 |> List.filter (fun s ->
                     s.Dim.Width > 0
                     && s.Dim.Height > 0
                     && s.Dim.Length > 0)
-                |> List.filter(fun s -> (item.NoTop && s.Coord.Y > 0)|>not)
+                |> List.filter (fun s -> (item.NoTop && s.Coord.Y > 0) |> not)
                 |> List.sortBy (fun s -> s.Coord.Z)
 
             let config4 =
@@ -418,7 +469,7 @@ let rec putItem (rootContainer:Container)  tryCount :PutItem =
                     s.Dim.Width > 0
                     && s.Dim.Height > 0
                     && s.Dim.Length > 0)
-                |> List.filter(fun s -> (item.NoTop && s.Coord.Y > 0)|>not)
+                |> List.filter (fun s -> (item.NoTop && s.Coord.Y > 0) |> not)
                 |> List.sortBy (fun s -> s.Coord.Z)
 
             let itemPut =
@@ -431,29 +482,43 @@ let rec putItem (rootContainer:Container)  tryCount :PutItem =
                             Z = container.Coord.Z
                         }
                 }
-            let t1 = [config1;config2;config3;config4] |> List.item (random.Next(0,4))
-            let t2 = [config1;config2;config3; config4] |> List.item (random.Next(0,4))
+
+            let t1 =
+                [ config1; config2; config3; config4 ]
+                |> List.item (random.Next(0, 4))
+
+            let t2 =
+                [ config1; config2; config3; config4 ]
+                |> List.item (random.Next(0, 4))
+
             let res =
                 ValueSome
-                   (struct (  [t1;t2] |> List.distinct
-                       |> List.filter (fun f -> f |> List.isEmpty |> not),
+                    (struct ([ t1; t2 ]
+                             |> List.distinct
+                             |> List.filter (fun f -> f |> List.isEmpty |> not),
 
-                    //    |> List.sortBy (fun s -> (s |> List.minBy (fun x -> float x.Coord.Z)).Coord.Z ),
-                     itemPut))
+                             //    |> List.sortBy (fun s -> (s |> List.minBy (fun x -> float x.Coord.Z)).Coord.Z ),
+                             itemPut))
+
             res
 
 let checkConflictI itemsPut =
-    let checkConflict (A:ItemPut) (B:ItemPut) =
-        not (B.Coord.X >= A.Coord.X+A.Item.Dim.Width
-            || B.Coord.X+B.Item.Dim.Width <= A.Coord.X
-            || B.Coord.Y >= A.Coord.Y+A.Item.Dim.Height
-            || B.Coord.Y+B.Item.Dim.Height <= A.Coord.Y
-            || B.Coord.Z >= A.Coord.Z+A.Item.Dim.Length
-            || B.Coord.Z+B.Item.Dim.Length <= A.Coord.Z)
+    let checkConflict (A: ItemPut) (B: ItemPut) =
+        not
+            (B.Coord.X
+             >= A.Coord.X
+             + A.Item.Dim.Width
+             || B.Coord.X + B.Item.Dim.Width <= A.Coord.X
+             || B.Coord.Y >= A.Coord.Y + A.Item.Dim.Height
+             || B.Coord.Y + B.Item.Dim.Height <= A.Coord.Y
+             || B.Coord.Z >= A.Coord.Z + A.Item.Dim.Length
+             || B.Coord.Z + B.Item.Dim.Length <= A.Coord.Z)
 
     for item1 in itemsPut do
-       for item2 in itemsPut do
-           if item1.Item.Id <> item2.Item.Id && checkConflict item1 item2 then
+        for item2 in itemsPut do
+            if item1.Item.Id
+               <> item2.Item.Id
+               && checkConflict item1 item2 then
                 printfn "Items conflc %A %A" item1 item2
                 failwith "wr"
 
@@ -461,68 +526,82 @@ let calculateCost =
     fun putItem containers items ->
         let rec loop =
             function
-            | struct( containerSet ,[], itemPuts)::_, _ -> ValueSome (containerSet,itemPuts)
-            | struct(containerSet, item :: remainingItems, itemPuts) :: remainingStack, counter when counter > 0 ->
+            | struct (containerSet, [], itemPuts) :: _, _ -> ValueSome(containerSet, itemPuts)
+            | struct (containerSet, item :: remainingItems, itemPuts) :: remainingStack, counter when counter > 0 ->
                 let containerSet = containerSet |> mergeContainers
-                let rec loopContainers: (struct(Container list * Container list)) -> StackItem list  =
+
+                let rec loopContainers: (struct (Container list * Container list)) -> StackItem list =
                     function
                     | (container :: remainingContainers) as cs, triedButNotFit ->
                         //printfn "cs:%A, item: %A" cs item
                         //printfn "!!!"
 
                         match putItem container item with
-                        | ValueSome (struct(containerTriplets, (itemPut: ItemPut))) ->
-                            let firstRes: StackItem list  =
+                        | ValueSome (struct (containerTriplets, (itemPut: ItemPut))) ->
+                            let firstRes: StackItem list =
                                 [
-                                    let newItems  = itemPut::itemPuts
+                                    let newItems = itemPut :: itemPuts
 
                                     match containerTriplets with
-                                    | [] -> yield ((remainingContainers @triedButNotFit |> mergeContainers), remainingItems, newItems)
-                                    |  _ ->
-                                    for triplet in containerTriplets do
-                                        let rema =
-                                            (remainingContainers @ triplet @ triedButNotFit) |> mergeContainers//|> List.tail //|> mergeContainers
-                                       // checkConflictI newItems
-                                        yield (rema
-                                               |> List.sortBy (fun s -> (s.Coord.Z,  - (s.Dim |> dimToVolume))),
+                                    | [] ->
+                                        yield ((remainingContainers
+                                                @ triedButNotFit
+                                                |> mergeContainers),
                                                remainingItems,
-                                               newItems
-                                               )
+                                               newItems)
+                                    | _ ->
+                                        for triplet in containerTriplets do
+                                            let rema =
+                                                (remainingContainers @ triplet @ triedButNotFit)
+                                                |> mergeContainers //|> List.tail //|> mergeContainers
+                                            // checkConflictI newItems
+                                            yield (rema
+                                                   |> List.sortBy (fun s -> (s.Coord.Z, -(s.Dim |> dimToVolume))),
+                                                   remainingItems,
+                                                   newItems)
                                 ]
+
                             firstRes
 
-                        | _ ->loopContainers (remainingContainers, container :: triedButNotFit)
+                        | _ -> loopContainers (remainingContainers, container :: triedButNotFit)
                     | _ -> []
-                let sorted = (containerSet |> List.sortBy (fun s -> s.Coord.Z))
 
-                let stackItems =
-                    loopContainers (sorted , [])
-                let totalStack = (stackItems@remainingStack)
+                let sorted =
+                    (containerSet |> List.sortBy (fun s -> s.Coord.Z))
+
+                let stackItems = loopContainers (sorted, [])
+                let totalStack = (stackItems @ remainingStack)
                 loop
-                        (totalStack
-                         |> List.sortBy (fun (struct(x,_,_)) ->
-                            if x.Length = 0 then
-                                struct(Int32.MaxValue, Int32.MaxValue)
-                            else
-                                ((x|> List.minBy (fun l -> l.Coord.Z)).Coord.Z),-((x|> List.maxBy (fun l -> l.Dim |> dimToVolume)).Dim |> dimToVolume)   )
-                                 ,
+                    (totalStack
+                     |> List.sortBy (fun (struct (x, _, _)) ->
+                         if x.Length = 0 then
+                             struct (Int32.MaxValue, Int32.MaxValue)
+                         else
+                             ((x |> List.minBy (fun l -> l.Coord.Z)).Coord.Z),
+                             -((x |> List.maxBy (fun l -> l.Dim |> dimToVolume)).Dim
+                               |> dimToVolume)),
 
-                         counter - 1)
-            | ( cs ,_, itemPuts)::_, _ -> ValueSome (cs,itemPuts)
+                     counter - 1)
+            | (cs, _, itemPuts) :: _, _ -> ValueSome(cs, itemPuts)
             | _, _ -> ValueNone
-        loop ([ containers, items,[] ], 8000)
+
+        loop ([ containers, items, [] ], 8000)
 
 let calcVolume (item: Item) =
     item.Dim.Width * item.Dim.Height * item.Dim.Length
 
 
-let inline mutate (itemsPut:ItemPut list) (items: Item list) =
+let inline mutate (itemsPut: ItemPut list) (items: Item list) =
     let firstSwap =
-        if random.NextDouble() > 0.6 || itemsPut |> List.isEmpty
-            then random.Next(0, items.Length)
+        if random.NextDouble() > 0.6
+           || itemsPut |> List.isEmpty then
+            random.Next(0, items.Length)
         else
-           let maxId = itemsPut |> List.maxBy(fun x -> x.Coord.Z)
-           items |> List.findIndex (fun x-> x.Id = maxId.Item.Id)
+            let maxId =
+                itemsPut |> List.maxBy (fun x -> x.Coord.Z)
+
+            items
+            |> List.findIndex (fun x -> x.Id = maxId.Item.Id)
 
     let secondSwap = random.Next(0, items.Length)
     let arr = items |> Array.ofList
@@ -535,54 +614,102 @@ let TMin = 0.01
 open System
 open System.Diagnostics
 
-let inline findUnfitItems itemsPut (items:Item list) =
-    let itemsPutIds = itemsPut |> List.map(fun d -> d.Item.Id)
-    items |> List.filter(fun i ->  itemsPutIds |> List.contains i.Id |> not)
+let inline findUnfitItems itemsPut (items: Item list) =
+    let itemsPutIds =
+        itemsPut |> List.map (fun d -> d.Item.Id)
+
+    items
+    |> List.filter (fun i -> itemsPutIds |> List.contains i.Id |> not)
 
 let calcCost rootContainer containers items =
     match calculateCost (putItem rootContainer 3) containers (items |> List.sortByDescending calcVolume) with
-    | ValueSome (cs,res) ->
+    | ValueSome (cs, res) ->
 
-        let unfitItems = findUnfitItems res items// printf "%A" unfitItems
+        let unfitItems = findUnfitItems res items // printf "%A" unfitItems
+
         let maxZCoord =
-            let max = (res |> List.maxBy (fun x -> x.Coord.Z + x.Item.Dim.Length))
+            let max =
+                (res
+                 |> List.maxBy (fun x -> x.Coord.Z + x.Item.Dim.Length))
+
             max.Item.Dim.Length + max.Coord.Z
+
         let sumZCoord =
-            (res |> List.sumBy (fun x -> x.Coord.Z + x.Item.Dim.Length))
-        float ((unfitItems |> List.sumBy calcVolume)*1000 + maxZCoord ) , res,cs
-    | ValueNone _ -> Double.MaxValue, [],[]
+            (res
+             |> List.sumBy (fun x -> x.Coord.Z + x.Item.Dim.Length))
 
-type GlobalBest = { ItemsPut : ItemPut list; Cost : float; ContainerSet : Container list}
+        float
+            ((unfitItems |> List.sumBy calcVolume)
+             * 1000
+             + maxZCoord),
+        res,
+        cs
+    | ValueNone _ -> Double.MaxValue, [], []
 
-let rec calc (rootContainer:Container) (containers: Container list) (itemsWithCost: ItemsWithCost) (globalBest:GlobalBest) (T: float) (alpha:float) result (sw : Stopwatch)=
+type GlobalBest =
+    {
+        ItemsPut: ItemPut list
+        Cost: float
+        ContainerSet: Container list
+    }
+
+let rec calc (rootContainer: Container)
+             (containers: Container list)
+             (itemsWithCost: ItemsWithCost)
+             (globalBest: GlobalBest)
+             (T: float)
+             (alpha: float)
+             result
+             (sw: Stopwatch)
+             =
     if TMin >= T || sw.ElapsedMilliseconds > 30000L then
         printf "%A" sw.ElapsedMilliseconds
         globalBest
     else
         let items = itemsWithCost.Items
 
-        let calculated, res , globalBest=
+        let calculated, res, globalBest =
             if itemsWithCost.Cost = 0. then
-                let cost, res,cs = calcCost rootContainer containers items
-                { itemsWithCost with Cost = cost }, res, { ItemsPut = res ; Cost = cost; ContainerSet = cs }
+                let cost, res, cs = calcCost rootContainer containers items
+                { itemsWithCost with Cost = cost },
+                res,
+                {
+                    ItemsPut = res
+                    Cost = cost
+                    ContainerSet = cs
+                }
             else
                 itemsWithCost, result, globalBest
 
-        let rec loop (itemsWC: ItemsWithCost, res) (globalBest:GlobalBest)  count =
+        let rec loop (itemsWC: ItemsWithCost, res) (globalBest: GlobalBest) count =
             if count = 0 then
                 itemsWC, res, globalBest
             else
                 let items = itemsWC.Items
-                let nbr = items |> mutate res |> mutate res |> mutate res |> mutate res |> mutate  res
-                let nbrCost, nbrRes,cs = calcCost rootContainer containers nbr
 
-                let nextItem, res , globalBest2=
+                let nbr =
+                    items
+                    |> mutate res
+                    |> mutate res
+                    |> mutate res
+                    |> mutate res
+                    |> mutate res
+
+                let nbrCost, nbrRes, cs = calcCost rootContainer containers nbr
+
+                let nextItem, res, globalBest2 =
                     printfn "costs: %f-%f" calculated.Cost nbrCost
                     if nbrCost < calculated.Cost then
-                        { Items = nbr; Cost = nbrCost }, nbrRes,
-                            if nbrCost < globalBest.Cost then
-                                { ItemsPut = nbrRes ; Cost = nbrCost; ContainerSet =cs }
-                            else globalBest
+                        { Items = nbr; Cost = nbrCost },
+                        nbrRes,
+                        (if nbrCost < globalBest.Cost then
+                            {
+                                ItemsPut = nbrRes
+                                Cost = nbrCost
+                                ContainerSet = cs
+                            }
+                         else
+                             globalBest)
                     else
                         let diff = (calculated.Cost - nbrCost)
                         let exp = Math.Exp(diff / T)
@@ -593,7 +720,8 @@ let rec calc (rootContainer:Container) (containers: Container list) (itemsWithCo
                                 Items = items
                                 Cost = calculated.Cost
                             },
-                            res, globalBest
+                            res,
+                            globalBest
 
                 loop (nextItem, res) globalBest2 (count - 1)
 
@@ -601,27 +729,87 @@ let rec calc (rootContainer:Container) (containers: Container list) (itemsWithCo
         calc rootContainer containers c globalBest (T * 0.) alpha r sw
 
 
-let run  (container: Container) (items: Item list) (T: float) (alpha:float) =
+let runInner (rootContainer: Container) (containers: Container list) (items: Item list) (T: float) (alpha: float) =
     try
-    let itemsWithCost = { Items = items |> List.map Rotate.rotateToMinZ ; Cost = 0.}
-    let globalBest = (calc container [container] itemsWithCost { ItemsPut = []; Cost = Double.MaxValue; ContainerSet =[]} T alpha [] (Stopwatch.StartNew()))
-    let itemsPut = globalBest.ItemsPut
-    let volumeContainer = container.Dim.Height * container.Dim.Width * container.Dim.Length
-    let itemsUnput = findUnfitItems itemsPut items
-    let putVolume = itemsUnput |> List.sumBy calcVolume
-    for item1 in itemsPut do
-       for item2 in itemsPut do
-           if item1.Item.Id <> item2.Item.Id && Conflict.checkConflict item1 item2 then
-                printfn "Items conflc %A %A" item1 item2
-    printfn "%A" globalBest.ContainerSet
-    let res =
-        {   ItemsPut = itemsPut;
-            ContainerVol = volumeContainer;
-            ItemsUnput = itemsUnput;
-            PutVolume = putVolume;
-            Container = container
+        let itemsWithCost =
+            {
+                Items = items |> List.map Rotate.rotateToMinZ
+                Cost = 0.
+            }
 
-        }
-    Serilog.Log.Information ("Result {@result}", res)
-    res
-    with e -> printfn "%A" e; reraise();
+        let globalBest =
+            (calc
+                rootContainer
+                 containers
+                 itemsWithCost
+                 {
+                     ItemsPut = []
+                     Cost = Double.MaxValue
+                     ContainerSet = []
+                 }
+                 T
+                 alpha
+                 []
+                 (Stopwatch.StartNew()))
+
+        let itemsPut = globalBest.ItemsPut
+
+        let volumeContainer =
+            rootContainer.Dim.Height
+            * rootContainer.Dim.Width
+            * rootContainer.Dim.Length
+
+        let itemsUnput = findUnfitItems itemsPut items
+        let putVolume = itemsUnput |> List.sumBy calcVolume
+        for item1 in itemsPut do
+            for item2 in itemsPut do
+                if item1.Item.Id
+                   <> item2.Item.Id
+                   && Conflict.checkConflict item1 item2 then
+                    printfn "Items conflc %A %A" item1 item2
+        printfn "%A" globalBest.ContainerSet
+
+        let res =
+            {
+                ItemsPut = itemsPut
+                ContainerVol = volumeContainer
+                ItemsUnput = itemsUnput
+                PutVolume = putVolume
+                Container = rootContainer
+                EmptyContainers = globalBest.ContainerSet
+            }
+
+        Serilog.Log.Information("Result {@result}", res)
+        res
+    with e ->
+        printfn "%A" e
+        reraise ()
+
+let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) =
+    let rec loop (containers: Container list) (items: Item list) (results: CalcResult list) =
+        let currentItems, remainingItems =
+            if items.Length > 20 then items |> List.splitAt 20 else items, []
+
+        let res =
+            runInner rootContainer containers currentItems T alpha
+        let results = res :: results
+        let newItems = res.ItemsUnput @ remainingItems
+        match newItems with
+        | [] ->
+            {
+                Container = rootContainer
+                ContainerVol = 100
+                EmptyContainers = []
+                ItemsPut =
+                    results
+                    |> List.map (fun c -> c.ItemsPut)
+                    |> List.fold (@) []
+                ItemsUnput =
+                    results
+                    |> List.map (fun c -> c.ItemsUnput)
+                    |> List.fold (@) []
+                PutVolume = 100
+            }
+        | _ -> loop (res.EmptyContainers |> mergeContainers) newItems results
+
+    loop [ rootContainer ] items []

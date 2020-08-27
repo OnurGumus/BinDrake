@@ -27,6 +27,7 @@ type CalcResult = {
     ItemsUnput : Item list
     PutVolume : int
     Container : Container
+    EmptyContainers : Container list
 }
 
 module Route =
