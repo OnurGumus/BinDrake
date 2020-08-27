@@ -663,7 +663,7 @@ let rec calc (rootContainer: Container)
              result
              (sw: Stopwatch)
              =
-    if TMin >= T || sw.ElapsedMilliseconds > 30000L then
+    if TMin >= T || sw.ElapsedMilliseconds > 10000L then
         printf "%A" sw.ElapsedMilliseconds
         globalBest
     else
@@ -699,7 +699,7 @@ let rec calc (rootContainer: Container)
                 let nbrCost, nbrRes, cs = calcCost rootContainer containers nbr
 
                 let nextItem, res, globalBest2 =
-                    printfn "costs: %f-%f" calculated.Cost nbrCost
+                    //printfn "costs: %f-%f" calculated.Cost nbrCost
                     if nbrCost < calculated.Cost then
                         { Items = nbr; Cost = nbrCost },
                         nbrRes,
@@ -786,15 +786,18 @@ let runInner (rootContainer: Container) (containers: Container list) (items: Ite
         reraise ()
 
 let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) =
-    let batchCount = 20
-    let rec loop (containers: Container list) (items: Item list) (results: CalcResult list) =
+    let rec loop (containers: Container list) (items: Item list) (results: CalcResult list) batchCount retryCount =
+        printf "loop"
         let containers = containers |> List.sortBy(fun c -> ((c.Coord.Z), -(c.Dim.Height)))
         // printfn "Containers %A" containers
         // printfn "==============="
+        let oldBatchCount = batchCount
         let batchCount =
             if items.Length > 0  && items.Head.NoTop then 1 else batchCount
+
         let currentItems, remainingItems =
             if items.Length > batchCount then items |> List.splitAt batchCount else items, []
+        let batchCount = oldBatchCount
         // let nonStackableCount = currentItems |> List.filter (fun x -> x.NoTop) |> List.length
         // printfn "nonstack:%A:" items
         // let currentItems, remainingItems =
@@ -810,8 +813,15 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
             runInner rootContainer containers currentItems T alpha
         let results = res :: results
         let newItems = res.ItemsUnput @ remainingItems
-        match newItems with
-        | [] ->
+        let retryCount = if res.ItemsPut.IsEmpty then retryCount - 1 else  retryCount
+        let batchCount =
+            if res.ItemsUnput.Length > 0 then
+                batchCount / 2
+            else
+                Math.Max(20,batchCount * 2)
+        match newItems, retryCount with
+        | _, 0
+        | [], _ ->
             let res =
                 {
                     Container = rootContainer
@@ -830,6 +840,6 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
             Serilog.Log.Information("Result {@result}", res)
             res
 
-        | _ -> loop (res.EmptyContainers |> mergeContainers) newItems results
+        | _ -> loop (res.EmptyContainers |> mergeContainers) newItems results batchCount retryCount
 
-    loop [ rootContainer ] (items |> List.sortByDescending(fun c -> c |> calcVolume)) []
+    loop [ rootContainer ] (items |> List.sortByDescending(fun c -> c |> calcVolume)) [] 20 6
