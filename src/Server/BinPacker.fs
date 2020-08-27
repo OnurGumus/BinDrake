@@ -539,8 +539,8 @@ let inline findUnfitItems itemsPut (items:Item list) =
     let itemsPutIds = itemsPut |> List.map(fun d -> d.Item.Id)
     items |> List.filter(fun i ->  itemsPutIds |> List.contains i.Id |> not)
 
-let calcCost container items =
-    match calculateCost (putItem container 3) [ container ] (items |> List.sortByDescending calcVolume) with
+let calcCost rootContainer containers items =
+    match calculateCost (putItem rootContainer 3) containers (items |> List.sortByDescending calcVolume) with
     | ValueSome (cs,res) ->
 
         let unfitItems = findUnfitItems res items// printf "%A" unfitItems
@@ -554,7 +554,7 @@ let calcCost container items =
 
 type GlobalBest = { ItemsPut : ItemPut list; Cost : float; ContainerSet : Container list}
 
-let rec calc (container: Container) (itemsWithCost: ItemsWithCost) (globalBest:GlobalBest) (T: float) (alpha:float) result (sw : Stopwatch)=
+let rec calc (rootContainer:Container) (containers: Container list) (itemsWithCost: ItemsWithCost) (globalBest:GlobalBest) (T: float) (alpha:float) result (sw : Stopwatch)=
     if TMin >= T || sw.ElapsedMilliseconds > 30000L then
         printf "%A" sw.ElapsedMilliseconds
         globalBest
@@ -563,7 +563,7 @@ let rec calc (container: Container) (itemsWithCost: ItemsWithCost) (globalBest:G
 
         let calculated, res , globalBest=
             if itemsWithCost.Cost = 0. then
-                let cost, res,cs = calcCost container items
+                let cost, res,cs = calcCost rootContainer containers items
                 { itemsWithCost with Cost = cost }, res, { ItemsPut = res ; Cost = cost; ContainerSet = cs }
             else
                 itemsWithCost, result, globalBest
@@ -574,7 +574,7 @@ let rec calc (container: Container) (itemsWithCost: ItemsWithCost) (globalBest:G
             else
                 let items = itemsWC.Items
                 let nbr = items |> mutate res |> mutate res |> mutate res |> mutate res |> mutate  res
-                let nbrCost, nbrRes,cs = calcCost container nbr
+                let nbrCost, nbrRes,cs = calcCost rootContainer containers nbr
 
                 let nextItem, res , globalBest2=
                     printfn "costs: %f-%f" calculated.Cost nbrCost
@@ -598,13 +598,13 @@ let rec calc (container: Container) (itemsWithCost: ItemsWithCost) (globalBest:G
                 loop (nextItem, res) globalBest2 (count - 1)
 
         let c, r, globalBest = loop (calculated, res) globalBest 1
-        calc container c globalBest (T * 0.) alpha r sw
+        calc rootContainer containers c globalBest (T * 0.) alpha r sw
 
 
 let run  (container: Container) (items: Item list) (T: float) (alpha:float) =
     try
     let itemsWithCost = { Items = items |> List.map Rotate.rotateToMinZ ; Cost = 0.}
-    let globalBest = (calc container itemsWithCost { ItemsPut = []; Cost = Double.MaxValue; ContainerSet =[]} T alpha [] (Stopwatch.StartNew()))
+    let globalBest = (calc container [container] itemsWithCost { ItemsPut = []; Cost = Double.MaxValue; ContainerSet =[]} T alpha [] (Stopwatch.StartNew()))
     let itemsPut = globalBest.ItemsPut
     let volumeContainer = container.Dim.Height * container.Dim.Width * container.Dim.Length
     let itemsUnput = findUnfitItems itemsPut items
