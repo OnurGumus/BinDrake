@@ -593,6 +593,8 @@ let calcVolume (item: Item) =
 
 
 let inline mutate (itemsPut: ItemPut list) (items: Item list) =
+    if items |> List.isEmpty then []
+    else
     let firstSwap =
         if random.NextDouble() > 0.6
            || itemsPut |> List.isEmpty then
@@ -629,15 +631,14 @@ let calcCost rootContainer containers items =
         let unfitItems = findUnfitItems res items // printf "%A" unfitItems
 
         let maxZCoord =
+            if res.Length = 0 then Int32.MaxValue
+            else
             let max =
                 (res
                  |> List.maxBy (fun x -> x.Coord.Z + x.Item.Dim.Length))
 
             max.Item.Dim.Length + max.Coord.Z
 
-        let sumZCoord =
-            (res
-             |> List.sumBy (fun x -> x.Coord.Z + x.Item.Dim.Length))
 
         float
             ((unfitItems |> List.sumBy calcVolume)
@@ -784,7 +785,7 @@ let runInner (rootContainer: Container) (containers: Container list) (items: Ite
     with e ->
         printfn "%A" e
         reraise ()
-
+let defaultBatchSize = 5
 let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) =
     let rec loop (containers: Container list) (items: Item list) (results: CalcResult list) batchCount retryCount =
         printf "loop"
@@ -818,7 +819,7 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
             if res.ItemsUnput.Length > 0 then
                 batchCount / 2
             else
-                Math.Max(20,batchCount * 2)
+                Math.Max(defaultBatchSize,batchCount * 2)
         match newItems, retryCount with
         | _, 0
         | [], _ ->
@@ -831,10 +832,12 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
                         results
                         |> List.map (fun c -> c.ItemsPut)
                         |> List.fold (@) []
+                        |> List.distinct
                     ItemsUnput =
                         results
                         |> List.map (fun c -> c.ItemsUnput)
                         |> List.fold (@) []
+                        |> List.distinct
                     PutVolume = 100
                 }
             Serilog.Log.Information("Result {@result}", res)
@@ -842,4 +845,4 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
 
         | _ -> loop (res.EmptyContainers |> mergeContainers) newItems results batchCount retryCount
 
-    loop [ rootContainer ] (items |> List.sortByDescending(fun c -> c |> calcVolume)) [] 20 6
+    loop [ rootContainer ] (items |> List.sortByDescending(fun c -> c |> calcVolume)) [] defaultBatchSize 6
