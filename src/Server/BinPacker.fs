@@ -787,6 +787,16 @@ let runInner (rootContainer: Container) (containers: Container list) (items: Ite
     with e ->
         printfn "%A" e
         reraise ()
+let swap (a: _[]) x y =
+    let tmp = a.[x]
+    a.[x] <- a.[y]
+    a.[y] <- tmp
+
+// shuffle an array (in-place)
+let shuffle a =
+    Array.iteri (fun i _ -> swap a i (random.Next(i, Array.length a))) a
+    a
+
 let defaultBatchSize = 20
 let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) =
     let rec loop (containers: Container list) (items: Item list) (results: CalcResult list) batchCount retryCount =
@@ -805,7 +815,7 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
         let res =
             runInner rootContainer containers currentItems T alpha
         let results = res :: results
-        let newItems = res.ItemsUnput @ remainingItems
+        let newItems = remainingItems  @ (res.ItemsUnput|> Array.ofList |> shuffle |> List.ofArray)
         let retryCount = if res.ItemsPut.IsEmpty then retryCount - 1 else  retryCount
 
         match newItems, retryCount with
@@ -849,6 +859,6 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
                     |> mutate res.ItemsPut
                     |> mutate res.ItemsPut
                     |> mutate res.ItemsPut) (retryCount - 1)
-    outerLoop items 2
+    outerLoop items 5
 
 
