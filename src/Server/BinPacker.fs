@@ -590,6 +590,8 @@ let calculateCost =
 
 let calcVolume (item: Item) =
     item.Dim.Width * item.Dim.Height * item.Dim.Length
+let maxDim (item: Item) =
+        Math.Max(item.Dim.Width, Math.Max(item.Dim.Height, item.Dim.Length))
 
 
 let inline mutate (itemsPut: ItemPut list) (items: Item list) =
@@ -664,7 +666,7 @@ let rec calc (rootContainer: Container)
              result
              (sw: Stopwatch)
              =
-    if TMin >= T || sw.ElapsedMilliseconds > 10000L then
+    if TMin >= T || sw.ElapsedMilliseconds > 1000L then
         printf "%A" sw.ElapsedMilliseconds
         globalBest
     else
@@ -727,8 +729,8 @@ let rec calc (rootContainer: Container)
 
                 loop (nextItem, res) globalBest2 (count - 1)
 
-        let c, r, globalBest = loop (calculated, res) globalBest 1
-        calc rootContainer containers c globalBest (T * 0.) alpha r sw
+        let c, r, globalBest = loop (calculated, res) globalBest 2
+        calc rootContainer containers c globalBest (T * alpha) alpha r sw
 
 
 let runInner (rootContainer: Container) (containers: Container list) (items: Item list) (T: float) (alpha: float) =
@@ -799,27 +801,13 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
         let currentItems, remainingItems =
             if items.Length > batchCount then items |> List.splitAt batchCount else items, []
         let batchCount = oldBatchCount
-        // let nonStackableCount = currentItems |> List.filter (fun x -> x.NoTop) |> List.length
-        // printfn "nonstack:%A:" items
-        // let currentItems, remainingItems =
-        //     if nonStackableCount > 3 then
 
-        //         if items.Length > 3 then items |> List.splitAt 3 else items, []
-        //     else
-        //         currentItems, remainingItems
-        // printfn "================"
-        // printfn "current:%A-remain:%A" currentItems remainingItems
-        // printfn "================"
         let res =
             runInner rootContainer containers currentItems T alpha
         let results = res :: results
         let newItems = res.ItemsUnput @ remainingItems
         let retryCount = if res.ItemsPut.IsEmpty then retryCount - 1 else  retryCount
-        // let batchCount =
-        //     if res.ItemsUnput.Length > 0 then
-        //         batchCount / 2
-        //     else
-        //         Math.Max(defaultBatchSize,batchCount * 2)
+
         match newItems, retryCount with
         | _, 0
         | [], _ ->
@@ -836,7 +824,7 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
                     ItemsUnput =
                         results
                         |> List.map (fun c -> c.ItemsUnput)
-                        |> List.fold (@) []
+                        |> List.fold (@) remainingItems
                         |> List.distinct
                     PutVolume = 100
                 }
@@ -844,9 +832,10 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
             res
 
         | _ -> loop (res.EmptyContainers |> mergeContainers) newItems results batchCount retryCount
-    let rec outerLoop items retryCount  =
+    let rec outerLoop (items:Item list) retryCount  =
         printf "outer loop"
-        let res = loop [ rootContainer ] (items |> List.sortByDescending(fun c -> c |> calcVolume)) [] defaultBatchSize 6
+        let defaultBatchSize = if items.Length < 100 then 15 else 20
+        let res = loop [ rootContainer ] (items |> List.sortByDescending(maxDim)) [] defaultBatchSize 6
         match res.ItemsUnput, retryCount with
         | _ , 0 -> res
         | [] ,_ -> res
@@ -860,6 +849,6 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
                     |> mutate res.ItemsPut
                     |> mutate res.ItemsPut
                     |> mutate res.ItemsPut) (retryCount - 1)
-    outerLoop items 20
+    outerLoop items 2
 
 
