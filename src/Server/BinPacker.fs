@@ -821,13 +821,13 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
         let results = res :: results
 
         let retryCount = if res.ItemsPut.IsEmpty then retryCount - 1 else  retryCount
-      //  printfn "unput items :%i - remaining:%i -batachCount:%i" (res.ItemsUnput.Length ) (remainingItems.Length) batchCount
+        printfn "unput items :%i - remaining:%i -batachCount:%i" (lastunput.Length ) (remainingItems.Length) batchCount
         let rbatchCount = Math.Max(1,(batchCount/2))
         //printfn "rbatchCount %i" rbatchCount
         match newItems, retryCount with
-        | _, 1
-        | _, 3
-        | _, 6 -> loop (res.EmptyContainers |> mergeContainers) newItems results rbatchCount retryCount
+        | _, 6
+        | _, 9
+        | _, 12 -> loop (res.EmptyContainers |> mergeContainers) newItems results rbatchCount retryCount
         | _, 0
         | _, -1
         | [], _ ->
@@ -851,7 +851,7 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
     let rec outerLoop (items:Item list) retryCount  =
         printf "outer loop"
         let defaultBatchSize = if items.Length < 100 then 15 else 20
-        let res = loop [ rootContainer ] (items |> List.sortByDescending(maxDim)) [] defaultBatchSize 12
+        let res = loop [ rootContainer ] (items |> List.sortByDescending(maxDim)) [] defaultBatchSize 18
         match res.ItemsUnput, retryCount with
         | _ , 0 -> res
         | [] ,_ -> res
@@ -865,8 +865,8 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
                     |> mutate res.ItemsPut
                     |> mutate res.ItemsPut
                     |> mutate res.ItemsPut) (retryCount - 1)
-    let res = outerLoop items 4
-    Serilog.Log.Information("Result {@itemPut} {@itemUnput}, {@emptyCont}", res.ItemsPut.Length, res.ItemsUnput.Length, res.EmptyContainers)
+    let res = outerLoop (items |> List.map Rotate.rotateToMinZ) 1
+    Serilog.Log.Information("Result {@itemPut} {@itemUnput}, {@emptyCont}", res.ItemsPut.Length, res.ItemsUnput.Length, res.EmptyContainers|>mergeContainers)
     res
 
 
