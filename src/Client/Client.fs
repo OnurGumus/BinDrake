@@ -634,7 +634,7 @@ let viewC =
                             "Add as many items as you want."
                             "If the item is not stackable uncheck stack for that item."
                             "All dimensions are unitless."
-                            "Click calculate and wait up to 60 sec."
+                            "Click calculate and wait up to 90 sec."
                             "Bin packer will try to fit the items and minimize the length."
                             "Review the result in 3D!"
                         ]
@@ -724,7 +724,7 @@ let viewC =
                          else if isinvalid
                          then "First fill the form correctly!"
                          else "Calculate")
-                    prop.onClick (fun _ -> setCounterValue 60; dispatch CalculateRequested)
+                    prop.onClick (fun _ -> setCounterValue 00; dispatch CalculateRequested)
                 ]
                 Html.span[
                     spacing.my1
