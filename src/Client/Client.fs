@@ -724,7 +724,7 @@ let viewC =
                          else if isinvalid
                          then "First fill the form correctly!"
                          else "Calculate")
-                    prop.onClick (fun _ -> setCounterValue 00; dispatch CalculateRequested)
+                    prop.onClick (fun _ -> setCounterValue 90; dispatch CalculateRequested)
                 ]
                 Html.span[
                     spacing.my1
