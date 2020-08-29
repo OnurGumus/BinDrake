@@ -865,8 +865,15 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
                     |> mutate res.ItemsPut
                     |> mutate res.ItemsPut
                     |> mutate res.ItemsPut) (retryCount - 1)
-    let res = outerLoop (items |> List.map Rotate.rotateToMinZ) 1
-    Serilog.Log.Information("Result {@itemPut} {@itemUnput}, {@emptyCont}", res.ItemsPut.Length, res.ItemsUnput.Length, res.EmptyContainers|>mergeContainers)
+    let res = outerLoop (items |> List.map Rotate.rotateToMinZ) 4
+    Serilog.Log.Information("Result {@itemPut}", res.ItemsPut.Length, res.ItemsUnput.Length)
+    let convertContainerToItemPut (container : Container)=
+        {
+            Coord = container.Coord
+            Item = { Dim = container.Dim ; Id = Guid.NewGuid().ToString(); Tag = sprintf "rgb(%i,%i,%i)" (random.Next(256)) (random.Next(256)) (random.Next(256)); NoTop =false }
+        }:ItemPut
+    //{res with ItemsPut = res.EmptyContainers |> List.map convertContainerToItemPut}
+
     res
 
 
