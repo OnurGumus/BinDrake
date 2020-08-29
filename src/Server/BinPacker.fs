@@ -589,7 +589,7 @@ let calculateCost =
         loop ([ containers, items, [] ], 8000)
 
 let calcVolume (item: Item) =
-    item.Dim.Width * item.Dim.Height * item.Dim.Length
+    float(item.Dim.Width) * float(item.Dim.Height) * float(item.Dim.Length)
 let maxDim (item: Item) =
         Math.Max(item.Dim.Width, Math.Max(item.Dim.Height, item.Dim.Length))
 
@@ -629,7 +629,7 @@ let inline findUnfitItems itemsPut (items: Item list) =
 let calcCost rootContainer containers items =
     match calculateCost (putItem rootContainer 3) containers (items |> List.sortByDescending calcVolume) with
     | ValueSome (cs, res) ->
-
+        let cs =(cs |> mergeContainers)
         let unfitItems = findUnfitItems res items // printf "%A" unfitItems
 
         let maxZCoord =
@@ -644,8 +644,9 @@ let calcCost rootContainer containers items =
 
         float
             ((unfitItems |> List.sumBy calcVolume)
-             * 1000
-             + maxZCoord),
+             * 1000.
+             + 1000. * float(cs.Length)
+             + float(maxZCoord)),
         res,
         cs
     | ValueNone _ -> Double.MaxValue, [], []
@@ -702,7 +703,7 @@ let rec calc (rootContainer: Container)
                 let nbrCost, nbrRes, cs = calcCost rootContainer containers nbr
 
                 let nextItem, res, globalBest2 =
-                    //printfn "costs: %f-%f" calculated.Cost nbrCost
+                   // printfn "costs: %f-%f" calculated.Cost nbrCost
                     if nbrCost < calculated.Cost then
                         { Items = nbr; Cost = nbrCost },
                         nbrRes,
@@ -737,7 +738,7 @@ let runInner (rootContainer: Container) (containers: Container list) (items: Ite
     try
         let itemsWithCost =
             {
-                Items = items |> List.map Rotate.rotateToMinZ
+                Items = items// |> List.map Rotate.rotateToMinZ
                 Cost = 0.
             }
 
@@ -777,7 +778,7 @@ let runInner (rootContainer: Container) (containers: Container list) (items: Ite
                 ItemsPut = itemsPut
                 ContainerVol = volumeContainer
                 ItemsUnput = itemsUnput
-                PutVolume = putVolume
+                PutVolume = int(putVolume)
                 Container = rootContainer
                 EmptyContainers = globalBest.ContainerSet
             }
@@ -826,12 +827,12 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
             , lastunput.Length, remainingItems.Length, batchCount)
 
         let rbatchCount = Math.Max(1,(batchCount/2))
-        let timeOut = sw.Elapsed.TotalSeconds > 60.
+        let timeOut = sw.Elapsed.TotalSeconds > 90.
         //printfn "rbatchCount %i" rbatchCount
         match timeOut,newItems, retryCount with
-        | false,_::_, 6
-        | false,_::_, 9
-        | false,_::_, 12 -> loop (res.EmptyContainers |> mergeContainers) newItems results rbatchCount retryCount
+        | false,_::_, 12
+        | false,_::_, 15
+        | false,_::_, 24 -> loop (res.EmptyContainers |> mergeContainers) newItems results rbatchCount retryCount
         | true, _,_
         | _,_, 0
         | _,_, -1
@@ -857,8 +858,8 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
 
         printf "outer loop"
         let defaultBatchSize = if items.Length < 100 then 15 else 20
-        let res = loop [ rootContainer ] (items |> List.sortByDescending(maxDim)) [] defaultBatchSize 18
-        let timeOut = sw.Elapsed.TotalSeconds > 60.
+        let res = loop [ rootContainer ] (items |> List.sortByDescending(maxDim)) [] defaultBatchSize 30
+        let timeOut = sw.Elapsed.TotalSeconds > 90.
 
         match timeOut,res.ItemsUnput, retryCount with
         | true,_,_
@@ -874,7 +875,7 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
                     |> mutate res.ItemsPut
                     |> mutate res.ItemsPut
                     |> mutate res.ItemsPut) (retryCount - 1)
-    let res = outerLoop (items |> List.map Rotate.rotateToMinZ) 4
+    let res = outerLoop (items |> List.map Rotate.rotateToMinZ) 1
     Serilog.Log.Information("Result {@itemPut}", res.ItemsPut.Length, res.ItemsUnput.Length)
     let convertContainerToItemPut (container : Container)=
         {
