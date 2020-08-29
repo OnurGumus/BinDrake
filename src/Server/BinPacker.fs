@@ -797,7 +797,8 @@ let shuffle a =
     a
 
 let defaultBatchSize = 20
-let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) =
+let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float)  =
+    let sw = Stopwatch.StartNew()
     let rec loop (containers: Container list) (items: Item list) (results: CalcResult list) batchCount retryCount =
         //printfn "retryCount:%i" retryCount
         let containers = containers |> List.sortBy(fun c -> ((c.Coord.Z), -(c.Dim.Height)))
@@ -821,16 +822,20 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
         let results = res :: results
 
         let retryCount = if res.ItemsPut.IsEmpty then retryCount - 1 else  retryCount
-        printfn "unput items :%i - remaining:%i -batachCount:%i" (lastunput.Length ) (remainingItems.Length) batchCount
+        Serilog.Log.Information("unput items :{@unput} - remaining:{@remaining} -batchCount:{@batchCount}"
+            , lastunput.Length, remainingItems.Length, batchCount)
+
         let rbatchCount = Math.Max(1,(batchCount/2))
+        let timeOut = sw.Elapsed.TotalSeconds > 60.
         //printfn "rbatchCount %i" rbatchCount
-        match newItems, retryCount with
-        | _, 6
-        | _, 9
-        | _, 12 -> loop (res.EmptyContainers |> mergeContainers) newItems results rbatchCount retryCount
-        | _, 0
-        | _, -1
-        | [], _ ->
+        match timeOut,newItems, retryCount with
+        | false,_::_, 6
+        | false,_::_, 9
+        | false,_::_, 12 -> loop (res.EmptyContainers |> mergeContainers) newItems results rbatchCount retryCount
+        | true, _,_
+        | _,_, 0
+        | _,_, -1
+        | _,[], _ ->
             let res =
                 {
                     Container = rootContainer
@@ -849,13 +854,17 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
 
         | _ -> loop (res.EmptyContainers |> mergeContainers) newItems results batchCount retryCount
     let rec outerLoop (items:Item list) retryCount  =
+
         printf "outer loop"
         let defaultBatchSize = if items.Length < 100 then 15 else 20
         let res = loop [ rootContainer ] (items |> List.sortByDescending(maxDim)) [] defaultBatchSize 18
-        match res.ItemsUnput, retryCount with
-        | _ , 0 -> res
-        | [] ,_ -> res
-        | _ ->
+        let timeOut = sw.Elapsed.TotalSeconds > 60.
+
+        match timeOut,res.ItemsUnput, retryCount with
+        | true,_,_
+        | _,_ , 0 -> res
+        | _,[] ,_ -> res
+        | _ ,_,_->
             outerLoop
                 (items
                     |> mutate res.ItemsPut

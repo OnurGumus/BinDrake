@@ -634,7 +634,7 @@ let viewC =
                             "Add as many items as you want."
                             "If the item is not stackable uncheck stack for that item."
                             "All dimensions are unitless."
-                            "Click calculate and wait up to 120 sec."
+                            "Click calculate and wait up to 60 sec."
                             "Bin packer will try to fit the items and minimize the length."
                             "Review the result in 3D!"
                         ]
@@ -722,9 +722,9 @@ let viewC =
                         (if isCalculating
                          then sprintf "Calculating... (Max %i sec)" counterValue
                          else if isinvalid
-                         then "First fill the form correctly"
+                         then "First fill the form correctly!"
                          else "Calculate")
-                    prop.onClick (fun _ -> setCounterValue 120; dispatch CalculateRequested)
+                    prop.onClick (fun _ -> setCounterValue 60; dispatch CalculateRequested)
                 ]
                 Html.span[
                     spacing.my1
@@ -741,7 +741,7 @@ let viewC =
                             | _, [] ->
                                 Bulma.label [
                                     prop.style[style.color "red"]
-                                    prop.text "Unable to fit all items"
+                                    prop.text "Unable to fit all items!"
                                 ]
                             | items, _ ->
                                 let g = items |> List.groupBy (fun x -> x.Tag)
@@ -764,7 +764,7 @@ let viewC =
                                                                               ]
                                                                           ]
                                                                           Html.span [
-                                                                              prop.text  (sprintf "%i items not fit with this color" values.Length)
+                                                                              prop.text  (sprintf "%i items not fit with this color." values.Length)
                                                                           ]
 
                                                                       ]
