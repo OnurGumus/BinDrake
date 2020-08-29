@@ -876,7 +876,7 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
                     |> mutate res.ItemsPut
                     |> mutate res.ItemsPut) (retryCount - 1)
     let res = outerLoop (items |> List.map Rotate.rotateToMinZ) 1
-    Serilog.Log.Information("Result {@itemPut}", res.ItemsPut.Length, res.ItemsUnput.Length)
+    Serilog.Log.Information("Result {@res}", res)
     let convertContainerToItemPut (container : Container)=
         {
             Coord = container.Coord
