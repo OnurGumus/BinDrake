@@ -171,6 +171,24 @@ let validateTreshold v =
         |> t.Lt 100_000. "must be less than {max}"
         |> t.End
 
+let convertToItems (model:Model) =
+    [
+        for rowItem, key in model.RowItems do
+            let r = rowItem.Value
+            for i = 1 to r.Quantity do
+                yield {
+                          Tag = r.Color
+                          Id = key + i.ToString()
+                          NoTop = not (r.Stackable)
+                          Dim =
+                              {
+                                  Width = r.Width
+                                  Height = r.Height
+                                  Length = r.Length
+                              }
+                      }
+    ]
+
 let update (msg: Msg) model =
     let model, cmd =
         match msg with
@@ -214,23 +232,7 @@ let update (msg: Msg) model =
                         }
                 }
 
-            let items: list<Item> =
-                [
-                    for rowItem, key in model.RowItems do
-                        let r = rowItem.Value
-                        for i = 1 to r.Quantity do
-                            yield {
-                                      Tag = r.Color
-                                      Id = key + i.ToString()
-                                      NoTop = not (r.Stackable)
-                                      Dim =
-                                          {
-                                              Width = r.Width
-                                              Height = r.Height
-                                              Length = r.Length
-                                          }
-                                  }
-                ]
+            let items: list<Item> = convertToItems model
 
             { model with Calculation = Calculating }, runCmd container items
 
@@ -687,7 +689,6 @@ let viewC =
 
                 let line (title: string) (v: int option) =
                     React.fragment [
-                        br []
                         Bulma.label title
                         control.div
                             [
@@ -703,19 +704,39 @@ let viewC =
                     ]
 
                 [
-                    let items = [ ("Total Volume:", model.TotalVolume) ]
+                    let items = [ ("Total Item Volume:", model.TotalVolume) ]
 
                     for t, v in items do
                         line t v
                 ]
                 |> ofList
 
+                match model.ContainerItem with
+                | Some container  -> line "Container volume:" (Some(container.Height * container.Width * container.Length))
+                | _ -> Html.none
+
                 let isinvalid =
                     (model.ContainerItem.IsNone
                      || model.TotalVolume.IsNone)
 
+                let volumeExceeds =
+                    match model.ContainerItem, model.TotalVolume with
+                    | Some container, Some volume ->  container.Height * container.Width * container.Length < volume
+                    | _ -> false
+
+                let itemExceeds =
+                    match model.ContainerItem, model.TotalVolume with
+                    | Some container, Some volume ->
+                        let checkDim  (item:Item) =
+                            let itemDim = Math.Max(Math.Max(item.Dim.Length, item.Dim.Width), item.Dim.Height)
+                            let cDim = Math.Max(Math.Max(container.Length, container.Width), container.Height)
+                            itemDim > cDim
+                        let items = convertToItems model
+                        List.exists (checkDim) items
+                    | _ -> false
+
                 Bulma.button.button [
-                    prop.disabled (isinvalid || isCalculating)
+                    prop.disabled (isinvalid || isCalculating || volumeExceeds||itemExceeds)
                     color.isPrimary
                     prop.id "calculate-button"
                     prop.text
@@ -723,6 +744,11 @@ let viewC =
                          then sprintf "Calculating... (Max %i sec)" counterValue
                          else if isinvalid
                          then "First fill the form correctly!"
+                         else if volumeExceeds
+                         then "Items' volume exceeds container volume."
+                         else if itemExceeds
+                         then "An item's dim is larger than container."
+
                          else "Calculate")
                     prop.onClick (fun _ -> setCounterValue 90; dispatch CalculateRequested)
                 ]
