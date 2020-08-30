@@ -148,28 +148,29 @@ let renderCube x y z width height length (color:string) L W =
 let mutable demoMode2 = false
 
 let init () =
-    let addSpottLight x y z =
+    let addSpottLight x y z inten=
         let spotLight = THREE.SpotLight.Create(!^ "white")
         spotLight.position.set (x, y, z) |> ignore
         spotLight.castShadow <- true
         spotLight.shadow.mapSize <- THREE.Vector2.Create(1024., 1024.)
         spotLight.shadow.camera?far <- 130
         spotLight.shadow.camera?near <- 40
+        spotLight.intensity <- inten
         scene.add (spotLight) |> ignore
 
-    addSpottLight -400. 400. 150.
-    addSpottLight 400. 400. 450.
-    addSpottLight -400. 400. 1450.
-    addSpottLight -1400. 1000. 1450.
+    addSpottLight -400. 400. 150. 0.4
+    addSpottLight 400. 400. 450. 0.4
+    addSpottLight -800. 1200. 2450. 0.4
+    addSpottLight -1400. 1000. 1450. 0.4
 
-    let dLight = THREE.DirectionalLight.Create(!^ "white",0.5)
+    let dLight = THREE.DirectionalLight.Create(!^ "white",0.4)
     dLight.translateX 100.0 |>ignore
     dLight.rotateZ 40. |> ignore
     dLight.rotateX 10. |> ignore
     dLight.rotateY 10. |> ignore
     dLight.position.set (-400., 400., -900.) |> ignore
     scene.add dLight |> ignore
-    let dLight2 = THREE.DirectionalLight.Create(!^ "white",0.5)
+    let dLight2 = THREE.DirectionalLight.Create(!^ "white",0.4)
     dLight2.translateX 100.0 |>ignore
     dLight2.rotateZ 40. |> ignore
     dLight2.rotateX 10. |> ignore

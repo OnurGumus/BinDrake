@@ -482,12 +482,15 @@ let rec putItem (rootContainer: Container) tryCount: PutItem =
                             Z = container.Coord.Z
                         }
                 }
-
+            let all =  [ config2; config1;  config3; config4  ] |> List.distinct
             let t1 =
-                [ config2; config1;  config3; config4  ]|> List.item (random.Next(0, 4))
-
+               all |> List.item (random.Next(0, all.Length))
             let t2 =
-                [ config1; config2; config3; config4 ] |> List.item (random.Next(0, 4))
+                all
+                |> function
+                |[] -> []
+                |[s] -> s
+                | _ -> all |> List.filter(fun e -> e <> t1) |> fun l ->  List.item (random.Next(0, l.Length)) l
             let sets =
                 if item.NoTop then [config2;config1]
                 else
@@ -631,7 +634,13 @@ let calcCost rootContainer containers items =
     | ValueSome (cs, res) ->
         let cs =(cs |> mergeContainers)
         let unfitItems = findUnfitItems res items // printf "%A" unfitItems
+        let sumZ =
+            if res.Length = 0 then Int32.MaxValue
+            else
+                (res
+                 |> List.sumBy (fun x -> x.Coord.Z + x.Item.Dim.Length))
 
+           // max.Item.Dim.Length + max.Coord.Z
         let maxZCoord =
             if res.Length = 0 then Int32.MaxValue
             else
@@ -645,8 +654,9 @@ let calcCost rootContainer containers items =
         float
             ((unfitItems |> List.sumBy calcVolume)
              * 1000.
-             + 1000. * float(cs.Length)
-             + float(maxZCoord)),
+             + 0. * float(cs.Length)
+             + 1. * float(sumZ)
+             + 1.0 *float(maxZCoord)),
         res,
         cs
     | ValueNone _ -> Double.MaxValue, [], []
@@ -667,7 +677,6 @@ let rec calc (rootContainer: Container)
              result
              (sw: Stopwatch)
              =
-
     if TMin >= T || sw.ElapsedMilliseconds > 1000L then
         globalBest
     else
@@ -675,7 +684,10 @@ let rec calc (rootContainer: Container)
 
         let calculated, res, globalBest =
             if itemsWithCost.Cost = 0. then
+                printf "bCalc"
                 let cost, res, cs = calcCost rootContainer containers items
+                printf "aCalc"
+
                 { itemsWithCost with Cost = cost },
                 res,
                 {
@@ -703,7 +715,7 @@ let rec calc (rootContainer: Container)
                 let nbrCost, nbrRes, cs = calcCost rootContainer containers nbr
 
                 let nextItem, res, globalBest2 =
-                   // printfn "costs: %f-%f" calculated.Cost nbrCost
+                    //printfn "costs: %f-%f" calculated.Cost nbrCost
                     if nbrCost < calculated.Cost then
                         { Items = nbr; Cost = nbrCost },
                         nbrRes,
