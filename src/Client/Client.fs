@@ -740,6 +740,11 @@ let viewC =
                              * container.Length))
                 | _ -> Html.none
 
+                match model.Calculation with
+                | Calculated r ->
+                    line "Volume fit:"  (Some r.PutVolume)
+                | _ -> Html.none
+
                 let isinvalid =
                     (model.ContainerItem.IsNone
                      || model.TotalVolume.IsNone)
