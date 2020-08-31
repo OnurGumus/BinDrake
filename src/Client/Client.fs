@@ -767,8 +767,17 @@ let viewC =
                             |> convertToItems
                             |> List.filter (fun x -> x.NoTop)
                             |> List.sumBy (fun x -> x.Dim.Width * x.Dim.Length)
+                        let maxHeight =
+                            model
+                            |> convertToItems
+                            |> List.filter (fun x -> x.NoTop)
+                            |> function
+                               | [] -> 0
+                               | other -> (other |> List.maxBy (fun x -> x.Dim.Height)).Dim.Height
 
-                        areaItems > containerArea
+                        areaItems > containerArea || maxHeight > container.Height
+
+
                     | _ -> false
 
                 let itemExceeds =

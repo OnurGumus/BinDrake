@@ -58,6 +58,7 @@ module Rotate =
 
 
 let dimToVolume (d: Dim) = d.Width * d.Height * d.Length
+let dimToArea (d: Dim) = d.Width * d.Height + (d.Length *d.Width) + (d.Length *d.Height)
 
 module Conflict =
     let checkConflictC (A: Container) (B: Container) =
@@ -217,6 +218,7 @@ let mergeContainers (containers: Container list) =
 
 let rec putItem (rootContainer: Container) tryCount: PutItem =
     fun container item ->
+        //printfn "trying to put %A %A" item container
         let remainingWidth = container.Dim.Width - item.Dim.Width
         let remainingHeight = container.Dim.Height - item.Dim.Height
         let remainingLength = container.Dim.Length - item.Dim.Length
@@ -597,7 +599,7 @@ let calculateCost =
             | (cs, _, itemPuts) :: _, _ -> ValueSome(cs, itemPuts)
             | _, _ -> ValueSome(containers, [])
 
-        loop ([ containers, items, [] ], 8000)
+        loop ([ containers, items, [] ], 10)
 
 let calcVolume (item: Item) =
     float (item.Dim.Width)
@@ -606,6 +608,10 @@ let calcVolume (item: Item) =
 
 let maxDim (item: Item) =
     Math.Max(item.Dim.Width, Math.Max(item.Dim.Height, item.Dim.Length))
+
+let maxVol (item: Item) =
+       item.Dim.Width * item.Dim.Height * item.Dim.Length
+
 
 
 let inline mutate (itemsPut: ItemPut list) (items: Item list) =
@@ -669,7 +675,7 @@ let calcCost rootContainer containers items =
         float
             ((unfitItems |> List.sumBy calcVolume)
              * 1000.
-             + 0. * float (cs.Length)
+             + 1000. * float (cs |> List.sumBy(fun x->x.Dim |> dimToArea))
              + 1. * float (sumZ)
              + 1.0 * float (maxZCoord)),
         res,
@@ -692,7 +698,7 @@ let rec calc (rootContainer: Container)
              result
              (sw: Stopwatch)
              =
-    if TMin >= T || sw.ElapsedMilliseconds > 1000L then
+    if TMin >= T || sw.ElapsedMilliseconds > 20L then
         globalBest
     else
         let items = itemsWithCost.Items
@@ -875,9 +881,9 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
         let timeOut = sw.Elapsed.TotalSeconds > 90.
         //printfn "rbatchCount %i" rbatchCount
         match timeOut, newItems, retryCount with
-        | false, _ :: _, 12
-        | false, _ :: _, 15
-        | false, _ :: _, 24 -> loop (res.EmptyContainers |> mergeContainers) newItems results rbatchCount retryCount
+        | false, _ :: _, 6
+        | false, _ :: _, 8
+        | false, _ :: _, 10 -> loop (res.EmptyContainers |> mergeContainers) newItems results rbatchCount retryCount
         | true, _, _
         | _, _, 0
         | _, _, -1
@@ -913,7 +919,7 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
         let defaultBatchSize = if items.Length < 100 then 15 else 20
 
         let res =
-            loop [ rootContainer ] (items |> List.sortByDescending (maxDim)) [] defaultBatchSize 30
+            loop [ rootContainer ] (items) [] defaultBatchSize 12
 
         let timeOut = sw.Elapsed.TotalSeconds > 90.
         let results = res::resList
@@ -931,10 +937,10 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
                 results
     try
         let resList =
-            outerLoop (items |> List.map Rotate.rotateToMinZ) 1 []
+            outerLoop (items |> List.map Rotate.rotateToMinZ |> List.sortByDescending (maxDim)) 2 []
         let res =
             resList
-            |> List.minBy (fun x ->  x.ItemsUnput.Length)
+            |> List.maxBy (fun x ->  x.PutVolume)
 
         Serilog.Log.Information("Result {@res}", res)
 
@@ -949,7 +955,7 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
                         NoTop = false
                     }
             }
-        //{res with ItemsPut = res.EmptyContainers |> List.map convertContainerToItemPut}
+        //let res = {res with ItemsPut = res.EmptyContainers |> List.map convertContainerToItemPut}
 
         res
     with e ->
