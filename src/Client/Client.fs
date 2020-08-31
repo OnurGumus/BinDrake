@@ -171,7 +171,7 @@ let validateTreshold v =
         |> t.Lt 100_000. "must be less than {max}"
         |> t.End
 
-let convertToItems (model:Model) =
+let convertToItems (model: Model) =
     [
         for rowItem, key in model.RowItems do
             let r = rowItem.Value
@@ -426,7 +426,7 @@ module Row =
                     Width = ""
                     Height = ""
                     Length = ""
-                    Color = sprintf "rgb(%i,%i,%i)" (r.Next(256)) (r.Next(256)) (r.Next(256))
+                    Color = sprintf "rgb(%i,%i,%i)" (r.Next(40,256)) (r.Next(40,256)) (r.Next(40,256))
                     Stackable = true
                     Quantity = ""
                 }
@@ -563,7 +563,16 @@ module Row =
 open Fable.Core
 open Browser.Dom
 open Fable.Core.JsInterop
-
+let thousands n =
+    let v = (if n < 0 then -n else n).ToString()
+    let r = v.Length % 3
+    let s = if r = 0 then 3 else r
+    [   yield v.[0.. s - 1]
+        for i in 0..(v.Length - s)/ 3 - 1 do
+            yield v.[i * 3 + s .. i * 3 + s + 2]
+    ]
+    |> String.concat ","
+    |> fun s -> if n < 0 then "-" + s else s
 let viewC =
     React.functionComponent (fun (props: {| model: Model
                                             dispatch: Msg -> unit |}) ->
@@ -580,8 +589,13 @@ let viewC =
         let scollDown () =
             match model.Calculation with
             | Calculated { ItemsPut = itemsPut } when itemsPut.Length > 0 ->
-                let element = document.querySelector ("#calculate-button")
-                element?scrollIntoView ({| behavior = "smooth"; block = "start" |})
+                let element =
+                    document.querySelector ("#calculate-button")
+
+                element?scrollIntoView ({|
+                                            behavior = "smooth"
+                                            block = "start"
+                                        |})
             | _ -> ()
             { new IDisposable with
                 member this.Dispose() = ()
@@ -593,7 +607,9 @@ let viewC =
             // start the ticking
 
             let subscriptionId =
-                JS.setTimeout (fun _ -> printf "%A" counterValue; if isCalculating then setCounterValue (counterValue - 1)) 1000
+                JS.setTimeout (fun _ ->
+                    printf "%A" counterValue
+                    if isCalculating then setCounterValue (counterValue - 1)) 1000
             // return IDisposable with cleanup code
             { new IDisposable with
                 member this.Dispose() = JS.clearTimeout (subscriptionId)
@@ -697,14 +713,17 @@ let viewC =
                                     then prop.className "output"
                                     prop.text
                                         (v
-                                         |> Option.map (string)
+                                         |> Option.map (thousands)
                                          |> Option.defaultValue "Please complete the form.")
                                 ]
                             ]
                     ]
 
                 [
-                    let items = [ ("Total Item Volume:", model.TotalVolume) ]
+                    let items =
+                        [
+                            ("Total Item Volume:", model.TotalVolume)
+                        ]
 
                     for t, v in items do
                         line t v
@@ -712,7 +731,13 @@ let viewC =
                 |> ofList
 
                 match model.ContainerItem with
-                | Some container  -> line "Container volume:" (Some(container.Height * container.Width * container.Length))
+                | Some container ->
+                    line
+                        "Container volume:"
+                        (Some
+                            (container.Height
+                             * container.Width
+                             * container.Length))
                 | _ -> Html.none
 
                 let isinvalid =
@@ -721,22 +746,49 @@ let viewC =
 
                 let volumeExceeds =
                     match model.ContainerItem, model.TotalVolume with
-                    | Some container, Some volume ->  container.Height * container.Width * container.Length < volume
+                    | Some container, Some volume ->
+                        container.Height
+                        * container.Width
+                        * container.Length < volume
+                    | _ -> false
+
+                let nostackExceeds =
+                    match model.ContainerItem, model.TotalVolume with
+                    | Some container, Some volume ->
+                        let containerArea = container.Length * container.Width
+
+                        let areaItems =
+                            model
+                            |> convertToItems
+                            |> List.filter (fun x -> x.NoTop)
+                            |> List.sumBy (fun x -> x.Dim.Width * x.Dim.Length)
+
+                        areaItems > containerArea
                     | _ -> false
 
                 let itemExceeds =
                     match model.ContainerItem, model.TotalVolume with
                     | Some container, Some volume ->
-                        let checkDim  (item:Item) =
-                            let itemDim = Math.Max(Math.Max(item.Dim.Length, item.Dim.Width), item.Dim.Height)
-                            let cDim = Math.Max(Math.Max(container.Length, container.Width), container.Height)
+                        let checkDim (item: Item) =
+                            let itemDim =
+                                Math.Max(Math.Max(item.Dim.Length, item.Dim.Width), item.Dim.Height)
+
+                            let cDim =
+                                Math.Max(Math.Max(container.Length, container.Width), container.Height)
+
                             itemDim > cDim
+
                         let items = convertToItems model
                         List.exists (checkDim) items
                     | _ -> false
 
                 Bulma.button.button [
-                    prop.disabled (isinvalid || isCalculating || volumeExceeds||itemExceeds)
+                    prop.disabled
+                        (isinvalid
+                         || isCalculating
+                         || nostackExceeds
+                         || volumeExceeds
+                         || itemExceeds)
                     color.isPrimary
                     prop.id "calculate-button"
                     prop.text
@@ -746,60 +798,69 @@ let viewC =
                          then "First fill the form correctly!"
                          else if volumeExceeds
                          then "Items' volume exceeds container volume."
+                         else if nostackExceeds
+                         then "No stack items won't fit to container."
                          else if itemExceeds
                          then "An item's dim is larger than container."
 
                          else "Calculate")
-                    prop.onClick (fun _ -> setCounterValue 90; dispatch CalculateRequested)
+                    prop.onClick (fun _ ->
+                        setCounterValue 90
+                        dispatch CalculateRequested)
                 ]
-                Html.span[
+                Html.span [
                     spacing.my1
-                    prop.children[
-                        match model.Calculation with
-                        | Calculated c ->
+                    prop.children
+                        [
+                            match model.Calculation with
+                            | Calculated c ->
 
-                            match c.ItemsUnput, c.ItemsPut with
-                            | [], _ ->
-                                Bulma.label [
-                                    prop.style[style.color "green"]
-                                    prop.text "All items put successfully!"
-                                ]
-                            | _, [] ->
-                                Bulma.label [
-                                    prop.style[style.color "red"]
-                                    prop.text "Unable to fit all items!"
-                                ]
-                            | items, _ ->
-                                let g = items |> List.groupBy (fun x -> x.Tag)
-                                React.fragment [
-                                    Bulma.label "Could not fit the following items:"
-                                    Html.ul
-                                        [
-                                            prop.children
-                                                [
-                                                    for key, values in g do
-                                                        yield Html.li
-                                                                  [
-                                                                      prop.children [
-                                                                          Html.span [
-                                                                              prop.text " x "
-                                                                              prop.style [
-                                                                                  style.backgroundColor key;
-                                                                                  style.color.white; style.width (length.ch 1)
-                                                                                  style.display.inlineBlock
+                                match c.ItemsUnput, c.ItemsPut with
+                                | [], _ ->
+                                    Bulma.label [
+                                        prop.style [ style.color "green" ]
+                                        prop.text "All items put successfully!"
+                                    ]
+                                | _, [] ->
+                                    Bulma.label [
+                                        prop.style [ style.color "red" ]
+                                        prop.text "Unable to fit all items!"
+                                    ]
+                                | items, _ ->
+                                    let g = items |> List.groupBy (fun x -> x.Tag)
+                                    React.fragment [
+                                        Bulma.label "Could not fit the following items:"
+                                        Html.ul
+                                            [
+                                                prop.children
+                                                    [
+                                                        for key, values in g do
+                                                            yield Html.li
+                                                                      [
+                                                                          prop.children [
+                                                                              Html.span [
+                                                                                  prop.text " x "
+                                                                                  prop.style [
+                                                                                      style.backgroundColor key
+                                                                                      style.color.white
+                                                                                      style.width (length.ch 1)
+                                                                                      style.display.inlineBlock
+                                                                                  ]
                                                                               ]
+                                                                              Html.span
+                                                                                  [
+                                                                                      prop.text
+                                                                                          (sprintf
+                                                                                              "%i items not fit with this color."
+                                                                                               values.Length)
+                                                                                  ]
                                                                           ]
-                                                                          Html.span [
-                                                                              prop.text  (sprintf "%i items not fit with this color." values.Length)
-                                                                          ]
-
                                                                       ]
-                                                                  ]
-                                                ]
-                                        ]
-                                ]
-                        | _ -> Html.none
-                    ]
+                                                    ]
+                                            ]
+                                    ]
+                            | _ -> Html.none
+                        ]
                 ]
             ]
 
