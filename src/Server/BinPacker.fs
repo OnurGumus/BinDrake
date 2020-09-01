@@ -599,7 +599,7 @@ let calculateCost =
             | (cs, _, itemPuts) :: _, _ -> ValueSome(cs, itemPuts)
             | _, _ -> ValueSome(containers, [])
 
-        loop ([ containers, items, [] ], 10)
+        loop ([ containers, items, [] ], 800)
 
 let calcVolume (item: Item) =
     float (item.Dim.Width)
@@ -698,7 +698,7 @@ let rec calc (rootContainer: Container)
              result
              (sw: Stopwatch)
              =
-    if TMin >= T || sw.ElapsedMilliseconds > 20L then
+    if TMin >= T || sw.ElapsedMilliseconds > 400L then
         globalBest
     else
         let items = itemsWithCost.Items
