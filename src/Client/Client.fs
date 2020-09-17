@@ -154,9 +154,9 @@ let init () =
 
 let cols =
     [
-        "Height"
-        "Width"
         "Length"
+        "Width"
+        "Height"
         "Quant."
         "Upright"
         "Stack"
@@ -351,7 +351,7 @@ module Container =
 
                 Html.div
                     [
-                        let cols = [ "Width"; "Height"; "Length" ]
+                        let cols = ["Length"; "Width"; "Height" ]
                         prop.className "table"
                         prop.children [
                             Html.div [
