@@ -164,7 +164,7 @@ let cols =
         "Height"
         "Weight"
         "Quant."
-        "Upright"
+        "⬆⬆"
         "Stack"
         "Color"
         ""
@@ -537,7 +537,7 @@ module Row =
                     | "Width" -> WidthChanged v
                     | "Weight" -> WeightChanged v
                     | "Quant." -> QuantityChanged v
-                    | "Upright" -> TopChanged(Boolean.Parse v)
+                    | "⬆⬆" -> TopChanged(Boolean.Parse v)
                     | "Stack" -> StackableChanged(Boolean.Parse v)
                     | "Length" -> LengthChanged v
                     | other -> failwith other
@@ -554,11 +554,11 @@ module Row =
                                         [
                                             if i < cols.Length - 2 then
                                                 match col with
-                                                | "Upright" ->
+                                                | "⬆⬆" ->
                                                 input.checkbox [
                                                     input.isSmall
                                                     prop.readOnly props.Disabled
-                                                    prop.onCheckedChange (fun e -> dispatch' "Upright" (e.ToString()))
+                                                    prop.onCheckedChange (fun e -> dispatch' "⬆⬆" (e.ToString()))
                                                 ]
                                                 | "Stack" ->
                                                     input.checkbox [
@@ -690,7 +690,7 @@ let viewC =
                             "Weight range is between 0 and 100,000."
                             "Add as many items as you want."
                             "If the item is not stackable uncheck \"Stack\" for that item."
-                            "If the item must keep its upright then check \"Upright\" for that item."
+                            "If the item must keep its upright then check \"⬆⬆\" for that item."
                             "All dimensions are unitless."
                             "Click calculate and wait up to 90 sec."
                             "Bin packer will try to fit the items and minimize the length."
