@@ -667,8 +667,8 @@ let viewC =
                         [
                             "Enter container and item dimensions between 1 and 2000, no decimals."
                             "Add as many items as you want."
-                            "If the item is not stackable uncheck stack for that item."
-                            "If the item must keep its upright then check upside for that item."
+                            "If the item is not stackable uncheck \"Stack\" for that item."
+                            "If the item must keep its upright then check \"Upright\" for that item."
                             "All dimensions are unitless."
                             "Click calculate and wait up to 90 sec."
                             "Bin packer will try to fit the items and minimize the length."
