@@ -11,7 +11,7 @@ type Dim =
         Length: int
     }
 type Container = { Dim: Dim; Coord: Coordinates; Weight : int }
-type Item = { Dim: Dim; Weight : int; Id: string; Tag: string ; NoTop:bool; KeepTop:bool}
+type Item = { Dim: Dim; Weight : int; Id: string; Tag: string ; NoTop:bool; KeepTop:bool; KeepBottom : bool}
 type ContainerTriplet = Container list
 type ItemPut = { Item: Item; Coord: Coordinates }
 type PutResult = ValueTuple<ContainerTriplet list ,  ItemPut ValueOption> ValueOption

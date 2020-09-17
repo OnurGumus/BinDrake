@@ -26,6 +26,7 @@ type RowItem =
         Quantity: int
         Stackable: bool
         KeepTop : bool
+        KeepBottom : bool
     }
 
 type ContainerItem =
@@ -113,6 +114,7 @@ let init () =
                             NoTop = false
                             KeepTop = false
                             Weight = 0
+                            KeepBottom = false
                         }
                 }
             for i = 0 to 9 do
@@ -130,6 +132,7 @@ let init () =
                             Id = i.ToString()
                             NoTop = false
                             KeepTop = false
+                            KeepBottom = false
                             Weight = 0
                         }
                 }
@@ -165,6 +168,7 @@ let cols =
         "Weight"
         "Quant."
         "⬆⬆"
+        "⬇⬇"
         "Stack"
         "Color"
         ""
@@ -198,6 +202,7 @@ let convertToItems (model: Model) =
                               }
                           Weight = r.Weight
                           KeepTop = r.KeepTop
+                          KeepBottom = r.KeepBottom
                       }
     ]
 
@@ -422,6 +427,7 @@ module Row =
             Color: string
             Stackable: bool
             KeepTop : bool
+            KeepBottom : bool
         }
 
     type Model =
@@ -436,6 +442,7 @@ module Row =
         | LengthChanged of string
         | WeightChanged of string
         | StackableChanged of bool
+        | KeepBottomChanged of bool
         | TopChanged of bool
         | QuantityChanged of string
 
@@ -453,6 +460,7 @@ module Row =
                     Color = sprintf "rgb(%i,%i,%i)" (r.Next(40,256)) (r.Next(40,256)) (r.Next(40,256))
                     Stackable = true
                     KeepTop = false
+                    KeepBottom = false
                     Quantity = ""
                 }
         },
@@ -472,6 +480,7 @@ module Row =
                 Weight = weightCheck "weight" formData.Weight
                 Stackable = formData.Stackable
                 KeepTop = formData.KeepTop
+                KeepBottom = formData.KeepBottom
                 Color = formData.Color
             }: RowItem
 
@@ -486,6 +495,7 @@ module Row =
             | WeightChanged s -> { formData with Weight = s }
             | QuantityChanged s -> { formData with Quantity = s }
             | StackableChanged s -> { formData with Stackable = s }
+            | KeepBottomChanged s -> { formData with KeepBottom = s }
             | TopChanged s -> { formData with KeepTop = s }
 
         let r = validate formData
@@ -538,6 +548,7 @@ module Row =
                     | "Weight" -> WeightChanged v
                     | "Quant." -> QuantityChanged v
                     | "⬆⬆" -> TopChanged(Boolean.Parse v)
+                    | "⬇⬇" -> KeepBottomChanged(Boolean.Parse v)
                     | "Stack" -> StackableChanged(Boolean.Parse v)
                     | "Length" -> LengthChanged v
                     | other -> failwith other
@@ -560,6 +571,12 @@ module Row =
                                                     prop.readOnly props.Disabled
                                                     prop.onCheckedChange (fun e -> dispatch' "⬆⬆" (e.ToString()))
                                                 ]
+                                                | "⬇⬇" ->
+                                                    input.checkbox [
+                                                        input.isSmall
+                                                        prop.readOnly props.Disabled
+                                                        prop.onCheckedChange (fun e -> dispatch' "⬇⬇" (e.ToString()))
+                                                    ]
                                                 | "Stack" ->
                                                     input.checkbox [
                                                         input.isSmall
@@ -689,12 +706,13 @@ let viewC =
                             "Enter container and item dimensions between 1 and 2000, no decimals."
                             "Weight range is between 0 and 100,000."
                             "Add as many items as you want."
-                            "If the item is not stackable uncheck \"Stack\" for that item."
+                            "If the item is not stackable (no other item is on top of this) uncheck \"Stack\" for that item."
                             "If the item must keep its upright then check \"⬆⬆\" for that item."
+                            "If the item must be at the bottom (e.g, heavy items) then check \"⬇⬇\" for that item."
                             "All dimensions are unitless."
                             "Click calculate and wait up to 90 sec."
                             "Bin packer will try to fit the items and minimize the length."
-                            "Gravity is ignored!"
+                            "Gravity is ignored."
                             "Review the result in 3D!"
                         ]
 

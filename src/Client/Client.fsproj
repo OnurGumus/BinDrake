@@ -13,7 +13,6 @@
     <Compile Include="stories/Test.stories.fs" />
     <Compile Include="stories/MyInput.fs" />
     <Compile Include="CanvasRenderer.fs" />
-    <Compile Include="Item.fs" />
     <Compile Include="Client.fs" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />

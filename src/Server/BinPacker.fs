@@ -231,6 +231,9 @@ let rec putItem (rootContainer: Container)  tryCount: PutItem =
            && container.Coord.Y
            + container.Dim.Height < rootContainer.Dim.Height then
             ValueNone
+        elif item.KeepBottom
+            && container.Coord.Y > 0 then
+             ValueNone
         elif (remainingHeight < 0)
              || remainingLength < 0
              || remainingWidth < 0 then
@@ -866,7 +869,7 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
         let oldBatchCount = batchCount
 
         let batchCount =
-            if items.Length > 0 && items.Head.NoTop then 1 else batchCount
+            if (items.Length > 0 && items.Head.NoTop) || (items.Length < 8)  then 1 else batchCount
 
         let currentItems, remainingItems =
             if items.Length > batchCount then items |> List.splitAt batchCount else items, []
@@ -959,7 +962,7 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
                 results
     try
         let resList =
-            outerLoop (items |> List.map Rotate.rotateToMinZ |> List.sortByDescending (maxDim)) 2 []
+            outerLoop (items |> List.map Rotate.rotateToMinZ |> List.sortByDescending (fun x -> (x.KeepBottom, maxDim x))) 2 []
         let res =
             resList
             |> List.maxBy (fun x ->  x.PutVolume)
@@ -976,6 +979,7 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
                         Tag = sprintf "rgb(%i,%i,%i)" (random.Next(256)) (random.Next(256)) (random.Next(256))
                         NoTop = false
                         KeepTop = false
+                        KeepBottom = false
                         Weight = 0
                     }
             }
