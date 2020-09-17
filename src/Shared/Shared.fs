@@ -10,14 +10,14 @@ type Dim =
         Height: int
         Length: int
     }
-type Container = { Dim: Dim; Coord: Coordinates }
-type Item = { Dim: Dim; Id: string; Tag: string ; NoTop:bool; KeepTop:bool}
+type Container = { Dim: Dim; Coord: Coordinates; Weight : int }
+type Item = { Dim: Dim; Weight : int; Id: string; Tag: string ; NoTop:bool; KeepTop:bool}
 type ContainerTriplet = Container list
 type ItemPut = { Item: Item; Coord: Coordinates }
-type PutResult = ValueTuple<ContainerTriplet list , ItemPut> ValueOption
+type PutResult = ValueTuple<ContainerTriplet list ,  ItemPut ValueOption> ValueOption
 [<Struct>]
 type ItemsWithCost = { Items: Item list; Cost: float }
-type PutItem = Container -> Item -> PutResult
+type PutItem = Container -> Item -> int -> PutResult
 type StackItem = ValueTuple<Container list , Item list , ItemPut list>
 [<Struct>]
 type Counter = { Value : int }

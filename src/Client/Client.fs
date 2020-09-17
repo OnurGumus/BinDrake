@@ -21,6 +21,7 @@ type RowItem =
         Width: int
         Height: int
         Length: int
+        Weight: int
         Color: string
         Quantity: int
         Stackable: bool
@@ -32,6 +33,7 @@ type ContainerItem =
         Width: int
         Height: int
         Length: int
+        Weight: int
     }
 
 type Model =
@@ -110,6 +112,7 @@ let init () =
                             Id = i.ToString()
                             NoTop = false
                             KeepTop = false
+                            Weight = 0
                         }
                 }
             for i = 0 to 9 do
@@ -127,6 +130,7 @@ let init () =
                             Id = i.ToString()
                             NoTop = false
                             KeepTop = false
+                            Weight = 0
                         }
                 }
         ]
@@ -140,6 +144,7 @@ let init () =
                     Length = 100
                 }
             Coord = { X = 0; Y = 0; Z = 0 }
+            Weight = 0
         }
 
     CanvasRenderer.renderResult container boxes true
@@ -157,6 +162,7 @@ let cols =
         "Length"
         "Width"
         "Height"
+        "Weight"
         "Quant."
         "Upright"
         "Stack"
@@ -190,6 +196,7 @@ let convertToItems (model: Model) =
                                   Height = r.Height
                                   Length = r.Length
                               }
+                          Weight = r.Weight
                           KeepTop = r.KeepTop
                       }
     ]
@@ -235,6 +242,7 @@ let update (msg: Msg) model =
                             Height = c.Height
                             Length = c.Length
                         }
+                    Weight = c.Weight
                 }
 
             let items: list<Item> = convertToItems model
@@ -280,6 +288,7 @@ module Container =
             Width: string
             Height: string
             Length: string
+            Weight: string
         }
 
     type Model =
@@ -292,12 +301,13 @@ module Container =
         | WidthChanged of string
         | HeightChanged of string
         | LengthChanged of string
+        | WeightChanged of string
 
 
     let init () =
         {
             ContainerItem = None
-            FormData = { Width = ""; Height = ""; Length = "" }
+            FormData = { Width = ""; Height = ""; Length = ""; Weight = "" }
         },
         Cmd.none
 
@@ -306,10 +316,12 @@ module Container =
         <| fun t ->
             let floatCheck = numericCheck t int 0 2000
             let intCheck = numericCheck t int 0 2000
+            let weightCheck = numericCheck t int -1 100000
             {
                 Width = floatCheck "width" formData.Width
                 Height = floatCheck "height" formData.Height
                 Length = floatCheck "length" formData.Length
+                Weight = weightCheck "weight" formData.Weight
             }: ContainerItem
 
     let update containerUpdated msg (state: Model) =
@@ -320,6 +332,7 @@ module Container =
             | WidthChanged s -> { formData with Width = s }
             | HeightChanged s -> { formData with Height = s }
             | LengthChanged s -> { formData with Length = s }
+            | WeightChanged s -> { formData with Weight = s}
 
         let r = validate formData
 
@@ -346,12 +359,13 @@ module Container =
                     | "Height" -> HeightChanged v
                     | "Width" -> WidthChanged v
                     | "Length" -> LengthChanged v
+                    | "Max Weight" -> WeightChanged v
                     | other -> failwith other
                     |> dispatch
 
                 Html.div
                     [
-                        let cols = ["Length"; "Width"; "Height" ]
+                        let cols = ["Length"; "Width"; "Height";"Max Weight" ]
                         prop.className "table"
                         prop.children [
                             Html.div [
@@ -404,6 +418,7 @@ module Row =
             Height: string
             Length: string
             Quantity: string
+            Weight: string
             Color: string
             Stackable: bool
             KeepTop : bool
@@ -419,6 +434,7 @@ module Row =
         | WidthChanged of string
         | HeightChanged of string
         | LengthChanged of string
+        | WeightChanged of string
         | StackableChanged of bool
         | TopChanged of bool
         | QuantityChanged of string
@@ -433,6 +449,7 @@ module Row =
                     Width = ""
                     Height = ""
                     Length = ""
+                    Weight = ""
                     Color = sprintf "rgb(%i,%i,%i)" (r.Next(40,256)) (r.Next(40,256)) (r.Next(40,256))
                     Stackable = true
                     KeepTop = false
@@ -446,11 +463,13 @@ module Row =
         <| fun t ->
             let floatCheck = numericCheck t int 0 2000
             let intCheck = numericCheck t int 0 2000
+            let weightCheck = numericCheck t int -1 100000
             {
                 Width = floatCheck "width" formData.Width
                 Height = floatCheck "height" formData.Height
                 Length = floatCheck "length" formData.Length
                 Quantity = intCheck "quantity" formData.Quantity
+                Weight = weightCheck "weight" formData.Weight
                 Stackable = formData.Stackable
                 KeepTop = formData.KeepTop
                 Color = formData.Color
@@ -464,6 +483,7 @@ module Row =
             | WidthChanged s -> { formData with Width = s }
             | HeightChanged s -> { formData with Height = s }
             | LengthChanged s -> { formData with Length = s }
+            | WeightChanged s -> { formData with Weight = s }
             | QuantityChanged s -> { formData with Quantity = s }
             | StackableChanged s -> { formData with Stackable = s }
             | TopChanged s -> { formData with KeepTop = s }
@@ -515,6 +535,7 @@ module Row =
                     match col with
                     | "Height" -> HeightChanged v
                     | "Width" -> WidthChanged v
+                    | "Weight" -> WeightChanged v
                     | "Quant." -> QuantityChanged v
                     | "Upright" -> TopChanged(Boolean.Parse v)
                     | "Stack" -> StackableChanged(Boolean.Parse v)
@@ -666,12 +687,14 @@ let viewC =
                     let items =
                         [
                             "Enter container and item dimensions between 1 and 2000, no decimals."
+                            "Weight range is between 0 and 100,000."
                             "Add as many items as you want."
                             "If the item is not stackable uncheck \"Stack\" for that item."
                             "If the item must keep its upright then check \"Upright\" for that item."
                             "All dimensions are unitless."
                             "Click calculate and wait up to 90 sec."
                             "Bin packer will try to fit the items and minimize the length."
+                            "Gravity is ignored!"
                             "Review the result in 3D!"
                         ]
 

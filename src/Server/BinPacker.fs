@@ -116,6 +116,7 @@ let mergeContainers (containers: Container list) =
                     Height = c1.Dim.Height
                     Length = c1.Dim.Length + c2.Dim.Length
                 }
+            Weight = c1.Weight + c2.Weight
             Coord = c1.Coord
         }
 
@@ -142,6 +143,7 @@ let mergeContainers (containers: Container list) =
                     Width = c1.Dim.Width
                     Height = c1.Dim.Height + c2.Dim.Height
                 }
+            Weight = c1.Weight + c2.Weight
             Coord = c1.Coord
         }
 
@@ -168,6 +170,7 @@ let mergeContainers (containers: Container list) =
                     Height = c1.Dim.Height
                     Width = c1.Dim.Width + c2.Dim.Width
                 }
+            Weight = c1.Weight + c2.Weight
             Coord = c1.Coord
         }
 
@@ -216,13 +219,15 @@ let mergeContainers (containers: Container list) =
 
     containers
 
-let rec putItem (rootContainer: Container) tryCount: PutItem =
-    fun container item ->
-        //printfn "trying to put %A %A" item container
+let rec putItem (rootContainer: Container)  tryCount: PutItem =
+    fun container item (weightPut :int)  ->
         let remainingWidth = container.Dim.Width - item.Dim.Width
         let remainingHeight = container.Dim.Height - item.Dim.Height
         let remainingLength = container.Dim.Length - item.Dim.Length
-        if item.NoTop
+        let remainingWeight = rootContainer.Weight - weightPut - item.Weight
+        if remainingWeight < 0  then
+           ValueSome ([[container]], ValueNone)
+        elif item.NoTop
            && container.Coord.Y
            + container.Dim.Height < rootContainer.Dim.Height then
             ValueNone
@@ -233,15 +238,15 @@ let rec putItem (rootContainer: Container) tryCount: PutItem =
                 if tryCount = 3 then
                     let item = item |> Rotate.rotateZ
 
-                    putItem rootContainer (tryCount - 1) container item
+                    putItem rootContainer (tryCount - 1) container item weightPut
                 else if tryCount = 2 then
                     let item = item |> Rotate.rotateY
 
-                    putItem rootContainer (tryCount - 1) container item
+                    putItem rootContainer (tryCount - 1) container item weightPut
                 else
                     let item = item |> Rotate.rotateX
 
-                    putItem rootContainer (tryCount - 1) container item
+                    putItem rootContainer (tryCount - 1) container item weightPut
 
             else
                 ValueNone
@@ -261,6 +266,7 @@ let rec putItem (rootContainer: Container) tryCount: PutItem =
                                 Y = container.Coord.Y + item.Dim.Height
                                 Z = container.Coord.Z
                             }
+                        Weight = 0
                     }
 
                 let sideBlock =
@@ -277,6 +283,7 @@ let rec putItem (rootContainer: Container) tryCount: PutItem =
                                 Y = container.Coord.Y
                                 Z = container.Coord.Z
                             }
+                        Weight = 0
                     }
 
                 let remainingBlock =
@@ -293,6 +300,7 @@ let rec putItem (rootContainer: Container) tryCount: PutItem =
                                 Y = container.Coord.Y
                                 Z = container.Coord.Z + item.Dim.Length
                             }
+                        Weight = 0
                     }
 
                 [ topBlock; sideBlock; remainingBlock ]
@@ -318,6 +326,7 @@ let rec putItem (rootContainer: Container) tryCount: PutItem =
                                 Y = container.Coord.Y + item.Dim.Height
                                 Z = container.Coord.Z
                             }
+                        Weight = 0
                     }
 
                 let sideBlock =
@@ -334,6 +343,7 @@ let rec putItem (rootContainer: Container) tryCount: PutItem =
                                 Y = container.Coord.Y
                                 Z = container.Coord.Z
                             }
+                        Weight = 0
                     }
 
                 let remainingBlock =
@@ -350,6 +360,7 @@ let rec putItem (rootContainer: Container) tryCount: PutItem =
                                 Y = container.Coord.Y
                                 Z = container.Coord.Z + item.Dim.Length
                             }
+                        Weight = 0
                     }
 
                 [ topBlock; sideBlock; remainingBlock ]
@@ -375,6 +386,7 @@ let rec putItem (rootContainer: Container) tryCount: PutItem =
                                 Y = container.Coord.Y + item.Dim.Height
                                 Z = container.Coord.Z
                             }
+                        Weight = 0
                     }
 
                 let sideBlock =
@@ -391,6 +403,7 @@ let rec putItem (rootContainer: Container) tryCount: PutItem =
                                 Y = container.Coord.Y
                                 Z = container.Coord.Z
                             }
+                        Weight = 0
                     }
 
                 let remainingBlock =
@@ -407,6 +420,7 @@ let rec putItem (rootContainer: Container) tryCount: PutItem =
                                 Y = container.Coord.Y
                                 Z = container.Coord.Z + item.Dim.Length
                             }
+                        Weight = 0
                     }
 
                 [ topBlock; sideBlock; remainingBlock ]
@@ -432,6 +446,7 @@ let rec putItem (rootContainer: Container) tryCount: PutItem =
                                 Y = container.Coord.Y + item.Dim.Height
                                 Z = container.Coord.Z
                             }
+                        Weight = 0
                     }
 
                 let sideBlock =
@@ -448,6 +463,7 @@ let rec putItem (rootContainer: Container) tryCount: PutItem =
                                 Y = container.Coord.Y
                                 Z = container.Coord.Z
                             }
+                        Weight = 0
                     }
 
                 let remainingBlock =
@@ -464,6 +480,7 @@ let rec putItem (rootContainer: Container) tryCount: PutItem =
                                 Y = container.Coord.Y
                                 Z = container.Coord.Z + item.Dim.Length
                             }
+                        Weight = 0
                     }
 
                 [ topBlock; sideBlock; remainingBlock ]
@@ -512,7 +529,7 @@ let rec putItem (rootContainer: Container) tryCount: PutItem =
                              |> List.filter (fun f -> f |> List.isEmpty |> not),
 
                              //    |> List.sortBy (fun s -> (s |> List.minBy (fun x -> float x.Coord.Z)).Coord.Z ),
-                             itemPut))
+                             ValueSome itemPut))
 
             res
 
@@ -537,7 +554,7 @@ let checkConflictI itemsPut =
                 failwith "wr"
 
 let calculateCost =
-    fun putItem containers items ->
+    fun putItem containers items  ->
         let rec loop =
             function
             | struct (containerSet, [], itemPuts) :: _, _ -> ValueSome(containerSet, itemPuts)
@@ -549,12 +566,15 @@ let calculateCost =
                     | (container :: remainingContainers) as cs, triedButNotFit ->
                         //printfn "cs:%A, item: %A" cs item
                         //printfn "!!!"
-
-                        match putItem container item with
-                        | ValueSome (struct (containerTriplets, (itemPut: ItemPut))) ->
+                        match (putItem container item (itemPuts |> List.sumBy(fun x->x.Item.Weight))) with
+                        | ValueSome (struct (containerTriplets, (itemPut: ItemPut ValueOption))) ->
                             let firstRes: StackItem list =
                                 [
-                                    let newItems = itemPut :: itemPuts
+                                    let newItems =
+                                         match itemPut with
+                                         |ValueNone -> itemPuts
+                                         | ValueSome i -> i :: itemPuts
+
 
                                     match containerTriplets with
                                     | [] ->
@@ -836,7 +856,7 @@ let defaultBatchSize = 20
 let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) =
     let sw = Stopwatch.StartNew()
 
-    let rec loop (containers: Container list) (items: Item list) (results: CalcResult list) batchCount retryCount =
+    let rec loop  (rootContainer: Container) (containers: Container list) (items: Item list) (results: CalcResult list) batchCount retryCount =
         //printfn "retryCount:%i" retryCount
         let containers =
             containers
@@ -855,6 +875,8 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
         //printfn "currentItemsCount %i"(currentItems.Length)
         let res =
             runInner rootContainer containers currentItems T alpha
+        let rootContainer = {rootContainer with Weight = rootContainer.Weight - (res.ItemsPut |> List.sumBy(fun s -> s.Item.Weight)) }
+
         // printf "empty conts %A" (res.EmptyContainers.Length)
         let lastunput = res.ItemsUnput
 
@@ -878,12 +900,12 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
              batchCount)
 
         let rbatchCount = Math.Max(1, (batchCount / 2))
-        let timeOut = sw.Elapsed.TotalSeconds > 90.
+        let timeOut = sw.Elapsed.TotalSeconds > 90. || items |> List.forall (fun x -> x.Weight > rootContainer.Weight)
         //printfn "rbatchCount %i" rbatchCount
         match timeOut, newItems, retryCount with
         | false, _ :: _, 6
         | false, _ :: _, 8
-        | false, _ :: _, 10 -> loop (res.EmptyContainers |> mergeContainers) newItems results rbatchCount retryCount
+        | false, _ :: _, 10 -> loop rootContainer (res.EmptyContainers |> mergeContainers) newItems results rbatchCount retryCount
         | true, _, _
         | _, _, 0
         | _, _, -1
@@ -911,7 +933,7 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
 
             res
 
-        | _ -> loop (res.EmptyContainers |> mergeContainers) newItems results batchCount retryCount
+        | _ -> loop rootContainer (res.EmptyContainers |> mergeContainers) newItems results batchCount retryCount
 
     let rec outerLoop (items: Item list) retryCount resList =
 
@@ -919,7 +941,7 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
         let defaultBatchSize = if items.Length < 100 then 15 else 20
 
         let res =
-            loop [ rootContainer ] (items) [] defaultBatchSize 12
+            loop rootContainer [ rootContainer ] (items) [] defaultBatchSize 12
 
         let timeOut = sw.Elapsed.TotalSeconds > 90.
         let results = res::resList
@@ -954,6 +976,7 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
                         Tag = sprintf "rgb(%i,%i,%i)" (random.Next(256)) (random.Next(256)) (random.Next(256))
                         NoTop = false
                         KeepTop = false
+                        Weight = 0
                     }
             }
         //let res = {res with ItemsPut = res.EmptyContainers |> List.map convertContainerToItemPut}

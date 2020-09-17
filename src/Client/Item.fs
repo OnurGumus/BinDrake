@@ -13,6 +13,7 @@ type Model = {
     ItemWidth : int option
     ItemHeight : int option
     ItemLength : int option
+    ItemWeight : int option
     Quantity :int option
     Color : string
     Id : string
@@ -23,6 +24,7 @@ type Msg =
     | WidthChanged of string
     | HeightChanged of string
     | LengthChanged of string
+    | WeightChanged of string
     | QuantityChanged of string
     | NoTopChanged of bool
     | KeepTopCanged of bool
@@ -37,6 +39,7 @@ let init id : Model * Cmd<Msg> =
         ItemWidth = None
         ItemHeight = None
         ItemLength = None
+        ItemWeight = None
         Quantity = None
         NoTop = false
         KeepTop = false
@@ -50,10 +53,10 @@ let (|Int|_|) (s:string) =
     | _ -> None
 
 let fillContainer (model:Model) =
-    match model.ItemLength, model.ItemHeight, model.ItemWidth , model.Quantity with
-    | Some l, Some h, Some w , Some q->
+    match model.ItemLength, model.ItemHeight, model.ItemWidth , model.ItemWeight, model.Quantity with
+    | Some l, Some h, Some w , Some wt, Some q->
 
-        { model with Items  = [ for i = 1 to q do  { Dim = { Width = w; Height = h; Length =l}; Id = model.Id + i.ToString(); Tag= model.Color; NoTop = model.NoTop; KeepTop = model.KeepTop }]}
+        { model with Items  = [ for i = 1 to q do  { Dim = { Width = w; Height = h; Length =l}; Weight = wt; Id = model.Id + i.ToString(); Tag= model.Color; NoTop = model.NoTop; KeepTop = model.KeepTop }]}
     | _ -> { model with Items = [] }
 
 let update (msg : Msg) (model : Model) : Model * Cmd<Msg> =
@@ -70,6 +73,10 @@ let update (msg : Msg) (model : Model) : Model * Cmd<Msg> =
         {model with ItemLength = Some i} |> fillContainer, Cmd.none
     |_, LengthChanged _ ->
         {model with ItemLength = None} |> fillContainer, Cmd.none
+    |_, WeightChanged (Int i) ->
+        {model with ItemWeight = Some i} |> fillContainer, Cmd.none
+    |_, WeightChanged _ ->
+        {model with ItemWeight = None} |> fillContainer, Cmd.none
     |_, QuantityChanged (Int i) ->
         {model with Quantity = Some i} |> fillContainer, Cmd.none
     |_, QuantityChanged _ ->
