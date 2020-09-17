@@ -7,7 +7,7 @@ let random = System.Random()
 
 module Rotate =
     let inline rotateZ (item: Item) =
-        if item.NoTop then
+        if item.KeepTop then
             item
         else
 
@@ -31,7 +31,7 @@ module Rotate =
         }
 
     let inline rotateX (item: Item) =
-        if item.NoTop then
+        if item.KeepTop then
             item
         else
             { item with
@@ -953,6 +953,7 @@ let run (rootContainer: Container) (items: Item list) (T: float) (alpha: float) 
                         Id = Guid.NewGuid().ToString()
                         Tag = sprintf "rgb(%i,%i,%i)" (random.Next(256)) (random.Next(256)) (random.Next(256))
                         NoTop = false
+                        KeepTop = false
                     }
             }
         //let res = {res with ItemsPut = res.EmptyContainers |> List.map convertContainerToItemPut}

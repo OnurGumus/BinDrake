@@ -24,6 +24,7 @@ type RowItem =
         Color: string
         Quantity: int
         Stackable: bool
+        KeepTop : bool
     }
 
 type ContainerItem =
@@ -108,6 +109,7 @@ let init () =
                             Tag = colors.[i]
                             Id = i.ToString()
                             NoTop = false
+                            KeepTop = false
                         }
                 }
             for i = 0 to 9 do
@@ -124,6 +126,7 @@ let init () =
                             Tag = colors.[i]
                             Id = i.ToString()
                             NoTop = false
+                            KeepTop = false
                         }
                 }
         ]
@@ -155,6 +158,7 @@ let cols =
         "Width"
         "Length"
         "Quant."
+        "Upright"
         "Stack"
         "Color"
         ""
@@ -186,6 +190,7 @@ let convertToItems (model: Model) =
                                   Height = r.Height
                                   Length = r.Length
                               }
+                          KeepTop = r.KeepTop
                       }
     ]
 
@@ -401,6 +406,7 @@ module Row =
             Quantity: string
             Color: string
             Stackable: bool
+            KeepTop : bool
         }
 
     type Model =
@@ -414,6 +420,7 @@ module Row =
         | HeightChanged of string
         | LengthChanged of string
         | StackableChanged of bool
+        | TopChanged of bool
         | QuantityChanged of string
 
     let r = Random()
@@ -428,6 +435,7 @@ module Row =
                     Length = ""
                     Color = sprintf "rgb(%i,%i,%i)" (r.Next(40,256)) (r.Next(40,256)) (r.Next(40,256))
                     Stackable = true
+                    KeepTop = false
                     Quantity = ""
                 }
         },
@@ -444,6 +452,7 @@ module Row =
                 Length = floatCheck "length" formData.Length
                 Quantity = intCheck "quantity" formData.Quantity
                 Stackable = formData.Stackable
+                KeepTop = formData.KeepTop
                 Color = formData.Color
             }: RowItem
 
@@ -457,6 +466,7 @@ module Row =
             | LengthChanged s -> { formData with Length = s }
             | QuantityChanged s -> { formData with Quantity = s }
             | StackableChanged s -> { formData with Stackable = s }
+            | TopChanged s -> { formData with KeepTop = s }
 
         let r = validate formData
 
@@ -506,6 +516,7 @@ module Row =
                     | "Height" -> HeightChanged v
                     | "Width" -> WidthChanged v
                     | "Quant." -> QuantityChanged v
+                    | "Upright" -> TopChanged(Boolean.Parse v)
                     | "Stack" -> StackableChanged(Boolean.Parse v)
                     | "Length" -> LengthChanged v
                     | other -> failwith other
@@ -522,6 +533,12 @@ module Row =
                                         [
                                             if i < cols.Length - 2 then
                                                 match col with
+                                                | "Upright" ->
+                                                input.checkbox [
+                                                    input.isSmall
+                                                    prop.readOnly props.Disabled
+                                                    prop.onCheckedChange (fun e -> dispatch' "Upright" (e.ToString()))
+                                                ]
                                                 | "Stack" ->
                                                     input.checkbox [
                                                         input.isSmall
@@ -651,6 +668,7 @@ let viewC =
                             "Enter container and item dimensions between 1 and 2000, no decimals."
                             "Add as many items as you want."
                             "If the item is not stackable uncheck stack for that item."
+                            "If the item must keep its upright then check upside for that item."
                             "All dimensions are unitless."
                             "Click calculate and wait up to 90 sec."
                             "Bin packer will try to fit the items and minimize the length."

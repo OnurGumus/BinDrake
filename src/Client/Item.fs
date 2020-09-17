@@ -17,6 +17,7 @@ type Model = {
     Color : string
     Id : string
     NoTop : bool
+    KeepTop : bool
 }
 type Msg =
     | WidthChanged of string
@@ -24,6 +25,7 @@ type Msg =
     | LengthChanged of string
     | QuantityChanged of string
     | NoTopChanged of bool
+    | KeepTopCanged of bool
     | RemoveItem
 let r = Random()
 
@@ -37,6 +39,7 @@ let init id : Model * Cmd<Msg> =
         ItemLength = None
         Quantity = None
         NoTop = false
+        KeepTop = false
         Color =  sprintf "rgb(%i,%i,%i)" (r.Next(256)) (r.Next(256)) (r.Next(256))
     }
     initialModel, Cmd.none
@@ -50,7 +53,7 @@ let fillContainer (model:Model) =
     match model.ItemLength, model.ItemHeight, model.ItemWidth , model.Quantity with
     | Some l, Some h, Some w , Some q->
 
-        { model with Items  = [ for i = 1 to q do  { Dim = { Width = w; Height = h; Length =l}; Id = model.Id + i.ToString(); Tag= model.Color; NoTop = model.NoTop }]}
+        { model with Items  = [ for i = 1 to q do  { Dim = { Width = w; Height = h; Length =l}; Id = model.Id + i.ToString(); Tag= model.Color; NoTop = model.NoTop; KeepTop = model.KeepTop }]}
     | _ -> { model with Items = [] }
 
 let update (msg : Msg) (model : Model) : Model * Cmd<Msg> =
@@ -73,6 +76,8 @@ let update (msg : Msg) (model : Model) : Model * Cmd<Msg> =
         {model with Quantity = None } |> fillContainer, Cmd.none
     |_ , NoTopChanged b ->
          {model with NoTop = b } |> fillContainer, Cmd.none
+    |_ , KeepTopCanged b ->
+         {model with KeepTop = b } |> fillContainer, Cmd.none
     | _ ->
         model,Cmd.none
 
@@ -111,6 +116,15 @@ let view (model : Model) (dispatch : Msg -> unit) =
                             prop.name "item-quantity"
                             prop.placeholder "quan."
                             prop.onInput(fun ev -> ev.target?value |> string |> QuantityChanged |> dispatch )
+                        ]
+                        Html.label[
+                            prop.htmlFor "keep-ntop"
+                            prop.text "Keep Top:"
+                        ]
+                        Html.input[
+                            prop.name "keep-top"
+                            prop.type' "checkbox"
+                            prop.onCheckedChange(fun ev -> ev |> KeepTopCanged |> dispatch )
                         ]
                         Html.label[
                             prop.htmlFor "item-notop"
