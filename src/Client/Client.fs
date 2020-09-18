@@ -318,7 +318,7 @@ module Container =
     let init () =
         {
             ContainerItem = None
-            FormData = { Width = ""; Height = ""; Length = ""; Weight = "" }
+            FormData = { Width = "0"; Height = ""; Length = ""; Weight = "" }
         },
         Cmd.none
 
@@ -409,6 +409,7 @@ module Container =
                                                             prop.readOnly props.Disabled
                                                             prop.maxLength 4
                                                             prop.max 2000
+                                                            prop.defaultValue (if col = "Max Weight" then "0" else "")
                                                             input.isSmall
                                                             prop.placeholder col
                                                             prop.onChange (fun (e: Event) -> dispatch' col e.Value)
@@ -462,7 +463,7 @@ module Row =
                     Width = ""
                     Height = ""
                     Length = ""
-                    Weight = ""
+                    Weight = "0"
                     Color = sprintf "rgb(%i,%i,%i)" (r.Next(40,256)) (r.Next(40,256)) (r.Next(40,256))
                     Stackable = true
                     KeepTop = false
@@ -603,6 +604,7 @@ module Row =
                                                     input.number [
                                                         prop.maxLength 5
                                                         prop.readOnly props.Disabled
+                                                        prop.defaultValue (if col = "Weight" then "0" else "")
                                                         prop.max 2000
                                                         input.isSmall
                                                         prop.placeholder col
