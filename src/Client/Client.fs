@@ -40,6 +40,7 @@ type ContainerItem =
 type Model =
     {
         Calculation: Calculation
+        CalculationMode: CalculationMode
         Container: Container option
         ContainerItem: ContainerItem option
         RowItems: (RowItem option * string) list
@@ -53,6 +54,7 @@ type Msg =
     | RemoveItem of string
     | RowUpdated of string * RowItem option
     | ContainerUpdated of ContainerItem option
+    | CalculationModeChanged of string
 
 module Server =
 
@@ -66,8 +68,8 @@ module Server =
 
 let run = Server.api.run
 
-let runCmd container items =
-    Cmd.OfAsync.perform (fun _ -> run container items 10000000000. 0.99) () ResultLoaded
+let runCmd calcMode container items =
+    Cmd.OfAsync.perform (fun _ -> run calcMode container items 10000000000. 0.99) () ResultLoaded
 
 let newRowItem () = (None, Guid.NewGuid().ToString())
 
@@ -157,6 +159,7 @@ let init () =
         ContainerItem = None
         RowItems = [ newRowItem () ]
         TotalVolume = None
+        CalculationMode = CalculationMode.MinimizeHeight
     },
     Cmd.none
 
@@ -235,6 +238,9 @@ let update (msg: Msg) model =
             Cmd.ofSub (fun _ -> CanvasRenderer.renderResult c.Container c.ItemsPut false)
 
         | ContainerUpdated c -> { model with ContainerItem = c }, Cmd.none
+        | CalculationModeChanged "Minimize Length" ->  { model with CalculationMode = MinimizeLength }, Cmd.none
+        | CalculationModeChanged "Minimize Height" ->  { model with CalculationMode = MinimizeHeight }, Cmd.none
+        | CalculationModeChanged _ ->  model, Cmd.none
         | CalculateRequested _ ->
             let c = model.ContainerItem.Value
 
@@ -252,7 +258,7 @@ let update (msg: Msg) model =
 
             let items: list<Item> = convertToItems model
 
-            { model with Calculation = Calculating }, runCmd container items
+            { model with Calculation = Calculating }, runCmd model.CalculationMode container items
 
     let totalVolume =
         match model.RowItems with
@@ -710,6 +716,7 @@ let viewC =
                             "If the item must keep its upright then check \"⬆⬆\" for that item."
                             "If the item must be at the bottom (e.g, heavy items) then check \"⬇⬇\" for that item."
                             "All dimensions are unitless."
+                            "Select the calculation mode depending on items to be at minimum height or pushed to the edge."
                             "Click calculate and wait up to 90 sec."
                             "Bin packer will try to fit the items and minimize the length."
                             "Gravity is ignored."
@@ -857,7 +864,19 @@ let viewC =
                         let items = convertToItems model
                         List.exists (checkDim) items
                     | _ -> false
-
+                Html.br[]
+                Bulma.label "Calculation mode:"
+                Html.select[
+                    prop.children[
+                        Html.option
+                            "Minimize Height"
+                        Html.option
+                            "Minimize Length"
+                    ]
+                    prop.onChange(fun (e:Event) -> CalculationModeChanged (!!e.target?value) |> dispatch )
+                ]
+                Html.br[]
+                Html.br[]
                 Bulma.button.button [
                     prop.disabled
                         (isinvalid

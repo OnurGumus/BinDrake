@@ -10,6 +10,11 @@ type Dim =
         Height: int
         Length: int
     }
+
+type CalculationMode =
+    | MinimizeLength
+    | MinimizeHeight
+
 type Container = { Dim: Dim; Coord: Coordinates; Weight : int }
 type Item = { Dim: Dim; Weight : int; Id: string; Tag: string ; NoTop:bool; KeepTop:bool; KeepBottom : bool}
 type ContainerTriplet = Container list
@@ -40,6 +45,6 @@ module Route =
 type ICounterApi =
     {
         initialCounter : unit -> Async<Counter>
-        run  : Container -> Item list -> float -> float -> Async<CalcResult>
+        run  : CalculationMode -> Container -> Item list -> float -> float -> Async<CalcResult>
     }
 

@@ -30,7 +30,7 @@ let port =
 
 let counterApi = {
     initialCounter = fun () -> async { return { Value = 42 } }
-    run = fun container items t alpha -> async {return  BinPacker.run container items t alpha }
+    run = fun calculationMode container items t alpha -> async {return  BinPacker.run  container calculationMode items t alpha }
 }
 
 let webApp =
