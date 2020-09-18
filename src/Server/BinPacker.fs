@@ -44,14 +44,18 @@ module Rotate =
             }
 
     let rotateToMinZ calculationMode item =
+        let comb = 
+            let x = item |> rotateX
+            let y = item |> rotateY
+            let z = item |> rotateZ
+            [ item; x; y ; z]
         let f =
             match calculationMode with
-            | MinimizeHeight -> (fun d -> d.Dim.Height)
-            | MinimizeLength -> (fun d -> d.Dim.Length)
-        let x = item |> rotateX
-        let y = item |> rotateY
-        [ item; x; y ]
-        |> List.minBy (fun d -> d.Dim.Height)
+            | MinimizeHeight ->                
+                comb |> List.minBy (fun d -> d.Dim.Height)
+            | MinimizeLength ->                 
+                comb |> List.minBy (fun d -> d.Dim.Length)
+        
 
     let inline randomRotate item: Item =
         let r = random.NextDouble()
