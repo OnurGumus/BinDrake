@@ -266,7 +266,7 @@ let rec putItem (rootContainer: Container) (calculationMode:CalculationMode)  tr
                 match calculationMode with
                 | MinimizeHeight -> (fun (s:Container) -> s.Coord.Y)
                 | MinimizeLength -> (fun s -> s.Coord.Z)
-            let item = rotateToMinZ calculationMode item
+            let item = Rotate.rotateToMinZ calculationMode item
             let config1 =
                 let topBlock =
                     {
