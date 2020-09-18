@@ -318,7 +318,7 @@ module Container =
     let init () =
         {
             ContainerItem = None
-            FormData = { Width = "0"; Height = ""; Length = ""; Weight = "" }
+            FormData = { Width = ""; Height = ""; Length = ""; Weight = "0" }
         },
         Cmd.none
 
