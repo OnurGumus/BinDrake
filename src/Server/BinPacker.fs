@@ -266,7 +266,7 @@ let rec putItem (rootContainer: Container) (calculationMode:CalculationMode)  tr
                 match calculationMode with
                 | MinimizeHeight -> (fun (s:Container) -> s.Coord.Y)
                 | MinimizeLength -> (fun s -> s.Coord.Z)
-            let item = Rotate.rotateToMinZ calculationMode item
+          
             let config1 =
                 let topBlock =
                     {
@@ -582,6 +582,7 @@ let calculateCost (calculationMode: CalculationMode) =
                     | (container :: remainingContainers) as cs, triedButNotFit ->
                         //printfn "cs:%A, item: %A" cs item
                         //printfn "!!!"
+                        let item = Rotate.rotateToMinZ calculationMode item
                         match (putItem container item (itemPuts |> List.sumBy(fun x->x.Item.Weight))) with
                         | ValueSome (struct (containerTriplets, (itemPut: ItemPut ValueOption))) ->
                             let firstRes: StackItem list =
