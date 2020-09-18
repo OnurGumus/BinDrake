@@ -44,18 +44,18 @@ module Rotate =
             }
 
     let rotateToMinZ calculationMode item =
-        let comb = 
+        let comb =
             let x = item |> rotateX
             let y = item |> rotateY
             let z = item |> rotateZ
             [ item; x; y ; z]
-        
+
         match calculationMode with
-            | MinimizeHeight ->                
+            | MinimizeHeight ->
                 comb |> List.minBy (fun d -> d.Dim.Height)
-            | MinimizeLength ->                 
+            | MinimizeLength ->
                 comb |> List.minBy (fun d -> d.Dim.Length)
-        
+
 
     let inline randomRotate item: Item =
         let r = random.NextDouble()
@@ -266,246 +266,493 @@ let rec putItem (rootContainer: Container) (calculationMode:CalculationMode)  tr
                 match calculationMode with
                 | MinimizeHeight -> (fun (s:Container) -> s.Coord.Y)
                 | MinimizeLength -> (fun s -> s.Coord.Z)
-          
-            let config1 =
-                let topBlock =
-                    {
-                        Dim =
+            let config1,config2,config3,config4 =
+                match calculationMode with
+                | CalculationMode.MinimizeLength ->
+                    let config1 =
+                        let topBlock =
                             {
-                                Width = container.Dim.Width
-                                Height = remainingHeight
-                                Length = item.Dim.Length
+                                Dim =
+                                    {
+                                        Width = container.Dim.Width
+                                        Height = remainingHeight
+                                        Length = item.Dim.Length
+                                    }
+                                Coord =
+                                    {
+                                        X = container.Coord.X
+                                        Y = container.Coord.Y + item.Dim.Height
+                                        Z = container.Coord.Z
+                                    }
+                                Weight = 0
                             }
-                        Coord =
-                            {
-                                X = container.Coord.X
-                                Y = container.Coord.Y + item.Dim.Height
-                                Z = container.Coord.Z
-                            }
-                        Weight = 0
-                    }
 
-                let sideBlock =
-                    {
-                        Dim =
+                        let sideBlock =
                             {
-                                Width = remainingWidth
-                                Height = item.Dim.Height
-                                Length = item.Dim.Length
+                                Dim =
+                                    {
+                                        Width = remainingWidth
+                                        Height = item.Dim.Height
+                                        Length = item.Dim.Length
+                                    }
+                                Coord =
+                                    {
+                                        X = container.Coord.X + item.Dim.Width
+                                        Y = container.Coord.Y
+                                        Z = container.Coord.Z
+                                    }
+                                Weight = 0
                             }
-                        Coord =
-                            {
-                                X = container.Coord.X + item.Dim.Width
-                                Y = container.Coord.Y
-                                Z = container.Coord.Z
-                            }
-                        Weight = 0
-                    }
 
-                let remainingBlock =
-                    {
-                        Dim =
+                        let remainingBlock =
                             {
-                                Width = container.Dim.Width
-                                Height = container.Dim.Height
-                                Length = remainingLength
+                                Dim =
+                                    {
+                                        Width = container.Dim.Width
+                                        Height = container.Dim.Height
+                                        Length = remainingLength
+                                    }
+                                Coord =
+                                    {
+                                        X = container.Coord.X
+                                        Y = container.Coord.Y
+                                        Z = container.Coord.Z + item.Dim.Length
+                                    }
+                                Weight = 0
                             }
-                        Coord =
-                            {
-                                X = container.Coord.X
-                                Y = container.Coord.Y
-                                Z = container.Coord.Z + item.Dim.Length
-                            }
-                        Weight = 0
-                    }
 
-                [ topBlock; sideBlock; remainingBlock ]
-                |> List.filter (fun s ->
-                    s.Dim.Width > 0
-                    && s.Dim.Height > 0
-                    && s.Dim.Length > 0)
-                |> List.filter (fun s -> (item.NoTop && s.Coord.Y > 0) |> not)
-                |> List.sortBy containerSort
+                        [ topBlock; sideBlock; remainingBlock ]
+                        |> List.filter (fun s ->
+                            s.Dim.Width > 0
+                            && s.Dim.Height > 0
+                            && s.Dim.Length > 0)
+                        |> List.filter (fun s -> (item.NoTop && s.Coord.Y > 0) |> not)
+                        |> List.sortBy containerSort
 
-            let config2 =
-                let topBlock =
-                    {
-                        Dim =
-                            {
-                                Width = item.Dim.Width
-                                Height = remainingHeight
-                                Length = item.Dim.Length
-                            }
-                        Coord =
-                            {
-                                X = container.Coord.X
-                                Y = container.Coord.Y + item.Dim.Height
-                                Z = container.Coord.Z
-                            }
-                        Weight = 0
-                    }
+                    let config2 =
 
-                let sideBlock =
-                    {
-                        Dim =
+                        let topBlock =
                             {
-                                Width = remainingWidth
-                                Height = container.Dim.Height
-                                Length = item.Dim.Length
+                                Dim =
+                                    {
+                                        Width = item.Dim.Width
+                                        Height = remainingHeight
+                                        Length = item.Dim.Length
+                                    }
+                                Coord =
+                                    {
+                                        X = container.Coord.X
+                                        Y = container.Coord.Y + item.Dim.Height
+                                        Z = container.Coord.Z
+                                    }
+                                Weight = 0
                             }
-                        Coord =
-                            {
-                                X = container.Coord.X + item.Dim.Width
-                                Y = container.Coord.Y
-                                Z = container.Coord.Z
-                            }
-                        Weight = 0
-                    }
 
-                let remainingBlock =
-                    {
-                        Dim =
+                        let sideBlock =
                             {
-                                Width = container.Dim.Width
-                                Height = container.Dim.Height
-                                Length = remainingLength
+                                Dim =
+                                    {
+                                        Width = remainingWidth
+                                        Height = container.Dim.Height
+                                        Length = item.Dim.Length
+                                    }
+                                Coord =
+                                    {
+                                        X = container.Coord.X + item.Dim.Width
+                                        Y = container.Coord.Y
+                                        Z = container.Coord.Z
+                                    }
+                                Weight = 0
                             }
-                        Coord =
-                            {
-                                X = container.Coord.X
-                                Y = container.Coord.Y
-                                Z = container.Coord.Z + item.Dim.Length
-                            }
-                        Weight = 0
-                    }
 
-                [ topBlock; sideBlock; remainingBlock ]
-                |> List.filter (fun s ->
-                    s.Dim.Width > 0
-                    && s.Dim.Height > 0
-                    && s.Dim.Length > 0)
-                |> List.filter (fun s -> (item.NoTop && s.Coord.Y > 0) |> not)
-                |> List.sortBy containerSort
+                        let remainingBlock =
+                            {
+                                Dim =
+                                    {
+                                        Width = container.Dim.Width
+                                        Height = container.Dim.Height
+                                        Length = remainingLength
+                                    }
+                                Coord =
+                                    {
+                                        X = container.Coord.X
+                                        Y = container.Coord.Y
+                                        Z = container.Coord.Z + item.Dim.Length
+                                    }
+                                Weight = 0
+                            }
 
-            let config3 =
-                let topBlock =
-                    {
-                        Dim =
-                            {
-                                Width = container.Dim.Width
-                                Height = remainingHeight
-                                Length = container.Dim.Length
-                            }
-                        Coord =
-                            {
-                                X = container.Coord.X
-                                Y = container.Coord.Y + item.Dim.Height
-                                Z = container.Coord.Z
-                            }
-                        Weight = 0
-                    }
+                        [ topBlock; sideBlock; remainingBlock ]
+                        |> List.filter (fun s ->
+                            s.Dim.Width > 0
+                            && s.Dim.Height > 0
+                            && s.Dim.Length > 0)
+                        |> List.filter (fun s -> (item.NoTop && s.Coord.Y > 0) |> not)
+                        |> List.sortBy containerSort
 
-                let sideBlock =
-                    {
-                        Dim =
+                    let config3 =
+                        let topBlock =
                             {
-                                Width = remainingWidth
-                                Height = item.Dim.Height
-                                Length = container.Dim.Length
+                                Dim =
+                                    {
+                                        Width = container.Dim.Width
+                                        Height = remainingHeight
+                                        Length = container.Dim.Length
+                                    }
+                                Coord =
+                                    {
+                                        X = container.Coord.X
+                                        Y = container.Coord.Y + item.Dim.Height
+                                        Z = container.Coord.Z
+                                    }
+                                Weight = 0
                             }
-                        Coord =
-                            {
-                                X = container.Coord.X + item.Dim.Width
-                                Y = container.Coord.Y
-                                Z = container.Coord.Z
-                            }
-                        Weight = 0
-                    }
 
-                let remainingBlock =
-                    {
-                        Dim =
+                        let sideBlock =
                             {
-                                Width = item.Dim.Width
-                                Height = item.Dim.Height
-                                Length = remainingLength
+                                Dim =
+                                    {
+                                        Width = remainingWidth
+                                        Height = item.Dim.Height
+                                        Length = container.Dim.Length
+                                    }
+                                Coord =
+                                    {
+                                        X = container.Coord.X + item.Dim.Width
+                                        Y = container.Coord.Y
+                                        Z = container.Coord.Z
+                                    }
+                                Weight = 0
                             }
-                        Coord =
-                            {
-                                X = container.Coord.X
-                                Y = container.Coord.Y
-                                Z = container.Coord.Z + item.Dim.Length
-                            }
-                        Weight = 0
-                    }
 
-                [ topBlock; sideBlock; remainingBlock ]
-                |> List.filter (fun s ->
-                    s.Dim.Width > 0
-                    && s.Dim.Height > 0
-                    && s.Dim.Length > 0)
-                |> List.filter (fun s -> (item.NoTop && s.Coord.Y > 0) |> not)
-                |> List.sortBy containerSort
+                        let remainingBlock =
+                            {
+                                Dim =
+                                    {
+                                        Width = item.Dim.Width
+                                        Height = item.Dim.Height
+                                        Length = remainingLength
+                                    }
+                                Coord =
+                                    {
+                                        X = container.Coord.X
+                                        Y = container.Coord.Y
+                                        Z = container.Coord.Z + item.Dim.Length
+                                    }
+                                Weight = 0
+                            }
 
-            let config4 =
-                let topBlock =
-                    {
-                        Dim =
-                            {
-                                Width = item.Dim.Width
-                                Height = remainingHeight
-                                Length = container.Dim.Length
-                            }
-                        Coord =
-                            {
-                                X = container.Coord.X
-                                Y = container.Coord.Y + item.Dim.Height
-                                Z = container.Coord.Z
-                            }
-                        Weight = 0
-                    }
+                        [ topBlock; sideBlock; remainingBlock ]
+                        |> List.filter (fun s ->
+                            s.Dim.Width > 0
+                            && s.Dim.Height > 0
+                            && s.Dim.Length > 0)
+                        |> List.filter (fun s -> (item.NoTop && s.Coord.Y > 0) |> not)
+                        |> List.sortBy containerSort
 
-                let sideBlock =
-                    {
-                        Dim =
+                    let config4 =
+                        let topBlock =
                             {
-                                Width = remainingWidth
-                                Height = container.Dim.Height
-                                Length = container.Dim.Length
+                                Dim =
+                                    {
+                                        Width = item.Dim.Width
+                                        Height = remainingHeight
+                                        Length = container.Dim.Length
+                                    }
+                                Coord =
+                                    {
+                                        X = container.Coord.X
+                                        Y = container.Coord.Y + item.Dim.Height
+                                        Z = container.Coord.Z
+                                    }
+                                Weight = 0
                             }
-                        Coord =
-                            {
-                                X = container.Coord.X + item.Dim.Width
-                                Y = container.Coord.Y
-                                Z = container.Coord.Z
-                            }
-                        Weight = 0
-                    }
 
-                let remainingBlock =
-                    {
-                        Dim =
+                        let sideBlock =
                             {
-                                Width = item.Dim.Width
-                                Height = item.Dim.Height
-                                Length = remainingLength
+                                Dim =
+                                    {
+                                        Width = remainingWidth
+                                        Height = container.Dim.Height
+                                        Length = container.Dim.Length
+                                    }
+                                Coord =
+                                    {
+                                        X = container.Coord.X + item.Dim.Width
+                                        Y = container.Coord.Y
+                                        Z = container.Coord.Z
+                                    }
+                                Weight = 0
                             }
-                        Coord =
-                            {
-                                X = container.Coord.X
-                                Y = container.Coord.Y
-                                Z = container.Coord.Z + item.Dim.Length
-                            }
-                        Weight = 0
-                    }
 
-                [ topBlock; sideBlock; remainingBlock ]
-                |> List.filter (fun s ->
-                    s.Dim.Width > 0
-                    && s.Dim.Height > 0
-                    && s.Dim.Length > 0)
-                |> List.filter (fun s -> (item.NoTop && s.Coord.Y > 0) |> not)
-                |> List.sortBy containerSort
+                        let remainingBlock =
+                            {
+                                Dim =
+                                    {
+                                        Width = item.Dim.Width
+                                        Height = item.Dim.Height
+                                        Length = remainingLength
+                                    }
+                                Coord =
+                                    {
+                                        X = container.Coord.X
+                                        Y = container.Coord.Y
+                                        Z = container.Coord.Z + item.Dim.Length
+                                    }
+                                Weight = 0
+                            }
+
+                        [ topBlock; sideBlock; remainingBlock ]
+                        |> List.filter (fun s ->
+                            s.Dim.Width > 0
+                            && s.Dim.Height > 0
+                            && s.Dim.Length > 0)
+                        |> List.filter (fun s -> (item.NoTop && s.Coord.Y > 0) |> not)
+                        |> List.sortBy containerSort
+                    config1, config2, config3, config4
+                | _ ->
+                let config1 =
+                    let topBlock =
+                        {
+                            Dim =
+                                {
+                                    Width = container.Dim.Width
+                                    Height = item.Dim.Height
+                                    Length = remainingLength
+                                }
+                            Coord =
+                                {
+                                    X = container.Coord.X
+                                    Y = container.Coord.Y
+                                    Z = container.Coord.Z +  item.Dim.Length
+                                }
+                            Weight = 0
+                        }
+
+                    let sideBlock =
+                        {
+                            Dim =
+                                {
+                                    Width = remainingWidth
+                                    Height = item.Dim.Height
+                                    Length = item.Dim.Length
+                                }
+                            Coord =
+                                {
+                                    X = container.Coord.X + item.Dim.Width
+                                    Y = container.Coord.Y
+                                    Z = container.Coord.Z
+                                }
+                            Weight = 0
+                        }
+
+                    let remainingBlock =
+                        {
+                            Dim =
+                                {
+                                    Width = container.Dim.Width
+                                    Height = remainingHeight
+                                    Length = container.Dim.Length
+                                }
+                            Coord =
+                                {
+                                    X = container.Coord.X
+                                    Y = container.Coord.Y + item.Dim.Height
+                                    Z = container.Coord.Z
+                                }
+                            Weight = 0
+                        }
+
+                    [ topBlock; sideBlock; remainingBlock ]
+                    |> List.filter (fun s ->
+                        s.Dim.Width > 0
+                        && s.Dim.Height > 0
+                        && s.Dim.Length > 0)
+                    |> List.filter (fun s -> (item.NoTop && s.Coord.Y > 0) |> not)
+                    |> List.sortBy containerSort
+
+                let config2 =
+
+                    let topBlock =
+                        {
+                            Dim =
+                                {
+                                    Width = item.Dim.Width
+                                    Height = item.Dim.Height
+                                    Length = remainingLength
+                                }
+                            Coord =
+                                {
+                                    X = container.Coord.X
+                                    Y = container.Coord.Y
+                                    Z = container.Coord.Z + item.Dim.Length
+                                }
+                            Weight = 0
+                        }
+
+                    let sideBlock =
+                        {
+                            Dim =
+                                {
+                                    Width = remainingWidth
+                                    Height = item.Dim.Height
+                                    Length = container.Dim.Length
+                                }
+                            Coord =
+                                {
+                                    X = container.Coord.X + item.Dim.Width
+                                    Y = container.Coord.Y
+                                    Z = container.Coord.Z
+                                }
+                            Weight = 0
+                        }
+
+                    let remainingBlock =
+                        {
+                            Dim =
+                                {
+                                    Width = container.Dim.Width
+                                    Height = remainingHeight
+                                    Length = container.Dim.Length
+                                }
+                            Coord =
+                                {
+                                    X = container.Coord.X
+                                    Y = container.Coord.Y + item.Dim.Height
+                                    Z = container.Coord.Z
+                                }
+                            Weight = 0
+                        }
+
+                    [ topBlock; sideBlock; remainingBlock ]
+                    |> List.filter (fun s ->
+                        s.Dim.Width > 0
+                        && s.Dim.Height > 0
+                        && s.Dim.Length > 0)
+                    |> List.filter (fun s -> (item.NoTop && s.Coord.Y > 0) |> not)
+                    |> List.sortBy containerSort
+
+                let config3 =
+                    let topBlock =
+                        {
+                            Dim =
+                                {
+                                    Width = container.Dim.Width
+                                    Height = container.Dim.Height
+                                    Length = remainingLength
+                                }
+                            Coord =
+                                {
+                                    X = container.Coord.X
+                                    Y = container.Coord.Y
+                                    Z = container.Coord.Z + item.Dim.Length
+                                }
+                            Weight = 0
+                        }
+
+                    let sideBlock =
+                        {
+                            Dim =
+                                {
+                                    Width = remainingWidth
+                                    Height = container.Dim.Height
+                                    Length = item.Dim.Length
+                                }
+                            Coord =
+                                {
+                                    X = container.Coord.X + item.Dim.Width
+                                    Y = container.Coord.Y
+                                    Z = container.Coord.Z
+                                }
+                            Weight = 0
+                        }
+
+                    let remainingBlock =
+                        {
+                            Dim =
+                                {
+                                    Width = item.Dim.Width
+                                    Height = remainingHeight
+                                    Length = item.Dim.Length
+                                }
+                            Coord =
+                                {
+                                    X = container.Coord.X
+                                    Y = container.Coord.Y + item.Dim.Height
+                                    Z = container.Coord.Z
+                                }
+                            Weight = 0
+                        }
+
+                    [ topBlock; sideBlock; remainingBlock ]
+                    |> List.filter (fun s ->
+                        s.Dim.Width > 0
+                        && s.Dim.Height > 0
+                        && s.Dim.Length > 0)
+                    |> List.filter (fun s -> (item.NoTop && s.Coord.Y > 0) |> not)
+                    |> List.sortBy containerSort
+
+                let config4 =
+                    let topBlock =
+                        {
+                            Dim =
+                                {
+                                    Width = item.Dim.Width
+                                    Height = container.Dim.Height
+                                    Length = remainingLength
+                                }
+                            Coord =
+                                {
+                                    X = container.Coord.X
+                                    Y = container.Coord.Y
+                                    Z = container.Coord.Z + item.Dim.Length
+                                }
+                            Weight = 0
+                        }
+
+                    let sideBlock =
+                        {
+                            Dim =
+                                {
+                                    Width = remainingWidth
+                                    Height = container.Dim.Height
+                                    Length = container.Dim.Length
+                                }
+                            Coord =
+                                {
+                                    X = container.Coord.X + item.Dim.Width
+                                    Y = container.Coord.Y
+                                    Z = container.Coord.Z
+                                }
+                            Weight = 0
+                        }
+
+                    let remainingBlock =
+                        {
+                            Dim =
+                                {
+                                    Width = item.Dim.Width
+                                    Height = remainingHeight
+                                    Length = item.Dim.Length
+                                }
+                            Coord =
+                                {
+                                    X = container.Coord.X
+                                    Y = container.Coord.Y + item.Dim.Height
+                                    Z = container.Coord.Z
+                                }
+                            Weight = 0
+                        }
+
+                    [ topBlock; sideBlock; remainingBlock ]
+                    |> List.filter (fun s ->
+                        s.Dim.Width > 0
+                        && s.Dim.Height > 0
+                        && s.Dim.Length > 0)
+                    |> List.filter (fun s -> (item.NoTop && s.Coord.Y > 0) |> not)
+                    |> List.sortBy containerSort
+                config1, config2, config3, config4
+
 
             let itemPut =
                 {
@@ -580,7 +827,7 @@ let calculateCost (calculationMode: CalculationMode) =
                 let rec loopContainers: (struct (Container list * Container list)) -> StackItem list =
                     function
                     | (container :: remainingContainers) as cs, triedButNotFit ->
-                        let item = 
+                        let item =
                          if remainingItems.Length < 8 then
                             Rotate.rotateToMinZ calculationMode item
                          else
