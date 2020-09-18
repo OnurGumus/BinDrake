@@ -49,8 +49,8 @@ module Rotate =
             let y = item |> rotateY
             let z = item |> rotateZ
             [ item; x; y ; z]
-        let f =
-            match calculationMode with
+        
+        match calculationMode with
             | MinimizeHeight ->                
                 comb |> List.minBy (fun d -> d.Dim.Height)
             | MinimizeLength ->                 
