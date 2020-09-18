@@ -266,13 +266,9 @@ let rec putItem (rootContainer: Container) (calculationMode:CalculationMode)  tr
                 match calculationMode with
                 | MinimizeHeight -> (fun (s:Container) -> s.Coord.Y)
                 | MinimizeLength -> (fun s -> s.Coord.Z)
-            let calcMode =
-                if item.NoTop then
-                    calculationMode // CalculationMode.MinimizeLength
-                else
-                    calculationMode
+
             let config1,config2,config3,config4 =
-                match calcMode with
+                match calculationMode with
                 | CalculationMode.MinimizeLength ->
                     let config1 =
                         let topBlock =
@@ -1293,13 +1289,19 @@ let runPerContainer (rootContainer: Container) (calculationMode: CalculationMode
             Serilog.Log.Error( e, "error")
             reraise()
 
-let run (rootContainer: Container) (calculationMode: CalculationMode) (items: Item list) (T: float) (alpha: float) =
+let run (rootContainer: Container) (containerMode:ContainerMode) (calculationMode: CalculationMode) (items: Item list) (T: float) (alpha: float) =
     let rec loop results unputItems =
         let res = runPerContainer rootContainer calculationMode unputItems T alpha
         let sumRes = res::results
-        match res.ItemsUnput with
-        | [] -> sumRes
-        | unput when unput.Length = unputItems.Length -> sumRes
-        | _ ->  loop sumRes res.ItemsUnput
-
-    loop [] items
+        printf "%A" containerMode
+        match containerMode with
+        | SingleContainer -> sumRes
+        | _ ->
+            if sumRes.Length > 20 then
+                sumRes
+            else
+                match res.ItemsUnput with
+                | [] -> sumRes
+                | unput when unput.Length = unputItems.Length -> sumRes
+                | _ ->  loop sumRes res.ItemsUnput
+    (loop [] items) |> List.rev

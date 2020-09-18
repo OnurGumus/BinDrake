@@ -30,11 +30,13 @@ let axes = THREE.AxesHelper.Create(20.)
 let currentContainer = ResizeArray<Three.Object3D>()
 let renderPlane (container:Container)  =
     let x =
-        (System.Math.Max(1,System.Math.Min(20,50000/(container.Dim.Width * container.Dim.Length )))
+        (System.Math.Max(1,System.Math.Min(40,50000/(container.Dim.Width * container.Dim.Length )))
         |> float )/1.5
+    let x =
+        if container.Dim.Width + container.Dim.Length > 1000 then
+            x / 1.5
+        else x
 
-    printf "%A" x
-    //camera.zoom <- 20.
     camera.position.set (500./x, 550./x, -700./x) |> ignore
     scene.remove currentContainer |> ignore
     let planeGeometry =

@@ -15,6 +15,10 @@ type CalculationMode =
     | MinimizeLength
     | MinimizeHeight
 
+type ContainerMode =
+    | SingleContainer
+    | MultiContainer
+
 type Container = { Dim: Dim; Coord: Coordinates; Weight : int }
 type Item = { Dim: Dim; Weight : int; Id: string; Tag: string ; NoTop:bool; KeepTop:bool; KeepBottom : bool}
 type ContainerTriplet = Container list
@@ -34,7 +38,7 @@ type CalcResult = {
     Container : Container
     EmptyContainers : Container list
 }
-
+type Calcs = { ContainerMode : ContainerMode; CalculationMode : CalculationMode}
 module Route =
     /// Defines how routes are generated on server and mapped from client
     let builder typeName methodName =
@@ -45,6 +49,6 @@ module Route =
 type ICounterApi =
     {
         initialCounter : unit -> Async<Counter>
-        run  : CalculationMode -> Container -> Item list -> float -> float -> Async<CalcResult list>
+        run  : Calcs -> Container -> Item list -> float -> float -> Async<CalcResult list>
     }
 
