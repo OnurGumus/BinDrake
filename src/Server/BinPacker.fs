@@ -266,8 +266,13 @@ let rec putItem (rootContainer: Container) (calculationMode:CalculationMode)  tr
                 match calculationMode with
                 | MinimizeHeight -> (fun (s:Container) -> s.Coord.Y)
                 | MinimizeLength -> (fun s -> s.Coord.Z)
+            let calcMode =
+                if item.NoTop then
+                    calculationMode // CalculationMode.MinimizeLength
+                else
+                    calculationMode
             let config1,config2,config3,config4 =
-                match calculationMode with
+                match calcMode with
                 | CalculationMode.MinimizeLength ->
                     let config1 =
                         let topBlock =
@@ -783,7 +788,12 @@ let rec putItem (rootContainer: Container) (calculationMode:CalculationMode)  tr
                     |> fun l -> List.item (random.Next(0, l.Length)) l
 
             let sets =
-                if item.NoTop then [ config2; config1 ] else [ t1; t2 ]
+                if item.NoTop then
+                    match calculationMode with
+                    | CalculationMode.MinimizeLength ->
+                        [ config2; config1 ]
+                    | _ -> [config3;config4]
+                else [ t1; t2 ]
 
             let res =
                 ValueSome
@@ -1149,7 +1159,7 @@ let shuffle a =
 
 let defaultBatchSize = 20
 
-let run (rootContainer: Container) (calculationMode: CalculationMode) (items: Item list) (T: float) (alpha: float) =
+let runPerContainer (rootContainer: Container) (calculationMode: CalculationMode) (items: Item list) (T: float) (alpha: float) =
     let sw = Stopwatch.StartNew()
 
     let rec loop  (rootContainer: Container) (containers: Container list) (items: Item list) (results: CalcResult list) batchCount retryCount =
@@ -1282,3 +1292,14 @@ let run (rootContainer: Container) (calculationMode: CalculationMode) (items: It
     with e ->
             Serilog.Log.Error( e, "error")
             reraise()
+
+let run (rootContainer: Container) (calculationMode: CalculationMode) (items: Item list) (T: float) (alpha: float) =
+    let rec loop results unputItems =
+        let res = runPerContainer rootContainer calculationMode unputItems T alpha
+        let sumRes = res::results
+        match res.ItemsUnput with
+        | [] -> sumRes
+        | unput when unput.Length = unputItems.Length -> sumRes
+        | _ ->  loop sumRes res.ItemsUnput
+
+    loop [] items

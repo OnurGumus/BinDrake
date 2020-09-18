@@ -45,6 +45,6 @@ module Route =
 type ICounterApi =
     {
         initialCounter : unit -> Async<Counter>
-        run  : CalculationMode -> Container -> Item list -> float -> float -> Async<CalcResult>
+        run  : CalculationMode -> Container -> Item list -> float -> float -> Async<CalcResult list>
     }
 

@@ -14,7 +14,7 @@ open Browser.Types
 type Calculation =
     | NotCalculated
     | Calculating
-    | Calculated of CalcResult
+    | Calculated of CalcResult list
 
 type RowItem =
     {
@@ -48,7 +48,7 @@ type Model =
     }
 
 type Msg =
-    | ResultLoaded of CalcResult
+    | ResultLoaded of CalcResult list
     | CalculateRequested
     | AddRow
     | RemoveItem of string
@@ -235,7 +235,7 @@ let update (msg: Msg) model =
             { model with
                 Calculation = Calculated c
             },
-            Cmd.ofSub (fun _ -> CanvasRenderer.renderResult c.Container c.ItemsPut false)
+            Cmd.ofSub (fun _ -> CanvasRenderer.renderResult c.Head.Container c.Head.ItemsPut false)
 
         | ContainerUpdated c -> { model with ContainerItem = c }, Cmd.none
         | CalculationModeChanged "Minimize Length" ->  { model with CalculationMode = MinimizeLength }, Cmd.none
@@ -651,14 +651,14 @@ let viewC =
 
         let scollDown () =
             match model.Calculation with
-            | Calculated { ItemsPut = itemsPut } when itemsPut.Length > 0 ->
-                let element =
-                    document.querySelector ("#calculate-button")
+            // | Calculated { ItemsPut = itemsPut } when itemsPut.Length > 0 ->
+            //     let element =
+            //         document.querySelector ("#calculate-button")
 
-                element?scrollIntoView ({|
-                                            behavior = "smooth"
-                                            block = "start"
-                                        |})
+            //     element?scrollIntoView ({|
+            //                                 behavior = "smooth"
+            //                                 block = "start"
+            //                             |})
             | _ -> ()
             { new IDisposable with
                 member this.Dispose() = ()
@@ -813,7 +813,7 @@ let viewC =
 
                 match model.Calculation with
                 | Calculated r ->
-                    line "Volume fit:"  (Some r.PutVolume)
+                    line "Volume fit:"  (Some (r |> List.sumBy(fun c-> c.PutVolume)))
                 | _ -> Html.none
 
                 let isinvalid =
@@ -883,8 +883,8 @@ let viewC =
                     prop.disabled
                         (isinvalid
                          || isCalculating
-                         || nostackExceeds
-                         || volumeExceeds
+                       //  || nostackExceeds
+                        // || volumeExceeds
                          || itemExceeds)
                     color.isPrimary
                     prop.id "calculate-button"
@@ -911,7 +911,7 @@ let viewC =
                         [
                             match model.Calculation with
                             | Calculated c ->
-
+                                let c = c.Head
                                 match c.ItemsUnput, c.ItemsPut with
                                 | [], _ ->
                                     Bulma.label [
