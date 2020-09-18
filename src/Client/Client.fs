@@ -713,7 +713,10 @@ let viewC =
                             "Click calculate and wait up to 90 sec."
                             "Bin packer will try to fit the items and minimize the length."
                             "Gravity is ignored."
-                            "Review the result in 3D!"
+                            "Review the result in 3D"
+                            "You may zoom to boxes to see what's under them."
+
+
                         ]
 
                     prop.children

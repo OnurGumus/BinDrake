@@ -11,7 +11,7 @@ let THREE = Three.exports
 let scene = THREE.Scene.Create()
 
 let camera =
-    THREE.PerspectiveCamera.Create(45., window.innerWidth / window.innerHeight, 0.1, 4000.)
+    THREE.PerspectiveCamera.Create(30., window.innerWidth / window.innerHeight, 20., 4000.)
 
 let opt =
     jsOptions<Three.WebGLRendererParameters>
