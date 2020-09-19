@@ -7,6 +7,10 @@ open Fable.Core.JS
 open System
 open Shared
 
+// let  gui = Dat.exports.GUI.Create();
+// let controls = {|clip = 0.|}
+// gui.add(controls, "clip", 0., 1250.) |> ignore
+
 let THREE = Three.exports
 let scene = THREE.Scene.Create()
 
@@ -14,34 +18,41 @@ let camera =
     THREE.PerspectiveCamera.Create(30., window.innerWidth / window.innerHeight, 20., 4000.)
 
 let opt =
-    jsOptions<Three.WebGLRendererParameters>
-        (fun x-> x.antialias <- Some true ; x.canvas <- Some (!^(document.getElementById("myCanvas"))))
-let renderer =
-    THREE.WebGLRenderer.Create(opt)
+    jsOptions<Three.WebGLRendererParameters> (fun x ->
+        x.antialias <- Some true
+        x.canvas <- Some(!^(document.getElementById ("myCanvas"))))
 
-renderer.setClearColor (!^THREE.Color.Create(!^ (float 0xFFFFFF)))
+let renderer = THREE.WebGLRenderer.Create(opt)
+
+renderer.setClearColor (!^THREE.Color.Create(!^(float 0xFFFFFF)))
 renderer.setSize (window.innerWidth, window.innerHeight)
 renderer.shadowMap?enabled <- true
 
 let axes = THREE.AxesHelper.Create(20.)
-//scene.add (axes) |> ignore
-//let L = 1300.
-//let W = 245.
 let currentContainer = ResizeArray<Three.Object3D>()
-let renderPlane (container:Container)  =
+
+let renderPlane (container: Container) =
     let x =
-        (System.Math.Max(1,System.Math.Min(40,50000/(container.Dim.Width * container.Dim.Length )))
-        |> float )/1.5
+        (System.Math.Max
+            (1,
+             System.Math.Min
+                 (40,
+                  50000
+                  / (container.Dim.Width * container.Dim.Length)))
+         |> float)
+        / 1.5
+
     let x =
-        if container.Dim.Width + container.Dim.Length > 1000 then
-            x / 1.5
+        if container.Dim.Width + container.Dim.Length > 1000
+        then x / 1.5
         else x
 
-    camera.position.set (500./x, 550./x, -700./x) |> ignore
+    camera.position.set (500. / x, 550. / x, -700. / x)
+    |> ignore
     scene.remove currentContainer |> ignore
+
     let planeGeometry =
-        THREE.PlaneGeometry
-            .Create(container.Dim.Length |> float, container.Dim.Width|>float)
+        THREE.PlaneGeometry.Create(container.Dim.Length |> float, container.Dim.Width |> float)
 
     let planeMaterial =
         THREE.MeshLambertMaterial.Create(jsOptions<_> (fun x -> x.color <- Some !^ "red"))
@@ -57,24 +68,39 @@ let renderPlane (container:Container)  =
 
 
 let cubeMaterial =
-    THREE.MeshLambertMaterial.Create(jsOptions<Three.MeshLambertMaterialParameters>
-        (fun x -> x.color <- Some !^ "green"; x.wireframe<- Some true ))
+    THREE.MeshLambertMaterial.Create
+        (jsOptions<Three.MeshLambertMaterialParameters> (fun x ->
+            x.color <- Some !^ "green"
+            x.wireframe <- Some true))
+
 let wireframeMaterial =
-    THREE.MeshBasicMaterial.Create(jsOptions<Three.MeshBasicMaterialParameters>
-        (fun x-> x.wireframe <- Some true; x.transparent <- Some true; x.color <- Some !^ "black") )
+    THREE.MeshBasicMaterial.Create
+        (jsOptions<Three.MeshBasicMaterialParameters> (fun x ->
+            x.wireframe <- Some true
+            x.transparent <- Some true
+            x.color <- Some !^ "black"))
 
 let lineMaterial =
-    THREE.LineBasicMaterial.Create(jsOptions<Three.LineBasicMaterialParameters>
-        (fun x->  x.color <- Some !^ "black") )
-let cubes = ResizeArray<Three.Object3D>()
-let renderCube x y z width height length (color:string) L W =
-    let cubeMaterial =
-        THREE.MeshLambertMaterial.Create(jsOptions<Three.MeshLambertMaterialParameters>
-            (fun x -> x.color <- Some !^ color ; x.wireframe<- Some false   ))
+    THREE.LineBasicMaterial.Create(jsOptions<Three.LineBasicMaterialParameters> (fun x -> x.color <- Some !^ "black"))
 
-    let cubeGeometry = THREE.BoxGeometry.Create(length, height, width )
-    let edgeGeomerty = THREE.EdgesGeometry.Create !^cubeGeometry
-    let wireFrame = THREE.LineSegments.Create(edgeGeomerty , lineMaterial)
+let cubes = ResizeArray<Three.Object3D>()
+
+let renderCube x y z width height length (color: string) L W =
+    let cubeMaterial =
+        THREE.MeshLambertMaterial.Create
+            (jsOptions<Three.MeshLambertMaterialParameters> (fun x ->
+                x.color <- Some !^color
+                x.wireframe <- Some false))
+
+    let cubeGeometry =
+        THREE.BoxGeometry.Create(length, height, width)
+
+    let edgeGeomerty =
+        THREE.EdgesGeometry.Create !^cubeGeometry
+
+    let wireFrame =
+        THREE.LineSegments.Create(edgeGeomerty, lineMaterial)
+
     let cube =
         THREE.Mesh.Create(cubeGeometry, cubeMaterial)
 
@@ -86,71 +112,15 @@ let renderCube x y z width height length (color:string) L W =
     // let cont = THREE.Box3.Create().setFromObject(container).getSize(v)
     // let L = cont.x
     // let W = cont.z
-    cube.position.set ( z - (L - length) /2. , y + height / 2. , (W - width) / 2. - x) |> ignore
+    cube.position.set (z - (L - length) / 2., y + height / 2., (W - width) / 2. - x)
+    |> ignore
     scene.add cube |> ignore
     cubes.Add cube
-
-
-// let containers = {Dim = {Width =int 245; Height = 150; Length = int 1300}; Coord = {X =0; Y =0; Z =0 }}
-// let items = [
-//     {Dim = {Width = 100; Height = 100; Length = 14} ;Id = "big1" ; Tag ="#880000"};
-//       {Dim = {Width = 100; Height = 46; Length = 100} ; Id = "big2";Tag ="blue"};
-//       {Dim = {Width = 45; Height = 37; Length = 30} ; Id = "small1";Tag ="pink"};
-//       {Dim = {Width = 45; Height = 19; Length = 30} ; Id = "small22";Tag ="lime"};
-//          {Dim = {Width = 100; Height = 56; Length = 100} ;Id = "big3" ; Tag ="green"};
-//       {Dim = {Width = 100; Height = 88; Length = 39} ; Id = "big4";Tag ="blue"};
-//      {Dim = {Width = 45; Height = 27; Length = 30} ; Id = "2";Tag ="pink"};
-//      {Dim = {Width = 45; Height = 89; Length = 30} ; Id = "3";Tag ="lime"};
-    //       {Dim = {Width = 100; Height = 100; Length = 100} ;Id = "1" ; Tag ="green"};
-    // {Dim = {Width = 100; Height = 95; Length = 47} ; Id = "4";Tag ="blue"};
-    //  {Dim = {Width = 45; Height = 100; Length = 30} ; Id = "5";Tag ="pink"};
-    //  {Dim = {Width = 45; Height = 83; Length = 30} ; Id = "6";Tag ="lime"};
-    //  {Dim = {Width = 100; Height = 100; Length = 25} ;Id = "7" ; Tag ="green"};
-    //  {Dim = {Width = 100; Height = 13; Length = 10} ; Id = "8";Tag ="blue"};
-    //  {Dim = {Width = 150; Height = 125; Length = 10} ; Id = "9"; Tag ="red"};
-    //  {Dim = {Width = 50; Height = 111; Length = 56} ; Id = "10";Tag ="yellow"};
-    //  {Dim = {Width = 5; Height = 75; Length = 35} ; Id = "11";Tag ="aqua"};
-    //  {Dim = {Width = 50; Height = 150; Length = 56} ; Id = "12";Tag ="pink"};
-    //  {Dim = {Width = 50; Height = 75; Length = 124} ; Id = "13";Tag ="white"};
-    //  {Dim = {Width = 15; Height = 150; Length = 30} ; Id = "14";Tag ="navy"};
-    //  {Dim = {Width = 50; Height = 100; Length = 30} ; Id = "15";Tag ="aqua"};
-    //       {Dim = {Width = 50; Height = 150; Length = 200} ; Id = "16";Tag ="yellow"};
-    //  {Dim = {Width = 50; Height = 148; Length = 25} ; Id = "17";Tag ="aqua"};
-    //  {Dim = {Width = 25; Height = 75; Length = 99} ; Id = "18";Tag ="pink"};
-    //  {Dim = {Width = 85; Height = 127; Length = 111} ; Id = "19";Tag ="green"};
-    //  {Dim = {Width = 95; Height = 75; Length = 30} ; Id = "20";Tag ="navy"};
-    //  {Dim = {Width = 50; Height = 27; Length = 30} ; Id = "21";Tag ="aqua"};
-    //       {Dim = {Width = 50; Height = 150; Length = 200} ; Id = "22";Tag ="pink"};
-    //  {Dim = {Width = 150; Height = 131; Length = 200} ; Id = "23";Tag ="white"};
-    //  {Dim = {Width = 40; Height = 15; Length = 30} ; Id = "24";Tag ="navy"};
-    //  {Dim = {Width = 47; Height = 100; Length = 30} ; Id = "25";Tag ="aqua"};
-    //          {Dim = {Width = 50; Height = 150; Length = 200} ; Id = "26";Tag ="pink"};
-    //  {Dim = {Width = 59; Height = 125; Length = 200} ; Id = "27";Tag ="white"};
-    //  {Dim = {Width = 67; Height = 75; Length = 30} ; Id = "28";Tag ="navy"};
-    //  {Dim = {Width = 89; Height = 100; Length = 30} ; Id = "29";Tag ="aqu"};
-    //    {Dim = {Width = 61; Height = 47; Length = 99} ; Id = "30";Tag ="#222222"};
-    //  {Dim = {Width = 143; Height = 145; Length = 135} ; Id = "31";Tag ="white"};
-    //  {Dim = {Width = 131; Height = 75; Length = 30} ; Id = "32";Tag ="navy"};
-    //   {Dim = {Width = 21; Height = 100; Length = 30} ; Id = "33";Tag ="aqua"};
-    //       {Dim = {Width = 50; Height = 150; Length = 200} ; Id = "34";Tag ="yellow"};
-    //  {Dim = {Width = 40; Height = 42; Length = 84} ; Id = "35";Tag ="aqua"};
-    //  {Dim = {Width = 99; Height = 47; Length = 21} ; Id = "36";Tag ="pink"};
-    //     {Dim = {Width = 50; Height = 125; Length = 200} ; Id = "27";Tag ="white"};
-    //  {Dim = {Width = 50; Height = 75; Length = 30} ; Id = "28";Tag ="navy"};
-    //  {Dim = {Width = 50; Height = 100; Length = 30} ; Id = "29";Tag ="aqu"};
-    //    {Dim = {Width = 50; Height = 150; Length = 200} ; Id = "30";Tag ="#222222"};
-    //  {Dim = {Width = 97; Height = 150; Length = 200} ; Id = "31";Tag ="white"};
-    //  {Dim = {Width = 42; Height = 75; Length = 30} ; Id = "32";Tag ="navy"};
-    //   {Dim = {Width = 36; Height = 100; Length = 30} ; Id = "33";Tag ="aqua"};
-    //       {Dim = {Width = 50; Height = 150; Length = 200} ; Id = "34";Tag ="yellow"};
-    //  {Dim = {Width = 39; Height = 150; Length = 24} ; Id = "35";Tag ="aqua"};
-    //  {Dim = {Width = 39; Height = 16; Length = 200} ; Id = "36";Tag ="pink"};
-   // ]
 
 let mutable demoMode2 = false
 
 let init () =
-    let addSpottLight x y z inten=
+    let addSpottLight x y z inten =
         let spotLight = THREE.SpotLight.Create(!^ "white")
         spotLight.position.set (x, y, z) |> ignore
         spotLight.castShadow <- true
@@ -165,15 +135,20 @@ let init () =
     addSpottLight -800. 1200. 2450. 0.4
     addSpottLight -1400. 1000. 1450. 0.4
 
-    let dLight = THREE.DirectionalLight.Create(!^ "white",0.4)
-    dLight.translateX 100.0 |>ignore
+    let dLight =
+        THREE.DirectionalLight.Create(!^ "white", 0.4)
+
+    dLight.translateX 100.0 |> ignore
     dLight.rotateZ 40. |> ignore
     dLight.rotateX 10. |> ignore
     dLight.rotateY 10. |> ignore
     dLight.position.set (-400., 400., -900.) |> ignore
     scene.add dLight |> ignore
-    let dLight2 = THREE.DirectionalLight.Create(!^ "white",0.4)
-    dLight2.translateX 100.0 |>ignore
+
+    let dLight2 =
+        THREE.DirectionalLight.Create(!^ "white", 0.4)
+
+    dLight2.translateX 100.0 |> ignore
     dLight2.rotateZ 40. |> ignore
     dLight2.rotateX 10. |> ignore
     dLight2.rotateY 10. |> ignore
@@ -202,30 +177,42 @@ let init () =
     let trackballControls = initTrackballControls (camera, renderer)
     let clock = THREE.Clock.Create()
 
-    let resizeRendererToDisplaySize(renderer:Three.Renderer) =
-        let  canvas = renderer.domElement;
-        let width = canvas.clientWidth;
-        let height = canvas.clientHeight;
-        let needResize = canvas.width <> width || canvas.height <> height;
-        if (needResize) then
-            renderer.setSize(width, height, false);
+    let resizeRendererToDisplaySize (renderer: Three.Renderer) =
+        let canvas = renderer.domElement
+        let width = canvas.clientWidth
+        let height = canvas.clientHeight
+
+        let needResize =
+            canvas.width <> width || canvas.height <> height
+
+        if (needResize) then renderer.setSize (width, height, false)
         needResize
 
     let rec renderScene time =
         let time = time * 0.001
         trackballControls.update (clock.getDelta ())
-        if (resizeRendererToDisplaySize(renderer)) then
-            let canvas = renderer.domElement;
-            camera.aspect <- canvas.clientWidth / canvas.clientHeight;
-            camera.updateProjectionMatrix();
+        if (resizeRendererToDisplaySize (renderer)) then
+            let canvas = renderer.domElement
+            camera.aspect <- canvas.clientWidth / canvas.clientHeight
+            camera.updateProjectionMatrix ()
         if demoMode2 then
-            cubes |> Seq.indexed |> Seq.iter (fun (ndx, ob) ->
-                let speed = 0.1 + float(ndx) * 0.05;
-                let rot = time * speed;
-                ob?rotation?x <- rot;
-                ob?rotation?y <- rot; )
+            cubes
+            |> Seq.indexed
+            |> Seq.iter (fun (ndx, ob) ->
+                let speed = 0.1 + float (ndx) * 0.05
+                let rot = time * speed
+                ob?rotation?x <- rot
+                ob?rotation?y <- rot)
+        // if currentContainer.Count > 0 then
+        //     let c : Three.Mesh<Three.PlaneGeometry,_> = !! currentContainer.[0]
+        //     let x = c.geometry.vertices.[0].x  + controls.clip
+        //     printf "%A" x
+        //     let globalPlane = THREE.Plane.Create( THREE.Vector3.Create(1., 0., 0.), x );
+
+        //     renderer.clippingPlanes <- !![|globalPlane|]
         renderer.render (scene, camera)
-        window.requestAnimationFrame (renderScene)|> ignore
+        window.requestAnimationFrame (renderScene)
+        |> ignore
 
     renderScene 0.
 
@@ -234,9 +221,14 @@ let renderResult container items demoMode =
     renderPlane container
     scene.remove cubes |> ignore
     cubes.Clear()
-    for (item : ItemPut) in items do
-        renderCube (item.Coord.X |> float) (item.Coord.Y |> float)
-            (item.Coord.Z |> float) (item.Item.Dim.Width |> float)
-            (item.Item.Dim.Height |> float) (item.Item.Dim.Length |> float) item.Item.Tag
+    for (item: ItemPut) in items do
+        renderCube
+            (item.Coord.X |> float)
+            (item.Coord.Y |> float)
+            (item.Coord.Z |> float)
+            (item.Item.Dim.Width |> float)
+            (item.Item.Dim.Height |> float)
+            (item.Item.Dim.Length |> float)
+            item.Item.Tag
             (container.Dim.Length |> float)
             (container.Dim.Width |> float)

@@ -12,6 +12,7 @@
     <Compile Include="TrackballControls.fs" />
     <Compile Include="stories/Test.stories.fs" />
     <Compile Include="stories/MyInput.fs" />
+    <Compile Include="Dat.fs" />
     <Compile Include="CanvasRenderer.fs" />
     <Compile Include="Client.fs" />
   </ItemGroup>

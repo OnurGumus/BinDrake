@@ -13,7 +13,6 @@ type Function = System.Action
 type RegExp = System.Text.RegularExpressions.Regex
 
 
-
 type [<AllowNullLiteral>] IExports =
         abstract Scene: SceneStatic
         abstract PerspectiveCamera: PerspectiveCameraStatic
@@ -39,6 +38,8 @@ type [<AllowNullLiteral>] IExports =
         abstract LineSegments : LineSegmentsStatic
         abstract OrthographicCamera : OrthographicCameraStatic
         abstract Box3 : Box3Static
+        abstract Plane : PlaneStatic
+
 [<Import("*","three")>]
 let exports : IExports=  jsNative
 
