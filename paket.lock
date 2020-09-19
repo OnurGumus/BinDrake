@@ -453,6 +453,8 @@ NUGET
     TypeShape (8.0.1)
       FSharp.Core (>= 4.3.4)
       System.Reflection.Emit.Lightweight (>= 4.3)
+    Zanaptak.TypedCssClasses (0.4)
+      FSharp.Core (>= 4.3.4)
 
 GROUP Server
 STORAGE: NONE

@@ -9,3 +9,4 @@ group Client
     Fable.Validation
     Feliz.Bulma
     Feliz.UseElmish
+    Zanaptak.TypedCssClasses

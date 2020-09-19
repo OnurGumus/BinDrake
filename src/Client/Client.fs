@@ -11,6 +11,8 @@ open Feliz
 open Feliz.Bulma.Bulma
 open Browser.Types
 open Feliz.Bulma.Operators
+open Zanaptak.TypedCssClasses
+type FA = CssClasses<"../../node_modules/@fortawesome/fontawesome-free/css/all.css", Naming.Underscores>
 
 type Calculation =
     | NotCalculated
@@ -588,9 +590,12 @@ module Row =
                 let removeButton =
                     Bulma.button.button [
                         button.isSmall
+                         ++ color.isDanger
                         prop.disabled props.Disabled
-                        color.isDanger
-                        prop.text "X"
+                        prop.classes[
+                            FA.fa
+                            FA.fa_times_circle
+                        ]
                         match props.Remove with
                         | Some remove -> prop.onClick (fun _ -> remove ())
                         | _ -> prop.style [ style.visibility.hidden ]
@@ -599,9 +604,13 @@ module Row =
                 let addButton =
                     Bulma.button.button [
                         button.isSmall
+                        ++ color.isPrimary
                         prop.disabled props.Disabled
-                        color.isPrimary
-                        prop.text "Add"
+
+                        prop.classes[
+                            FA.fa
+                            FA.fa_plus_circle
+                        ]
                         match props.AddRow with
                         | Some addRow -> prop.onClick (fun _ -> addRow ())
                         | _ -> prop.style [ style.visibility.hidden ]

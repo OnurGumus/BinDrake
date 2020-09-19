@@ -6,7 +6,7 @@
     "@babel/polyfill": "^7.6.0",
     "@babel/preset-env": "^7.6.3",
     "@babel/runtime": "^7.6.3",
-    "@fortawesome/fontawesome-free": "^5.11.2",
+    "@fortawesome/fontawesome-free": "^5.14.0",
     "@storybook/html": "^5.3.19",
     "babel-loader": "^8.0.5",
     "bulma": "^0.9.0",

@@ -29,6 +29,7 @@ group Client
     nuget Fable.Validation
     nuget Feliz.Bulma
     nuget Feliz.UseElmish
+    nuget Zanaptak.TypedCssClasses
 
 group Build
     source https://api.nuget.org/v3/index.json
