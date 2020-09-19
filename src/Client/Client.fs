@@ -10,6 +10,7 @@ open Feliz.Bulma
 open Feliz
 open Feliz.Bulma.Bulma
 open Browser.Types
+open Feliz.Bulma.Operators
 
 type Calculation =
     | NotCalculated
@@ -46,7 +47,7 @@ type Model =
         ContainerItem: ContainerItem option
         RowItems: (RowItem option * string) list
         TotalVolume: int option
-        CurrentResultIndex : int
+        CurrentResultIndex: int
     }
 
 type Msg =
@@ -73,7 +74,16 @@ module Server =
 let run = Server.api.run
 
 let runCmd containerMode calcMode container items =
-    Cmd.OfAsync.perform (fun _ -> run { ContainerMode =containerMode; CalculationMode = (calcMode)} container items 10000000000. 0.99) () ResultLoaded
+    Cmd.OfAsync.perform (fun _ ->
+        run
+            {
+                ContainerMode = containerMode
+                CalculationMode = (calcMode)
+            }
+            container
+            items
+            10000000000.
+            0.99) () ResultLoaded
 
 let newRowItem () = (None, Guid.NewGuid().ToString())
 
@@ -220,10 +230,9 @@ let update (msg: Msg) model =
     let model, cmd =
         match msg with
         | CurrentResultChanged i ->
-                match model.Calculation with
-                | Calculated c ->
-                    {model with CurrentResultIndex = i}, Cmd.ofMsg (ResultLoaded c)
-                | _ -> failwith "should not happen"
+            match model.Calculation with
+            | Calculated c -> { model with CurrentResultIndex = i }, Cmd.ofMsg (ResultLoaded c)
+            | _ -> failwith "should not happen"
         | AddRow ->
             { model with
                 RowItems = model.RowItems @ [ newRowItem () ]
@@ -247,7 +256,11 @@ let update (msg: Msg) model =
             { model with
                 Calculation = Calculated c
             },
-            Cmd.ofSub (fun _ -> CanvasRenderer.renderResult c.[model.CurrentResultIndex].Container c.[model.CurrentResultIndex].ItemsPut false)
+            Cmd.ofSub (fun _ ->
+                CanvasRenderer.renderResult
+                    c.[model.CurrentResultIndex].Container
+                    c.[model.CurrentResultIndex].ItemsPut
+                    false)
 
         | ContainerUpdated c -> { model with ContainerItem = c }, Cmd.none
         | CalculationModeChanged "Minimize Length" ->
@@ -292,7 +305,11 @@ let update (msg: Msg) model =
 
             let items: list<Item> = convertToItems model
 
-            { model with Calculation = Calculating; CurrentResultIndex = 0 }, runCmd model.ContainerMode model.CalculationMode container items
+            { model with
+                Calculation = Calculating
+                CurrentResultIndex = 0
+            },
+            runCmd model.ContainerMode model.CalculationMode container items
 
     let totalVolume =
         match model.RowItems with
@@ -688,11 +705,12 @@ let viewC =
             | Calculating -> true
             | _ -> false
 
-        let (counterValue, setCounterValue) = React.useState (35)
+        let (counterValue, setCounterValue) = React.useState (90)
 
         let scollDown () =
             match model.Calculation with
-            | Calculated results when results |> List.exists( fun r->  r.ItemsPut.Length > 0) ->
+            | Calculated results when results
+                                      |> List.exists (fun r -> r.ItemsPut.Length > 0) ->
                 let element =
                     document.querySelector ("#calculate-button")
 
@@ -708,12 +726,8 @@ let viewC =
         React.useEffect (scollDown, [| box isCalculating |])
 
         let subscribeToTimer () =
-            // start the ticking
-
             let subscriptionId =
-                JS.setTimeout (fun _ ->
-                    if isCalculating then setCounterValue (counterValue - 1)) 1000
-            // return IDisposable with cleanup code
+                JS.setTimeout (fun _ -> if isCalculating then setCounterValue (counterValue - 1)) 1000
             { new IDisposable with
                 member this.Dispose() = JS.clearTimeout (subscriptionId)
             }
@@ -743,11 +757,9 @@ let viewC =
             field.div [
                 Html.b "How to use:"
                 Html.ul [
-                    prop.style [
-                        style.listStyleType.disc
-                        style.marginLeft (length.em 1)
-                        style.custom ("fontSize", "smaller")
-                    ]
+                    spacing.ml1
+                    ++ size.isSize7
+                    prop.style [ style.listStyleType.disc ]
 
                     let items =
                         [
@@ -852,6 +864,8 @@ let viewC =
                 | Calculated r -> line "Volume fit:" (Some(r |> List.sumBy (fun c -> c.PutVolume)))
                 | _ -> Html.none
 
+                let isMultiBin = match model.ContainerMode with | MultiContainer -> true | _ -> false
+
                 let isinvalid =
                     (model.ContainerItem.IsNone
                      || model.TotalVolume.IsNone)
@@ -863,6 +877,7 @@ let viewC =
                         * container.Width
                         * container.Length < volume
                     | _ -> false
+                    |>  (&&) (isMultiBin |> not)
 
                 let nostackExceeds =
                     match model.ContainerItem, model.TotalVolume with
@@ -883,8 +898,9 @@ let viewC =
                             | [] -> 0
                             | other -> (other |> List.maxBy (fun x -> x.Dim.Height)).Dim.Height
 
-                        areaItems > containerArea
-                        || maxHeight > container.Height
+                        (areaItems > containerArea
+                        || maxHeight > container.Height)
+                        && (isMultiBin |> not)
 
 
                     | _ -> false
@@ -902,12 +918,12 @@ let viewC =
                             itemDim > cDim
 
                         let items = convertToItems model
-                        List.exists (checkDim) items
+                        List.exists (checkDim) items || items |> List.exists(fun i -> i.Weight > container.Weight)
                     | _ -> false
 
                 Html.br []
                 Html.div [
-                    prop.style [ style.display.inlineBlock ]
+                    helpers.isInlineBlock
                     prop.children [
                         Bulma.label "Calculation mode:"
                         Html.select [
@@ -922,10 +938,8 @@ let viewC =
                     ]
                 ]
                 Html.div [
-                    prop.style [
-                        style.display.inlineBlock
-                        style.marginLeft (length.em 4)
-                    ]
+                    spacing.ml4
+                    ++ helpers.isInlineBlock
                     prop.children [
                         Bulma.label "Container mode:"
                         Html.select [
@@ -933,9 +947,7 @@ let viewC =
                                 Html.option "Single Container"
                                 Html.option "Multi Container"
                             ]
-                            prop.onChange (fun (e: Event) ->
-                                ContainerModeChanged(!!e.target?value)
-                                |> dispatch)
+                            prop.onChange (fun (e: Event) -> ContainerModeChanged(!!e.target?value) |> dispatch)
                         ]
                     ]
                 ]
@@ -945,24 +957,26 @@ let viewC =
                     prop.disabled
                         (isinvalid
                          || isCalculating
-                         //  || nostackExceeds
-                         // || volumeExceeds
+                         || nostackExceeds
+                         || volumeExceeds
                          || itemExceeds)
                     color.isPrimary
                     prop.id "calculate-button"
                     prop.text
-                        (if isCalculating
-                         then sprintf "Calculating... (Max %i sec)" counterValue
-                         else if isinvalid
-                         then "First fill the form correctly!"
-                        //  else if volumeExceeds
-                        //  then "Items' volume exceeds container volume."
-                        //  else if nostackExceeds
-                        //  then "No stack items won't fit to container."
-                         else if itemExceeds
-                         then "An item's dim is larger than container."
+                        (if isCalculating then
+                            sprintf "Calculating... (Max %i sec)" counterValue
 
-                         else "Calculate")
+                         elif volumeExceeds then
+                            "Items' volume exceeds single container volume."
+                         else if nostackExceeds
+                            then "No stack items won't fit to single container."
+                         elif isinvalid then
+                             "First fill the form correctly!"
+                         else if itemExceeds then
+                             "An item's parameters are larger than container's."
+
+                         else
+                             "Calculate")
                     prop.onClick (fun _ ->
                         setCounterValue 90
                         dispatch CalculateRequested)
@@ -972,17 +986,17 @@ let viewC =
                     prop.children [
                         match model.Calculation with
                         | Calculated c ->
-                            let itemsPut = c |> List.collect(fun l -> l.ItemsPut)
+                            let itemsPut = c |> List.collect (fun l -> l.ItemsPut)
                             let itemsUnput = (c |> List.last).ItemsUnput
                             match itemsUnput, itemsPut with
                             | [], _ ->
                                 Bulma.label [
-                                    prop.style [ style.color "green" ]
+                                    prop.style [ style.color.green]
                                     prop.text "All items put successfully!"
                                 ]
                             | _, [] ->
                                 Bulma.label [
-                                    prop.style [ style.color "red" ]
+                                    color.isDanger
                                     prop.text "Unable to fit all items!"
                                 ]
                             | items, _ ->
@@ -990,78 +1004,66 @@ let viewC =
                                 React.fragment [
                                     Bulma.label "Could not fit the following items:"
                                     Html.ul [
-                                        prop.children [
-                                            for key, values in g do
-                                                yield
-                                                    Html.li [
-                                                        prop.children [
-                                                            Html.span [
-                                                                prop.text " x "
-                                                                prop.style [
-                                                                    style.backgroundColor key
-                                                                    style.color.white
-                                                                    style.width (length.ch 1)
-                                                                    style.display.inlineBlock
-                                                                ]
-                                                            ]
-                                                            Html.span [
-                                                                prop.text
-                                                                    (sprintf
-                                                                        "%i items not fit with this color."
-                                                                         values.Length)
-                                                            ]
+                                        for key, values in g do
+                                            yield
+                                                Html.li [
+                                                    Html.span [
+                                                        helpers.isInlineBlock ++ color.hasTextWhite
+                                                        prop.text " x "
+                                                        prop.style [
+                                                            style.backgroundColor key
+                                                            style.width (length.ch 1)
                                                         ]
                                                     ]
-                                        ]
+                                                    Html.span [
+                                                        prop.textf "%i items not fit with this color." values.Length
+                                                    ]
+                                                ]
                                     ]
                                 ]
                         | _ -> Html.none
                     ]
                 ]
                 match model.Calculation with
-                    | Calculated c ->
-                        Html.div[
-                            Html.br[]
-                            Bulma.button.button [
-                                color.isDanger
-                                prop.text " << "
-                                prop.disabled ((model.CurrentResultIndex = 0) || isCalculating)
-                                prop.onClick( fun _ -> dispatch (CurrentResultChanged (model.CurrentResultIndex - 1)))
-                            ]
-                            Html.span[
-                                prop.style [style.margin (length.em 1); style.fontWeight 700 ]
-                                prop.textf "Show container: %i/%i" (model.CurrentResultIndex + 1) (c.Length)
-                            ]
-                            Bulma.button.button [
-                                color.isDanger
-                                prop.text " >> "
-                                prop.disabled ((model.CurrentResultIndex = c.Length - 1) || isCalculating)
-                                prop.onClick( fun _ -> dispatch (CurrentResultChanged (model.CurrentResultIndex + 1)))
-
-                            ]
+                | Calculated c ->
+                    Html.div [
+                        Html.br []
+                        Bulma.button.button [
+                            color.isDanger
+                            prop.text " << "
+                            prop.disabled ((model.CurrentResultIndex = 0) || isCalculating)
+                            prop.onClick (fun _ -> dispatch (CurrentResultChanged(model.CurrentResultIndex - 1)))
                         ]
-                    | _ -> Html.none
+                        Html.span [
+                            spacing.mx1 ++ text.hasTextWeightSemibold
+                            prop.textf "Show container: %i/%i" (model.CurrentResultIndex + 1) (c.Length)
+                        ]
+                        Bulma.button.button [
+                            color.isDanger
+                            prop.text " >> "
+                            prop.disabled
+                                ((model.CurrentResultIndex = c.Length - 1)
+                                 || isCalculating)
+                            prop.onClick (fun _ -> dispatch (CurrentResultChanged(model.CurrentResultIndex + 1)))
+
+                        ]
+                    ]
+                | _ -> Html.none
             ]
 
         Bulma.container [
-            prop.children [
-                Bulma.columns [
-                    prop.children [
-                        Bulma.column [
-                            prop.children [
-                                Bulma.panel [
-                                    spacing.mt1
-                                    prop.children [
-                                        Bulma.panelHeading [
-                                            Html.span [
-                                                prop.style [ style.color.white ]
-                                                prop.text "3D Bin Packer"
-                                            ]
-                                        ]
-                                        Bulma.panelBlock.div [ content ]
-                                    ]
+            Bulma.columns [
+                Bulma.column [
+                    Bulma.panel [
+                        spacing.mt1
+                        prop.children [
+                            Bulma.panelHeading [
+                                Html.span [
+                                    prop.style [ style.color.white ]
+                                    prop.text "3D Bin Packer"
                                 ]
                             ]
+                            Bulma.panelBlock.div [ content ]
                         ]
                     ]
                 ]
