@@ -38,6 +38,46 @@ type CalcResult = {
     Container : Container
     EmptyContainers : Container list
 }
+module ClientModel =
+    type Calculation =
+        | NotCalculated
+        | Calculating
+        | Calculated of CalcResult list
+
+    type RowItem =
+        {
+            Width: int
+            Height: int
+            Length: int
+            Weight: int
+            Color: string
+            Quantity: int
+            Stackable: bool
+            KeepTop: bool
+            KeepBottom: bool
+        }
+
+    type ContainerItem =
+        {
+            Width: int
+            Height: int
+            Length: int
+            Weight: int
+        }
+    type Model =
+        {
+            Calculation: Calculation
+            CalculationMode: CalculationMode
+            ContainerMode: ContainerMode
+            Container: Container option
+            ContainerItem: ContainerItem option
+            RowItems: (RowItem option * string) list
+            TotalVolume: int option
+            CurrentResultIndex: int
+            UrlShown : bool
+            Loading : bool
+        }
+
 type Calcs = { ContainerMode : ContainerMode; CalculationMode : CalculationMode}
 module Route =
     /// Defines how routes are generated on server and mapped from client
@@ -50,5 +90,7 @@ type ICounterApi =
     {
         initialCounter : unit -> Async<Counter>
         run  : Calcs -> Container -> Item list -> float -> float -> Async<CalcResult list>
+        saveModel  : ClientModel.Model -> Async<Guid>
+        loadModel  : Guid -> Async<ClientModel.Model>
     }
 

@@ -12,48 +12,22 @@ open Feliz.Bulma.Bulma
 open Browser.Types
 open Feliz.Bulma.Operators
 open Zanaptak.TypedCssClasses
+open Fable.Core
+open Shared.ClientModel
+
 type FA = CssClasses<"../../node_modules/@fortawesome/fontawesome-free/css/all.css", Naming.Underscores>
+open Thoth.Json
 
-type Calculation =
-    | NotCalculated
-    | Calculating
-    | Calculated of CalcResult list
+[<Emit("btoa($0)")>]
+let toBase64String (s: string): string = jsNative
 
-type RowItem =
-    {
-        Width: int
-        Height: int
-        Length: int
-        Weight: int
-        Color: string
-        Quantity: int
-        Stackable: bool
-        KeepTop: bool
-        KeepBottom: bool
-    }
+[<Emit("atob($0)")>]
+let fromBase64String (s: string): string = jsNative
 
-type ContainerItem =
-    {
-        Width: int
-        Height: int
-        Length: int
-        Weight: int
-    }
-
-type Model =
-    {
-        Calculation: Calculation
-        CalculationMode: CalculationMode
-        ContainerMode: ContainerMode
-        Container: Container option
-        ContainerItem: ContainerItem option
-        RowItems: (RowItem option * string) list
-        TotalVolume: int option
-        CurrentResultIndex: int
-    }
-
+let r = Random()
 type Msg =
     | ResultLoaded of CalcResult list
+    | ModelSaved of Guid
     | CalculateRequested
     | AddRow
     | RemoveItem of string
@@ -62,6 +36,8 @@ type Msg =
     | CalculationModeChanged of string
     | ContainerModeChanged of string
     | CurrentResultChanged of int
+    | ShareRequested
+    | ModelLoaded of Model
 
 module Server =
 
@@ -74,6 +50,8 @@ module Server =
         |> Remoting.buildProxy<ICounterApi>
 
 let run = Server.api.run
+let save = Server.api.saveModel
+let load = Server.api.loadModel
 
 let runCmd containerMode calcMode container items =
     Cmd.OfAsync.perform (fun _ ->
@@ -86,6 +64,12 @@ let runCmd containerMode calcMode container items =
             items
             10000000000.
             0.99) () ResultLoaded
+
+let saveCmd model =
+    Cmd.OfAsync.perform (fun _ -> save model) () ModelSaved
+
+let loadCmd guid =
+        Cmd.OfAsync.perform (fun _ -> load guid) () ModelLoaded
 
 let newRowItem () = (None, Guid.NewGuid().ToString())
 
@@ -167,7 +151,15 @@ let init () =
             Coord = { X = 0; Y = 0; Z = 0 }
             Weight = 0
         }
-
+    // let read = Browser.Dom.window.location.search.Substring(2) |> Guid.Parse
+    // printf "%A"read
+    let cmd,loading =
+        match Browser.Dom.window.location.search with
+        | null
+        | "" -> Cmd.none, false
+        | s ->
+            let guid =  Browser.Dom.window.location.search.Substring(3) |> Guid.Parse
+            (loadCmd guid), true
     CanvasRenderer.renderResult container boxes true
     {
         Calculation = NotCalculated
@@ -178,8 +170,10 @@ let init () =
         CalculationMode = CalculationMode.MinimizeHeight
         ContainerMode = ContainerMode.SingleContainer
         CurrentResultIndex = 0
+        UrlShown = false
+        Loading = loading
     },
-    Cmd.none
+    cmd
 
 let cols =
     [
@@ -231,6 +225,18 @@ let convertToItems (model: Model) =
 let update (msg: Msg) model =
     let model, cmd =
         match msg with
+        | ModelLoaded model ->
+            match model.Calculation with
+            | Calculated c ->
+                {model with Loading = false},Cmd.ofMsg (ResultLoaded c)
+            | _ -> failwith "should not happen"
+
+        | ModelSaved guid ->
+            { model with UrlShown = true} ,
+            Cmd.ofSub (fun _ ->
+                Browser.Dom.window.history.replaceState(null,null, sprintf "?g=%s" (guid.ToString())))
+
+        | ShareRequested -> model, saveCmd model
         | CurrentResultChanged i ->
             match model.Calculation with
             | Calculated c -> { model with CurrentResultIndex = i }, Cmd.ofMsg (ResultLoaded c)
@@ -255,9 +261,17 @@ let update (msg: Msg) model =
             },
             Cmd.none
         | ResultLoaded c ->
-            { model with
-                Calculation = Calculated c
-            },
+            let model =
+                { model with
+                    Calculation = Calculated c
+                }
+            // let r = Encode.Auto.toString(4, model) |> toBase64String //|> Decode.Auto.fromString<Model>
+            // r |> printf "%A"
+            // let f = r |> fromBase64String
+            // f |> printf "%A"
+            // let ff = f |> Decode.Auto.fromString<Model>
+            // ff |> printf "%A"
+            model,
             Cmd.ofSub (fun _ ->
                 CanvasRenderer.renderResult
                     c.[model.CurrentResultIndex].Container
@@ -310,6 +324,7 @@ let update (msg: Msg) model =
             { model with
                 Calculation = Calculating
                 CurrentResultIndex = 0
+                UrlShown = false
             },
             runCmd model.ContainerMode model.CalculationMode container items
 
@@ -327,6 +342,18 @@ let update (msg: Msg) model =
         | _ -> None
 
     { model with TotalVolume = totalVolume }, cmd
+type RowFormData =
+        {
+            Width: string
+            Height: string
+            Length: string
+            Quantity: string
+            Weight: string
+            Color: string
+            Stackable: bool
+            KeepTop: bool
+            KeepBottom: bool
+        }
 
 
 type RowProp =
@@ -336,29 +363,29 @@ type RowProp =
         Remove: (unit -> unit) option
         Key: string
         Disabled: bool
+        FormData : RowFormData
     }
-
-type ContainerProp =
-    {
-        ContainerUpdated: ContainerItem option -> unit
-        Disabled: bool
-    }
-
-module Container =
-    open Feliz.UseElmish
-
-    type FormData =
+    type ContainerFormData =
         {
             Width: string
             Height: string
             Length: string
             Weight: string
         }
+type ContainerProp =
+    {
+        ContainerUpdated: ContainerItem option -> unit
+        Disabled: bool
+        ContainerFormData : ContainerFormData
+    }
+
+module Container =
+    open Feliz.UseElmish
 
     type Model =
         {
             ContainerItem: Result<ContainerItem, Map<string, string list>> option
-            FormData: FormData
+            FormData: ContainerFormData
         }
 
     type Msg =
@@ -368,20 +395,14 @@ module Container =
         | WeightChanged of string
 
 
-    let init () =
+    let init (formData : ContainerFormData) =
         {
             ContainerItem = None
-            FormData =
-                {
-                    Width = ""
-                    Height = ""
-                    Length = ""
-                    Weight = "0"
-                }
+            FormData = formData
         },
         Cmd.none
 
-    let validate (formData: FormData) =
+    let validate (formData: ContainerFormData) =
         all
         <| fun t ->
             let floatCheck = numericCheck t int 0 2000
@@ -422,7 +443,7 @@ module Container =
         React.functionComponent
             ((fun (props: ContainerProp) ->
                 let model, dispatch =
-                    React.useElmish (init, update props.ContainerUpdated, [||])
+                    React.useElmish (init props.ContainerFormData, update props.ContainerUpdated, [||])
 
                 let dispatch' col v =
                     match col with
@@ -433,6 +454,13 @@ module Container =
                     | other -> failwith other
                     |> dispatch
 
+                let defaultValue col  =
+                        match col with
+                        | "Height" -> model.FormData.Height
+                        | "Width" -> model.FormData.Width
+                        | "Length" -> model.FormData.Length
+                        | "Max Weight" -> match model.FormData.Weight with  | null | "" -> "0" | e -> e
+                        | other -> failwith other
                 Html.div [
                     let cols =
                         [
@@ -470,7 +498,7 @@ module Container =
                                                 prop.readOnly props.Disabled
                                                 prop.maxLength 4
                                                 prop.max 2000
-                                                prop.defaultValue (if col = "Max Weight" then "0" else "")
+                                                prop.defaultValue (defaultValue col)
                                                 input.isSmall
                                                 prop.placeholder col
                                                 prop.onChange (fun (e: Event) -> dispatch' col e.Value)
@@ -485,23 +513,11 @@ module Container =
 module Row =
     open Feliz.UseElmish
 
-    type FormData =
-        {
-            Width: string
-            Height: string
-            Length: string
-            Quantity: string
-            Weight: string
-            Color: string
-            Stackable: bool
-            KeepTop: bool
-            KeepBottom: bool
-        }
 
     type Model =
         {
             RowItem: Result<RowItem, Map<string, string list>> option
-            FormData: FormData
+            FormData: RowFormData
         }
 
     type Msg =
@@ -514,27 +530,27 @@ module Row =
         | TopChanged of bool
         | QuantityChanged of string
 
-    let r = Random()
 
-    let init () =
+
+    let init (formData : RowFormData) =
         {
             RowItem = None
-            FormData =
-                {
-                    Width = ""
-                    Height = ""
-                    Length = ""
-                    Weight = "0"
-                    Color = sprintf "rgb(%i,%i,%i)" (r.Next(40, 256)) (r.Next(40, 256)) (r.Next(40, 256))
-                    Stackable = true
-                    KeepTop = false
-                    KeepBottom = false
-                    Quantity = ""
-                }
+            FormData = formData
+                // {
+                //     Width = ""
+                //     Height = ""
+                //     Length = ""
+                //     Weight = "0"
+                //     Color = sprintf "rgb(%i,%i,%i)" (r.Next(40, 256)) (r.Next(40, 256)) (r.Next(40, 256))
+                //     Stackable = true
+                //     KeepTop = false
+                //     KeepBottom = false
+                //     Quantity = ""
+                // }
         },
         Cmd.none
 
-    let validate (formData: FormData) =
+    let validate (formData: RowFormData) =
         all
         <| fun t ->
             let floatCheck = numericCheck t int 0 2000
@@ -585,14 +601,13 @@ module Row =
         React.functionComponent
             ((fun (props: RowProp) ->
                 let model, dispatch =
-                    React.useElmish (init, update props.RowUpdated, [||])
+                    React.useElmish (init props.FormData, update props.RowUpdated, [||])
 
                 let removeButton =
                     Bulma.button.button [
-                        button.isSmall
-                         ++ color.isDanger
+                        button.isSmall ++ color.isDanger
                         prop.disabled props.Disabled
-                        prop.classes[
+                        prop.classes [
                             FA.fa
                             FA.fa_times_circle
                         ]
@@ -603,11 +618,10 @@ module Row =
 
                 let addButton =
                     Bulma.button.button [
-                        button.isSmall
-                        ++ color.isPrimary
+                        button.isSmall ++ color.isPrimary
                         prop.disabled props.Disabled
 
-                        prop.classes[
+                        prop.classes [
                             FA.fa
                             FA.fa_plus_circle
                         ]
@@ -629,6 +643,17 @@ module Row =
                     | other -> failwith other
                     |> dispatch
 
+                let defaultt col  =
+                        match col with
+                        | "Height" -> model.FormData.Height.ToString()
+                        | "Width" -> model.FormData.Width.ToString()
+                        | "Weight" -> model.FormData.Weight.ToString()
+                        | "Quant." -> model.FormData.Quantity.ToString()
+                        | "⬆⬆" -> model.FormData.KeepTop.ToString()
+                        | "⬇⬇" ->  model.FormData.KeepBottom.ToString()
+                        | "Stack" ->model.FormData.Stackable.ToString()
+                        | "Length" -> model.FormData.Length.ToString()
+                        | other -> failwith other
                 Html.div [
                     prop.className "tr"
                     prop.children [
@@ -641,12 +666,14 @@ module Row =
                                         | "⬆⬆" ->
                                             input.checkbox [
                                                 input.isSmall
+                                                prop.defaultChecked model.FormData.KeepTop
                                                 prop.readOnly props.Disabled
                                                 prop.onCheckedChange (fun e -> dispatch' "⬆⬆" (e.ToString()))
                                             ]
                                         | "⬇⬇" ->
                                             input.checkbox [
                                                 input.isSmall
+                                                prop.defaultChecked model.FormData.KeepBottom
                                                 prop.readOnly props.Disabled
                                                 prop.onCheckedChange (fun e -> dispatch' "⬇⬇" (e.ToString()))
                                             ]
@@ -654,6 +681,7 @@ module Row =
                                             input.checkbox [
                                                 input.isSmall
                                                 prop.readOnly props.Disabled
+                                                prop.defaultChecked model.FormData.Stackable
                                                 prop.defaultChecked true
                                                 prop.onCheckedChange (fun e -> dispatch' "Stack" (e.ToString()))
                                             ]
@@ -669,7 +697,7 @@ module Row =
                                             input.number [
                                                 prop.maxLength 5
                                                 prop.readOnly props.Disabled
-                                                prop.defaultValue (if col = "Weight" then "0" else "")
+                                                prop.defaultValue (defaultt col)
                                                 prop.max 2000
                                                 input.isSmall
                                                 prop.placeholder col
@@ -737,6 +765,7 @@ let viewC =
         let subscribeToTimer () =
             let subscriptionId =
                 JS.setTimeout (fun _ -> if isCalculating then setCounterValue (counterValue - 1)) 1000
+
             { new IDisposable with
                 member this.Dispose() = JS.clearTimeout (subscriptionId)
             }
@@ -745,7 +774,7 @@ let viewC =
 
         let rowItems =
             [
-                for i, (_, key) in model.RowItems |> List.indexed do
+                for i, (row, key) in model.RowItems |> List.indexed do
                     let addRow =
                         if i = model.RowItems.Length - 1 then Some(fun () -> dispatch AddRow) else None
 
@@ -759,6 +788,33 @@ let viewC =
                             Key = key
                             Remove = remove
                             Disabled = isCalculating
+                            FormData =
+                                match row with
+                                | None ->
+                                    {
+                                               Width = ""
+                                               Height = ""
+                                               Length = ""
+                                               Weight = "0"
+                                               Color = sprintf "rgb(%i,%i,%i)" (r.Next(40, 256)) (r.Next(40, 256)) (r.Next(40, 256))
+                                               Stackable = true
+                                               KeepTop = false
+                                               KeepBottom = false
+                                               Quantity = ""
+
+                                    }
+                                | Some r ->
+                                    {
+                                        Width = r.Width.ToString()
+                                        Height = r.Height.ToString()
+                                        Length = r.Length.ToString()
+                                        Weight = r.Weight.ToString()
+                                        Color = r.Color.ToString()
+                                        Stackable = r.Stackable
+                                        KeepTop = r.KeepTop
+                                        KeepBottom = r.KeepBottom
+                                        Quantity = r.Quantity.ToString()
+                                    }
                         }
             ]
 
@@ -766,8 +822,7 @@ let viewC =
             field.div [
                 Html.b "How to use:"
                 Html.ul [
-                    spacing.ml1
-                    ++ size.isSize7
+                    spacing.ml1 ++ size.isSize7
                     prop.style [ style.listStyleType.disc ]
 
                     let items =
@@ -784,7 +839,7 @@ let viewC =
                             "Click calculate and wait up to 90 sec."
                             "Bin packer will try to fit the items and minimize the placement."
                             "Gravity is ignored."
-                            "Review the result in 3D"
+                            "Review the result in 3D then you may share it via share the result button and copy the url."
                             "You may zoom to boxes to see what's under them."
 
 
@@ -800,11 +855,29 @@ let viewC =
                     prop.text "Enter CONTAINER dimensions:"
                     control.isSmall
                 ]
-                Container.view
-                    {
-                        ContainerUpdated = fun r -> dispatch (ContainerUpdated(r))
-                        Disabled = isCalculating
-                    }
+                if model.Loading then Html.none
+                else
+                    match model.ContainerItem with
+                    | None ->
+                        Container.view
+                            {
+                                ContainerUpdated = fun r -> dispatch (ContainerUpdated(r))
+                                Disabled = isCalculating
+                                ContainerFormData = { Width = ""; Height =""; Weight="0"; Length = "" }
+                            }
+                    | Some container ->
+                        Container.view
+                            {
+                                ContainerUpdated = fun r -> dispatch (ContainerUpdated(r))
+                                Disabled = isCalculating
+                                ContainerFormData =
+                                    {
+                                        Width = container.Width.ToString();
+                                        Height = container.Height.ToString();
+                                        Weight= container.Weight.ToString();
+                                        Length = container.Length.ToString();
+                                    }
+                            }
 
                 Bulma.label [
                     prop.text "Enter ITEM dimensions:"
@@ -873,7 +946,10 @@ let viewC =
                 | Calculated r -> line "Volume fit:" (Some(r |> List.sumBy (fun c -> c.PutVolume)))
                 | _ -> Html.none
 
-                let isMultiBin = match model.ContainerMode with | MultiContainer -> true | _ -> false
+                let isMultiBin =
+                    match model.ContainerMode with
+                    | MultiContainer -> true
+                    | _ -> false
 
                 let isinvalid =
                     (model.ContainerItem.IsNone
@@ -886,7 +962,7 @@ let viewC =
                         * container.Width
                         * container.Length < volume
                     | _ -> false
-                    |>  (&&) (isMultiBin |> not)
+                    |> (&&) (isMultiBin |> not)
 
                 let nostackExceeds =
                     match model.ContainerItem, model.TotalVolume with
@@ -908,7 +984,7 @@ let viewC =
                             | other -> (other |> List.maxBy (fun x -> x.Dim.Height)).Dim.Height
 
                         (areaItems > containerArea
-                        || maxHeight > container.Height)
+                         || maxHeight > container.Height)
                         && (isMultiBin |> not)
 
 
@@ -927,7 +1003,9 @@ let viewC =
                             itemDim > cDim
 
                         let items = convertToItems model
-                        List.exists (checkDim) items || items |> List.exists(fun i -> i.Weight > container.Weight)
+                        List.exists (checkDim) items
+                        || items
+                        |> List.exists (fun i -> i.Weight > container.Weight)
                     | _ -> false
 
                 Html.br []
@@ -947,8 +1025,7 @@ let viewC =
                     ]
                 ]
                 Html.div [
-                    spacing.ml4
-                    ++ helpers.isInlineBlock
+                    spacing.ml4 ++ helpers.isInlineBlock
                     prop.children [
                         Bulma.label "Container mode:"
                         Html.select [
@@ -976,9 +1053,9 @@ let viewC =
                             sprintf "Calculating... (Max %i sec)" counterValue
 
                          elif volumeExceeds then
-                            "Items' volume exceeds single container volume."
-                         else if nostackExceeds
-                            then "No stack items won't fit to single container."
+                             "Items' volume exceeds single container volume."
+                         else if nostackExceeds then
+                             "No stack items won't fit to single container."
                          elif isinvalid then
                              "First fill the form correctly!"
                          else if itemExceeds then
@@ -997,40 +1074,53 @@ let viewC =
                         | Calculated c ->
                             let itemsPut = c |> List.collect (fun l -> l.ItemsPut)
                             let itemsUnput = (c |> List.last).ItemsUnput
-                            match itemsUnput, itemsPut with
-                            | [], _ ->
-                                Bulma.label [
-                                    prop.style [ style.color.green]
-                                    prop.text "All items put successfully!"
-                                ]
-                            | _, [] ->
-                                Bulma.label [
-                                    color.isDanger
-                                    prop.text "Unable to fit all items!"
-                                ]
-                            | items, _ ->
-                                let g = items |> List.groupBy (fun x -> x.Tag)
-                                React.fragment [
-                                    Bulma.label "Could not fit the following items:"
-                                    Html.ul [
-                                        for key, values in g do
-                                            yield
-                                                Html.li [
-                                                    Html.span [
-                                                        helpers.isInlineBlock ++ color.hasTextWhite
-                                                        prop.text " x "
-                                                        prop.style [
-                                                            style.backgroundColor key
-                                                            style.width (length.ch 1)
+                            let label =
+                                match itemsUnput, itemsPut with
+                                | [], _ ->
+                                    Bulma.label [
+                                        prop.style [ style.color.green ]
+                                        prop.text "All items put successfully!"
+                                    ]
+                                | _, [] ->
+                                    Bulma.label [
+                                        color.isDanger
+                                        prop.text "Unable to fit all items!"
+                                    ]
+                                | items, _ ->
+                                    let g = items |> List.groupBy (fun x -> x.Tag)
+                                    React.fragment [
+                                        Bulma.label "Could not fit the following items:"
+                                        Html.ul [
+                                            for key, values in g do
+                                                yield
+                                                    Html.li [
+                                                        Html.span [
+                                                            helpers.isInlineBlock ++ color.hasTextWhite
+                                                            prop.text " x "
+                                                            prop.style [
+                                                                style.backgroundColor key
+                                                                style.width (length.ch 1)
+                                                            ]
+                                                        ]
+                                                        Html.span [
+                                                            prop.textf "%i items not fit with this color." values.Length
                                                         ]
                                                     ]
-                                                    Html.span [
-                                                        prop.textf "%i items not fit with this color." values.Length
-                                                    ]
-                                                ]
-                                    ]
+                                        ]
+
                                 ]
+                            React.fragment[
+                                label
+                                Bulma.button.button [
+                                    color.isInfo
+                                    prop.text (if model.UrlShown then "Now copy the url and share it" else "Share the result")
+                                    prop.disabled (isCalculating || model.UrlShown)
+                                    prop.onClick (fun _ -> dispatch ShareRequested)
+                                ]
+                            ]
                         | _ -> Html.none
+
+
                     ]
                 ]
                 match model.Calculation with

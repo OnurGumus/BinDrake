@@ -10,7 +10,7 @@ group Server
     nuget Serilog.Sinks.Console
     nuget Destructurama.FSharp >= 1.1.1-dev-00033
     nuget Serilog.Sinks.File
-
+    nuget Thoth.Json.Net
 
 group Client
     source https://api.nuget.org/v3/index.json
@@ -30,6 +30,7 @@ group Client
     nuget Feliz.Bulma
     nuget Feliz.UseElmish
     nuget Zanaptak.TypedCssClasses
+    nuget Thoth.Json
 
 group Build
     source https://api.nuget.org/v3/index.json

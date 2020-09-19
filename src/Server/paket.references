@@ -6,3 +6,4 @@ group Server
     Serilog.Sinks.Console
     Destructurama.FSharp
     Serilog.Sinks.File
+    Thoth.Json.Net

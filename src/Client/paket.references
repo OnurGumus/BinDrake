@@ -10,3 +10,4 @@ group Client
     Feliz.Bulma
     Feliz.UseElmish
     Zanaptak.TypedCssClasses
+    Thoth.Json

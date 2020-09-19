@@ -16,6 +16,8 @@ open Serilog.Sinks.File
 open Microsoft.ApplicationInsights.Extensibility
 open Fable.Remoting.Server
 open Fable.Remoting.Giraffe
+open Thoth.Json.Net
+open System
 
 let tryGetEnv = System.Environment.GetEnvironmentVariable >> function null | "" -> None | x -> Some x
 
@@ -31,6 +33,23 @@ let port =
 let counterApi = {
     initialCounter = fun () -> async { return { Value = 42 } }
     run = fun calcs container items t alpha -> async {return  BinPacker.run  container  calcs.ContainerMode calcs.CalculationMode items t alpha }
+    saveModel = fun model ->
+        async{
+            let guid = Guid.NewGuid()
+            let path = "saved_data_" + guid.ToString() + ".txt"
+            let data = Encode.Auto.toString(4, model)
+            do! File.WriteAllTextAsync(path,data) |> Async.AwaitTask
+            return guid
+        }
+    loadModel = fun guid ->
+        async{
+            let path = "saved_data_" + guid.ToString() + ".txt"
+            let! datas = File.ReadAllTextAsync(path) |> Async.AwaitTask
+            let data = Decode.Auto.fromString<Shared.ClientModel.Model>(datas)
+            match data with
+            | Ok data -> return data
+            | _ -> return failwith "Error"
+        }
 }
 
 let webApp =
