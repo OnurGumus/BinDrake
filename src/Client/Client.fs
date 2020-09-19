@@ -682,7 +682,6 @@ module Row =
                                                 input.isSmall
                                                 prop.readOnly props.Disabled
                                                 prop.defaultChecked model.FormData.Stackable
-                                                prop.defaultChecked true
                                                 prop.onCheckedChange (fun e -> dispatch' "Stack" (e.ToString()))
                                             ]
                                         | "Color" ->
