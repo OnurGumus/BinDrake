@@ -856,11 +856,11 @@ let calculateCost (calculationMode: CalculationMode) =
                 let rec loopContainers: (struct (Container list * Container list)) -> StackItem list =
                     function
                     | (container :: remainingContainers) as cs, triedButNotFit ->
-                        let item =
-                         if remainingItems.Length < 8 then
-                            Rotate.rotateToMinZ calculationMode item
-                         else
-                            item
+                        // let item =
+                        //  if remainingItems.Length < 8 then
+                        //     Rotate.rotateToMinZ calculationMode item
+                        //  else
+                        //     item
                         match (putItem container item (itemPuts |> List.sumBy(fun x->x.Item.Weight))) with
                         | ValueSome (struct (containerTriplets, (itemPut: ItemPut ValueOption))) ->
                             let firstRes: StackItem list =
