@@ -1,5 +1,5 @@
 @charset "utf-8";
-$size-7:0.9rem;
+$size-7:0.68rem;
 @import "~bulma/bulma";
 @import "../../node_modules/@fortawesome/fontawesome-free/css/all.css";
 
@@ -17,6 +17,13 @@ button {
 input {
     width: 7ch;
     display: inline;
+}
+.dg.ac{
+    position: absolute !important;
+    top:90em !important;
+    left:initial !important;
+    right:0 !important;;
+
 }
 
 input[type="checkbox"] {
@@ -41,6 +48,9 @@ input[type="number"]{
 }
 
 @media only screen and (min-width: 900px) {
+    .dg.ac{
+        top:0 !important;
+    }
     input[type="number"]{
         padding:10px !important;
     }
@@ -52,7 +62,6 @@ input[type="number"]{
     #myCanvas {
         flex: 1 1 50%;
         width: 50% !important;
-        margin-top: 15%;
     }
 
     #elmish-app {
