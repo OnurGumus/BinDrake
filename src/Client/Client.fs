@@ -1016,7 +1016,7 @@ let viewC =
                     prop.children [
                         Bulma.label "Calculation mode:"
                         Html.select [
-                            prop.defaultValue
+                            prop.value
                                 (match model.CalculationMode with
                                  | MinimizeHeight -> "Minimize Height"
                                  | _ -> "Minimize Length")
@@ -1035,7 +1035,7 @@ let viewC =
                     prop.children [
                         Bulma.label "Container mode:"
                         Html.select [
-                            prop.defaultValue
+                            prop.value
                                 (match model.ContainerMode with
                                  | SingleContainer -> "Single Container"
                                  | _ -> "Multi Container")
