@@ -227,6 +227,16 @@ let mergeContainers (containers: Container list) =
 
     containers
 
+let containerNestedSort (calcMode : CalculationMode) (containers : Container list) =
+        match calcMode with
+        | MinimizeLength ->
+            let targetContainer = (containers |> List.minBy (fun x -> (float x.Coord.Z, -(x.Dim |> dimToVolume)  )))
+            (float targetContainer.Coord.Z, -(targetContainer.Dim |> dimToVolume)  )
+        | MinimizeHeight ->
+           let targetContainer = (containers |> List.minBy (fun x -> (float x.Coord.Y, -(x.Dim |> dimToVolume)  )))
+           (float targetContainer.Coord.Y, -(targetContainer.Dim |> dimToVolume)  )
+
+
 let rec putItem (rootContainer: Container) (calculationMode:CalculationMode)  tryCount: PutItem =
     fun container item (weightPut :int)  ->
         let remainingWidth = container.Dim.Width - item.Dim.Width
@@ -251,17 +261,22 @@ let rec putItem (rootContainer: Container) (calculationMode:CalculationMode)  tr
 
                     putItem rootContainer calculationMode (tryCount - 1) container item weightPut
                 else if tryCount = 2 then
-                    let item = item |> Rotate.rotateY
+                    let item = item |> Rotate.rotateZ |>  Rotate.rotateY
 
                     putItem rootContainer calculationMode (tryCount - 1) container item weightPut
                 else
-                    let item = item |> Rotate.rotateX
+                    let item = item |>  Rotate.rotateY |> Rotate.rotateX
 
                     putItem rootContainer calculationMode (tryCount - 1) container item weightPut
 
             else
                 ValueNone
         else
+            let calculationMode =
+                if item.NoTop then
+                    CalculationMode.MinimizeHeight
+                else calculationMode
+
             let containerSort =
                 match calculationMode with
                 | MinimizeHeight -> (fun (s:Container) -> s.Coord.Y)
@@ -767,8 +782,13 @@ let rec putItem (rootContainer: Container) (calculationMode:CalculationMode)  tr
                 }
 
             let all =
-                [ config2; config1; config3; config4 ]
-                |> List.distinct
+                match calculationMode with
+                | MinimizeLength ->
+                    [ config2; config1; config3; config4 ]
+                    |> List.distinct
+                | MinimizeHeight ->
+                    [ config3; config4; config2; config1; ]
+                    |> List.distinct
 
             let t1 =
                 all |> List.item (random.Next(0, all.Length))
@@ -793,11 +813,10 @@ let rec putItem (rootContainer: Container) (calculationMode:CalculationMode)  tr
 
             let res =
                 ValueSome
-                    (struct (sets
+                    (struct (all
                              |> List.distinct
-                             |> List.filter (fun f -> f |> List.isEmpty |> not),
-
-                             //    |> List.sortBy (fun s -> (s |> List.minBy (fun x -> float x.Coord.Z)).Coord.Z ),
+                             |> List.filter (fun f -> f |> List.isEmpty |> not)
+                             |> List.sortBy (containerNestedSort calculationMode),
                              ValueSome itemPut))
 
             res
@@ -886,19 +905,18 @@ let calculateCost (calculationMode: CalculationMode) =
                 let stackItems = loopContainers (sorted, [])
                 let totalStack = (stackItems @ remainingStack)
                 loop
-                    (totalStack
-                     |> List.sortBy (fun (struct (x, _, _)) ->
-                         if x.Length = 0 then
-                             struct (Int32.MaxValue, Int32.MaxValue)
-                         else
-                            let containerSort containers  =
-                                match calculationMode with
-                                | MinimizeHeight ->  (containers |> List.minBy (fun (l:Container) -> l.Coord.Y)).Coord.Y
-                                | MinimizeLength -> (containers |> List.minBy (fun l -> l.Coord.Z)).Coord.Z
+                    (totalStack,
+                    //  |> List.sortBy (fun (struct (x, _, _)) ->
+                    //      if x.Length = 0 then
+                    //          struct (Int32.MaxValue, Int32.MaxValue)
+                    //      else
+                    //         let containerSort containers  =
+                    //             match calculationMode with
+                    //             | MinimizeHeight ->  (containers |> containerNestedSort)
+                    //             | MinimizeLength -> (containers |> containerNestedSort)
 
-                            (x |> containerSort),
-                                -((x |> List.maxBy (fun l -> l.Dim |> dimToVolume)).Dim
-                                |> dimToVolume)),
+                    //         let z = (x |> List.sortBy containerSort)
+                    //         ),
 
                          counter - 1)
             | (cs, _, itemPuts) :: _, _ -> ValueSome(cs, itemPuts)
@@ -941,7 +959,7 @@ let inline mutate (calcMode: CalculationMode) (itemsPut: ItemPut list) (items: I
         let secondSwap = random.Next(0, items.Length)
         let arr = items |> Array.ofList
         let tmp = arr.[firstSwap] |> Rotate.randomRotate
-        arr.[firstSwap] <- arr.[secondSwap] //|> randomRotate
+        arr.[firstSwap] <- arr.[secondSwap]
         arr.[secondSwap] <- tmp
         arr |> List.ofArray
 
@@ -960,7 +978,7 @@ let calcCost rootContainer (calculationMode:CalculationMode) containers items =
     match calculateCost calculationMode (putItem rootContainer calculationMode 3) containers (items |> List.sortByDescending calcVolume) with
     | ValueSome (cs, res) ->
         let cs = (cs |> mergeContainers)
-        let unfitItems = findUnfitItems res items // printf "%A" unfitItems
+        let unfitItems = findUnfitItems res items
 
         let sumZ =
             if res.Length = 0 then
@@ -974,7 +992,6 @@ let calcCost rootContainer (calculationMode:CalculationMode) containers items =
                     (res
                     |> List.sumBy (fun x -> x.Coord.Z + x.Item.Dim.Length))
 
-        // max.Item.Dim.Length + max.Coord.Z
         let maxZCoord =
             if res.Length = 0 then
                 Int32.MaxValue
@@ -1019,16 +1036,14 @@ let rec calc (rootContainer: Container)
              result
              (sw: Stopwatch)
              =
-    if TMin >= T || sw.ElapsedMilliseconds > 400L then
+    if TMin >= T || sw.ElapsedMilliseconds > 400L || (itemsWithCost.Items.Length = 1 && globalBest.ItemsPut.Length = 1) then
         globalBest
     else
         let items = itemsWithCost.Items
 
         let calculated, res, globalBest =
             if itemsWithCost.Cost = 0. then
-                printf "bCalc"
                 let cost, res, cs = calcCost rootContainer calculationMode containers items
-                printf "aCalc"
 
                 { itemsWithCost with Cost = cost },
                 res,
@@ -1084,8 +1099,11 @@ let rec calc (rootContainer: Container)
 
                 loop (nextItem, res) globalBest2 (count - 1)
 
-        let c, r, globalBest = loop (calculated, res) globalBest 2
-        calc rootContainer calculationMode containers c globalBest (T * alpha) alpha r sw
+        if TMin >= T || sw.ElapsedMilliseconds > 400L || (itemsWithCost.Items.Length = 1 && globalBest.ItemsPut.Length = 1) then
+            globalBest
+        else
+            let c, r, globalBest = loop (calculated, res) globalBest 1
+            calc rootContainer calculationMode containers c globalBest (T * alpha) alpha r sw
 
 
 let runInner (rootContainer: Container) (calculationMode: CalculationMode) (containers: Container list) (items: Item list) (T: float) (alpha: float) =
@@ -1161,8 +1179,8 @@ let runPerContainer (rootContainer: Container) (calculationMode: CalculationMode
     let rec loop  (rootContainer: Container) (containers: Container list) (items: Item list) (results: CalcResult list) batchCount retryCount =
         let containerSort =
             match calculationMode with
-            | MinimizeLength -> (fun (c:Container) -> ((c.Coord.Y), -(c.Dim.Length)))
-            | MinimizeHeight ->  (fun c -> ((c.Coord.Z), -(c.Dim.Height)))
+            | MinimizeHeight -> (fun (c:Container) -> ((c.Coord.Y), -(c.Dim |> dimToVolume)))
+            | MinimizeLength ->  (fun c -> ((c.Coord.Z), -(c.Dim |> dimToVolume)))
         let containers =
             containers
             |> List.sortBy containerSort
@@ -1203,7 +1221,7 @@ let runPerContainer (rootContainer: Container) (calculationMode: CalculationMode
              batchCount)
 
         let rbatchCount = Math.Max(1, (batchCount / 2))
-        let timeOut = sw.Elapsed.TotalSeconds > 90. || items |> List.forall (fun x -> x.Weight > rootContainer.Weight)
+        let timeOut = false// sw.Elapsed.TotalSeconds > 90. || items |> List.forall (fun x -> x.Weight > rootContainer.Weight)
         //printfn "rbatchCount %i" rbatchCount
         match timeOut, newItems, retryCount with
         | false, _ :: _, 6
