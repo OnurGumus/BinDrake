@@ -11,6 +11,7 @@ let mutable demoMode2 = false
 
 let  gui = Dat.exports.GUI.Create();
 
+
 let THREE = Three.exports
 let scene = THREE.Scene.Create()
 
@@ -69,6 +70,21 @@ let renderPlane (container: Container) =
     scene.add plane |> ignore
     currentContainer.Add plane
 
+    let planeGeometry =
+        THREE.PlaneGeometry.Create(container.Dim.Length |> float, container.Dim.Height |> float)
+
+    let planeMaterial =
+        THREE.MeshLambertMaterial.Create(jsOptions<_> (fun x -> x.color <- Some !^ "red"))
+
+    let plane =
+        THREE.Mesh.Create(planeGeometry, planeMaterial)
+
+    plane.receiveShadow <- true
+    plane.rotation.z <- 1. * Math.PI
+    plane.rotation.y <-  1. * Math.PI
+    plane.position.set (0., (float(container.Dim.Height) / 2.),  (float(container.Dim.Width) / 2.)) |> ignore
+    scene.add plane |> ignore
+    currentContainer.Add plane
 
 let cubeMaterial =
     THREE.MeshLambertMaterial.Create
@@ -247,7 +263,8 @@ let renderResult (container : Container) items demoMode =
                 renderResultInner container
                     (items |> List.filter
                         (fun i -> float(container.Dim.Height - i.Coord.Y) >= float(!!v))) demoMode2 ) )
-
+    gui?__closeButton?hidden <- true
+    console.log gui
     gui.updateDisplay()
 
     renderResultInner container items demoMode

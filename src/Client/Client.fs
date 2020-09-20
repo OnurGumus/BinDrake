@@ -835,7 +835,7 @@ let viewC =
                             "Bin packer will try to fit the items and minimize the placement."
                             "Gravity is ignored."
                             "Review the result in 3D then you may share it via share the result button and copy the url."
-                            "You may zoom to boxes to see what's under them."
+                            "You may visually remove some boxes by using h-filter and v-filter controls on 3D."
 
 
                         ]
