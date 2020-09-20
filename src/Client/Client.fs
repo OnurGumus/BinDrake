@@ -1014,8 +1014,20 @@ let viewC =
                         Bulma.label "Calculation mode:"
                         Html.select [
                             prop.children [
-                                Html.option "Minimize Height"
-                                Html.option "Minimize Length"
+                                Html.option [
+                                    prop.text "Minimize Height"
+                                    prop.selected
+                                        (match model.CalculationMode with
+                                        | MinimizeHeight -> true
+                                        | _ -> false)
+                                ]
+                                Html.option [
+                                    prop.text "Minimize Length"
+                                    prop.selected
+                                        (match model.CalculationMode with
+                                        | MinimizeLength -> true
+                                        | _ -> false)
+                                ]
                             ]
                             prop.onChange (fun (e: Event) ->
                                 CalculationModeChanged(!!e.target?value)
@@ -1029,8 +1041,20 @@ let viewC =
                         Bulma.label "Container mode:"
                         Html.select [
                             prop.children [
-                                Html.option "Single Container"
-                                Html.option "Multi Container"
+                                Html.option [
+                                    prop.text "Single Container"
+                                    prop.selected
+                                        (match model.ContainerMode with
+                                        | SingleContainer -> true
+                                        | _ -> false)
+                                ]
+                                Html.option [
+                                    prop.text "Multi Container"
+                                    prop.selected
+                                        (match model.ContainerMode with
+                                        | MultiContainer -> true
+                                        | _ -> false)
+                                ]
                             ]
                             prop.onChange (fun (e: Event) -> ContainerModeChanged(!!e.target?value) |> dispatch)
                         ]
@@ -1134,7 +1158,7 @@ let viewC =
                         ]
                         Html.span [
                             spacing.mx1 ++ text.hasTextWeightSemibold
-                            prop.textf "Show container: %i/%i" (model.CurrentResultIndex + 1) (c.Length)
+                            prop.textf "Showing container: %i/%i" (model.CurrentResultIndex + 1) (c.Length)
                         ]
                         Bulma.button.button [
                             color.isDanger
