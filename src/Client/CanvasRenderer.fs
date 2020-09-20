@@ -9,7 +9,7 @@ open Shared
 
 let mutable demoMode2 = false
 
-let  gui = Dat.exports.GUI.Create();
+let gui = Dat.exports.GUI.Create()
 
 
 let THREE = Three.exports
@@ -81,8 +81,9 @@ let renderPlane (container: Container) =
 
     plane.receiveShadow <- true
     plane.rotation.z <- 1. * Math.PI
-    plane.rotation.y <-  1. * Math.PI
-    plane.position.set (0., (float(container.Dim.Height) / 2.),  (float(container.Dim.Width) / 2.)) |> ignore
+    plane.rotation.y <- 1. * Math.PI
+    plane.position.set (0., (float (container.Dim.Height) / 2.), (float (container.Dim.Width) / 2.))
+    |> ignore
     scene.add plane |> ignore
     currentContainer.Add plane
 
@@ -226,45 +227,53 @@ let init () =
         |> ignore
 
     renderScene 0.
-let renderResultInner container items demoMode =
-        demoMode2 <- demoMode
-        renderPlane container
-        scene.remove cubes |> ignore
-        cubes.Clear()
-        for (item: ItemPut) in items do
-            renderCube
-                (item.Coord.X |> float)
-                (item.Coord.Y |> float)
-                (item.Coord.Z |> float)
-                (item.Item.Dim.Width |> float)
-                (item.Item.Dim.Height |> float)
-                (item.Item.Dim.Length |> float)
-                item.Item.Tag
-                (container.Dim.Length |> float)
-                (container.Dim.Width |> float)
 
-let renderResult (container : Container) items demoMode =
+let renderResultInner container items demoMode =
+    demoMode2 <- demoMode
+    renderPlane container
+    scene.remove cubes |> ignore
+    cubes.Clear()
+    for (item: ItemPut) in items do
+        renderCube
+            (item.Coord.X |> float)
+            (item.Coord.Y |> float)
+            (item.Coord.Z |> float)
+            (item.Item.Dim.Width |> float)
+            (item.Item.Dim.Height |> float)
+            (item.Item.Dim.Length |> float)
+            item.Item.Tag
+            (container.Dim.Length |> float)
+            (container.Dim.Width |> float)
+
+let renderResult (container: Container) items demoMode =
     match lastLController with
-    | Some c -> gui.remove(c)
+    | Some c -> gui.remove (c)
     | _ -> ()
+    let h = {| h_filter = 0 |}
+    let v = {| v_filter = 0 |}
+
+    let callback =
+        List.filter (fun i ->
+            float (container.Dim.Length - i.Coord.Z)
+            >= float (!!h.h_filter)
+            && float (container.Dim.Height - i.Coord.Y)
+               >= float (!!v.v_filter))
+
     lastLController <-
-        Some (gui.add({|h_filter = 0|}, "h_filter", 0., float(container.Dim.Length))
-            .onChange(fun v ->
-                renderResultInner container
-                    (items |> List.filter
-                        (fun i -> float(container.Dim.Length - i.Coord.Z) >= float(!!v))) demoMode2 ) )
+        Some
+            (gui.add(h, "h_filter", 0., float (container.Dim.Length))
+                .onChange(fun v -> renderResultInner container (items |> callback) demoMode2))
 
     match lastHController with
-    | Some c -> gui.remove(c)
+    | Some c -> gui.remove (c)
     | _ -> ()
     lastHController <-
-        Some (gui.add({|v_filter = 0|}, "v_filter", 0., float(container.Dim.Height))
-            .onChange(fun v ->
-                renderResultInner container
-                    (items |> List.filter
-                        (fun i -> float(container.Dim.Height - i.Coord.Y) >= float(!!v))) demoMode2 ) )
+        Some
+            (gui.add(v, "v_filter", 0., float (container.Dim.Height))
+                .onChange(fun _ -> renderResultInner container (items |> callback) demoMode2))
+
     gui?__closeButton?hidden <- true
     console.log gui
-    gui.updateDisplay()
+    gui.updateDisplay ()
 
     renderResultInner container items demoMode
