@@ -47,8 +47,8 @@ let renderPlane (container: Container) =
         / 1.5
 
     let x =
-        if container.Dim.Width + container.Dim.Length > 1000
-        then x / 2.5
+        if container.Dim.Width * container.Dim.Length * container.Dim.Height> 4000
+        then x / 3.5
         else x / 1.5
 
     camera.position.set (500. / x, 550. / x, -700. / x)

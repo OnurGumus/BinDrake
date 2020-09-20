@@ -1191,18 +1191,16 @@ let runPerContainer (rootContainer: Container) (calculationMode: CalculationMode
         let oldBatchCount = batchCount
 
         let batchCount =
-            if (items.Length > 0 && items.Head.NoTop) || (items.Length < 8)  then 1 else batchCount
+            if (items.Length > 0 && items.Head.NoTop) then 1 else batchCount
 
         let currentItems, remainingItems =
             if items.Length > batchCount then items |> List.splitAt batchCount else items, []
 
         let batchCount = oldBatchCount
-        //printfn "currentItemsCount %i"(currentItems.Length)
         let res =
             runInner rootContainer calculationMode containers currentItems T alpha
         let rootContainer = {rootContainer with Weight = rootContainer.Weight - (res.ItemsPut |> List.sumBy(fun s -> s.Item.Weight)) }
 
-        // printf "empty conts %A" (res.EmptyContainers.Length)
         let lastunput = res.ItemsUnput
 
         let newItems =
