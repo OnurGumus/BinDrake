@@ -281,7 +281,12 @@ let rec putItem (rootContainer: Container) (calculationMode:CalculationMode)  tr
                 match calculationMode with
                 | MinimizeHeight -> (fun (s:Container) -> s.Coord.Y)
                 | MinimizeLength -> (fun s -> s.Coord.Z)
-
+            let noTopFilter (s:Container) =
+                (item.NoTop
+                    && s.Coord.Y = container.Coord.Y + item.Dim.Height
+                    && s.Coord.X = container.Coord.X
+                    && s.Coord.Z = container.Coord.Z
+                    ) |> not
             let config1,config2,config3,config4 =
                 match calculationMode with
                 | CalculationMode.MinimizeLength ->
@@ -336,13 +341,12 @@ let rec putItem (rootContainer: Container) (calculationMode:CalculationMode)  tr
                                     }
                                 Weight = 0
                             }
-
                         [ topBlock; sideBlock; remainingBlock ]
                         |> List.filter (fun s ->
                             s.Dim.Width > 0
                             && s.Dim.Height > 0
                             && s.Dim.Length > 0)
-                        |> List.filter (fun s -> (item.NoTop && s.Coord.Y > 0) |> not)
+                        |> List.filter noTopFilter
                         |> List.sortBy containerSort
 
                     let config2 =
@@ -403,7 +407,7 @@ let rec putItem (rootContainer: Container) (calculationMode:CalculationMode)  tr
                             s.Dim.Width > 0
                             && s.Dim.Height > 0
                             && s.Dim.Length > 0)
-                        |> List.filter (fun s -> (item.NoTop && s.Coord.Y > 0) |> not)
+                        |> List.filter noTopFilter
                         |> List.sortBy containerSort
 
                     let config3 =
@@ -463,7 +467,7 @@ let rec putItem (rootContainer: Container) (calculationMode:CalculationMode)  tr
                             s.Dim.Width > 0
                             && s.Dim.Height > 0
                             && s.Dim.Length > 0)
-                        |> List.filter (fun s -> (item.NoTop && s.Coord.Y > 0) |> not)
+                        |> List.filter noTopFilter
                         |> List.sortBy containerSort
 
                     let config4 =
@@ -523,7 +527,7 @@ let rec putItem (rootContainer: Container) (calculationMode:CalculationMode)  tr
                             s.Dim.Width > 0
                             && s.Dim.Height > 0
                             && s.Dim.Length > 0)
-                        |> List.filter (fun s -> (item.NoTop && s.Coord.Y > 0) |> not)
+                        |> List.filter noTopFilter
                         |> List.sortBy containerSort
                     config1, config2, config3, config4
                 | _ ->
@@ -584,7 +588,7 @@ let rec putItem (rootContainer: Container) (calculationMode:CalculationMode)  tr
                         s.Dim.Width > 0
                         && s.Dim.Height > 0
                         && s.Dim.Length > 0)
-                    |> List.filter (fun s -> (item.NoTop && s.Coord.Y > 0) |> not)
+                    |> List.filter noTopFilter
                     |> List.sortBy containerSort
 
                 let config2 =
@@ -645,7 +649,7 @@ let rec putItem (rootContainer: Container) (calculationMode:CalculationMode)  tr
                         s.Dim.Width > 0
                         && s.Dim.Height > 0
                         && s.Dim.Length > 0)
-                    |> List.filter (fun s -> (item.NoTop && s.Coord.Y > 0) |> not)
+                    |> List.filter noTopFilter
                     |> List.sortBy containerSort
 
                 let config3 =
@@ -705,7 +709,7 @@ let rec putItem (rootContainer: Container) (calculationMode:CalculationMode)  tr
                         s.Dim.Width > 0
                         && s.Dim.Height > 0
                         && s.Dim.Length > 0)
-                    |> List.filter (fun s -> (item.NoTop && s.Coord.Y > 0) |> not)
+                    |> List.filter noTopFilter
                     |> List.sortBy containerSort
 
                 let config4 =
@@ -765,7 +769,7 @@ let rec putItem (rootContainer: Container) (calculationMode:CalculationMode)  tr
                         s.Dim.Width > 0
                         && s.Dim.Height > 0
                         && s.Dim.Length > 0)
-                    |> List.filter (fun s -> (item.NoTop && s.Coord.Y > 0) |> not)
+                    |> List.filter noTopFilter
                     |> List.sortBy containerSort
                 config1, config2, config3, config4
 
@@ -1221,12 +1225,12 @@ let runPerContainer (rootContainer: Container) (calculationMode: CalculationMode
              batchCount)
 
         let rbatchCount = Math.Max(1, (batchCount / 2))
-        let timeOut = false// sw.Elapsed.TotalSeconds > 90. || items |> List.forall (fun x -> x.Weight > rootContainer.Weight)
+        let timeOut = sw.Elapsed.TotalSeconds > 90. || items |> List.forall (fun x -> x.Weight > rootContainer.Weight)
         //printfn "rbatchCount %i" rbatchCount
         match timeOut, newItems, retryCount with
-        | false, _ :: _, 6
-        | false, _ :: _, 8
-        | false, _ :: _, 10 -> loop rootContainer (res.EmptyContainers |> mergeContainers) newItems results rbatchCount retryCount
+        | false, _ :: _, 1
+        | false, _ :: _, 2
+        | false, _ :: _, 3-> loop rootContainer (res.EmptyContainers |> mergeContainers) newItems results rbatchCount retryCount
         | true, _, _
         | _, _, 0
         | _, _, -1
@@ -1261,7 +1265,7 @@ let runPerContainer (rootContainer: Container) (calculationMode: CalculationMode
         let defaultBatchSize = if items.Length < 100 then 15 else 20
 
         let res =
-            loop rootContainer [ rootContainer ] (items) [] defaultBatchSize 12
+            loop rootContainer [ rootContainer ] (items) [] defaultBatchSize 6
 
         let timeOut = sw.Elapsed.TotalSeconds > 90.
         let results = res::resList
