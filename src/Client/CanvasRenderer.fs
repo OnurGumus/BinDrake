@@ -7,9 +7,9 @@ open Fable.Core.JS
 open System
 open Shared
 
-// let  gui = Dat.exports.GUI.Create();
-// let controls = {|clip = 0.|}
-// gui.add(controls, "clip", 0., 1250.) |> ignore
+let mutable demoMode2 = false
+
+let  gui = Dat.exports.GUI.Create();
 
 let THREE = Three.exports
 let scene = THREE.Scene.Create()
@@ -30,8 +30,11 @@ renderer.shadowMap?enabled <- true
 
 let axes = THREE.AxesHelper.Create(20.)
 let currentContainer = ResizeArray<Three.Object3D>()
+let mutable lastLController = None
+let mutable lastHController = None
 
 let renderPlane (container: Container) =
+
     let x =
         (System.Math.Max
             (1,
@@ -117,7 +120,6 @@ let renderCube x y z width height length (color: string) L W =
     scene.add cube |> ignore
     cubes.Add cube
 
-let mutable demoMode2 = false
 
 let init () =
     let addSpottLight x y z inten =
@@ -203,32 +205,49 @@ let init () =
                 let rot = time * speed
                 ob?rotation?x <- rot
                 ob?rotation?y <- rot)
-        // if currentContainer.Count > 0 then
-        //     let c : Three.Mesh<Three.PlaneGeometry,_> = !! currentContainer.[0]
-        //     let x = c.geometry.vertices.[0].x  + controls.clip
-        //     printf "%A" x
-        //     let globalPlane = THREE.Plane.Create( THREE.Vector3.Create(1., 0., 0.), x );
-
-        //     renderer.clippingPlanes <- !![|globalPlane|]
         renderer.render (scene, camera)
         window.requestAnimationFrame (renderScene)
         |> ignore
 
     renderScene 0.
+let renderResultInner container items demoMode =
+        demoMode2 <- demoMode
+        renderPlane container
+        scene.remove cubes |> ignore
+        cubes.Clear()
+        for (item: ItemPut) in items do
+            renderCube
+                (item.Coord.X |> float)
+                (item.Coord.Y |> float)
+                (item.Coord.Z |> float)
+                (item.Item.Dim.Width |> float)
+                (item.Item.Dim.Height |> float)
+                (item.Item.Dim.Length |> float)
+                item.Item.Tag
+                (container.Dim.Length |> float)
+                (container.Dim.Width |> float)
 
-let renderResult container items demoMode =
-    demoMode2 <- demoMode
-    renderPlane container
-    scene.remove cubes |> ignore
-    cubes.Clear()
-    for (item: ItemPut) in items do
-        renderCube
-            (item.Coord.X |> float)
-            (item.Coord.Y |> float)
-            (item.Coord.Z |> float)
-            (item.Item.Dim.Width |> float)
-            (item.Item.Dim.Height |> float)
-            (item.Item.Dim.Length |> float)
-            item.Item.Tag
-            (container.Dim.Length |> float)
-            (container.Dim.Width |> float)
+let renderResult (container : Container) items demoMode =
+    match lastLController with
+    | Some c -> gui.remove(c)
+    | _ -> ()
+    lastLController <-
+        Some (gui.add({|h_filter = 0|}, "h_filter", 0., float(container.Dim.Length))
+            .onChange(fun v ->
+                renderResultInner container
+                    (items |> List.filter
+                        (fun i -> float(container.Dim.Length - i.Coord.Z) >= float(!!v))) demoMode2 ) )
+
+    match lastHController with
+    | Some c -> gui.remove(c)
+    | _ -> ()
+    lastHController <-
+        Some (gui.add({|v_filter = 0|}, "v_filter", 0., float(container.Dim.Height))
+            .onChange(fun v ->
+                renderResultInner container
+                    (items |> List.filter
+                        (fun i -> float(container.Dim.Height - i.Coord.Y) >= float(!!v))) demoMode2 ) )
+
+    gui.updateDisplay()
+
+    renderResultInner container items demoMode

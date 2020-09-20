@@ -25,6 +25,7 @@ let toBase64String (s: string): string = jsNative
 let fromBase64String (s: string): string = jsNative
 
 let r = Random()
+
 type Msg =
     | ResultLoaded of CalcResult list
     | ModelSaved of Guid
@@ -69,7 +70,7 @@ let saveCmd model =
     Cmd.OfAsync.perform (fun _ -> save model) () ModelSaved
 
 let loadCmd guid =
-        Cmd.OfAsync.perform (fun _ -> load guid) () ModelLoaded
+    Cmd.OfAsync.perform (fun _ -> load guid) () ModelLoaded
 
 let newRowItem () = (None, Guid.NewGuid().ToString())
 
@@ -151,13 +152,18 @@ let init () =
             Coord = { X = 0; Y = 0; Z = 0 }
             Weight = 0
         }
-    let cmd,loading =
+
+    let cmd, loading =
         match Browser.Dom.window.location.search with
         | null
         | "" -> Cmd.none, false
         | s ->
-            let guid =  Browser.Dom.window.location.search.Substring(3) |> Guid.Parse
+            let guid =
+                Browser.Dom.window.location.search.Substring(3)
+                |> Guid.Parse
+
             (loadCmd guid), true
+
     CanvasRenderer.renderResult container boxes true
     {
         Calculation = NotCalculated
@@ -225,14 +231,12 @@ let update (msg: Msg) model =
         match msg with
         | ModelLoaded model ->
             match model.Calculation with
-            | Calculated c ->
-                {model with Loading = false},Cmd.ofMsg (ResultLoaded c)
+            | Calculated c -> { model with Loading = false }, Cmd.ofMsg (ResultLoaded c)
             | _ -> failwith "should not happen"
 
         | ModelSaved guid ->
-            { model with UrlShown = true} ,
-            Cmd.ofSub (fun _ ->
-                Browser.Dom.window.history.replaceState(null,null, sprintf "?g=%s" (guid.ToString())))
+            { model with UrlShown = true },
+            Cmd.ofSub (fun _ -> Browser.Dom.window.history.replaceState (null, null, sprintf "?g=%s" (guid.ToString())))
 
         | ShareRequested -> model, saveCmd model
         | CurrentResultChanged i ->
@@ -263,6 +267,7 @@ let update (msg: Msg) model =
                 { model with
                     Calculation = Calculated c
                 }
+
             model,
             Cmd.ofSub (fun _ ->
                 CanvasRenderer.renderResult
@@ -334,18 +339,19 @@ let update (msg: Msg) model =
         | _ -> None
 
     { model with TotalVolume = totalVolume }, cmd
+
 type RowFormData =
-        {
-            Width: string
-            Height: string
-            Length: string
-            Quantity: string
-            Weight: string
-            Color: string
-            Stackable: bool
-            KeepTop: bool
-            KeepBottom: bool
-        }
+    {
+        Width: string
+        Height: string
+        Length: string
+        Quantity: string
+        Weight: string
+        Color: string
+        Stackable: bool
+        KeepTop: bool
+        KeepBottom: bool
+    }
 
 
 type RowProp =
@@ -355,20 +361,22 @@ type RowProp =
         Remove: (unit -> unit) option
         Key: string
         Disabled: bool
-        FormData : RowFormData
+        FormData: RowFormData
     }
-    type ContainerFormData =
-        {
-            Width: string
-            Height: string
-            Length: string
-            Weight: string
-        }
+
+type ContainerFormData =
+    {
+        Width: string
+        Height: string
+        Length: string
+        Weight: string
+    }
+
 type ContainerProp =
     {
         ContainerUpdated: ContainerItem option -> unit
         Disabled: bool
-        ContainerFormData : ContainerFormData
+        ContainerFormData: ContainerFormData
     }
 
 module Container =
@@ -387,7 +395,7 @@ module Container =
         | WeightChanged of string
 
 
-    let init (formData : ContainerFormData) =
+    let init (formData: ContainerFormData) =
         {
             ContainerItem = None
             FormData = formData
@@ -446,13 +454,18 @@ module Container =
                     | other -> failwith other
                     |> dispatch
 
-                let defaultValue col  =
-                        match col with
-                        | "Height" -> model.FormData.Height
-                        | "Width" -> model.FormData.Width
-                        | "Length" -> model.FormData.Length
-                        | "Max Weight" -> match model.FormData.Weight with  | null | "" -> "0" | e -> e
-                        | other -> failwith other
+                let defaultValue col =
+                    match col with
+                    | "Height" -> model.FormData.Height
+                    | "Width" -> model.FormData.Width
+                    | "Length" -> model.FormData.Length
+                    | "Max Weight" ->
+                        match model.FormData.Weight with
+                        | null
+                        | "" -> "0"
+                        | e -> e
+                    | other -> failwith other
+
                 Html.div [
                     let cols =
                         [
@@ -524,23 +537,8 @@ module Row =
 
 
 
-    let init (formData : RowFormData) =
-        {
-            RowItem = None
-            FormData = formData
-                // {
-                //     Width = ""
-                //     Height = ""
-                //     Length = ""
-                //     Weight = "0"
-                //     Color = sprintf "rgb(%i,%i,%i)" (r.Next(40, 256)) (r.Next(40, 256)) (r.Next(40, 256))
-                //     Stackable = true
-                //     KeepTop = false
-                //     KeepBottom = false
-                //     Quantity = ""
-                // }
-        },
-        Cmd.none
+    let init (formData: RowFormData) =
+        { RowItem = None; FormData = formData }, Cmd.none
 
     let validate (formData: RowFormData) =
         all
@@ -635,17 +633,18 @@ module Row =
                     | other -> failwith other
                     |> dispatch
 
-                let defaultt col  =
-                        match col with
-                        | "Height" -> model.FormData.Height.ToString()
-                        | "Width" -> model.FormData.Width.ToString()
-                        | "Weight" -> model.FormData.Weight.ToString()
-                        | "Quant." -> model.FormData.Quantity.ToString()
-                        | "⬆⬆" -> model.FormData.KeepTop.ToString()
-                        | "⬇⬇" ->  model.FormData.KeepBottom.ToString()
-                        | "Stack" ->model.FormData.Stackable.ToString()
-                        | "Length" -> model.FormData.Length.ToString()
-                        | other -> failwith other
+                let defaultt col =
+                    match col with
+                    | "Height" -> model.FormData.Height.ToString()
+                    | "Width" -> model.FormData.Width.ToString()
+                    | "Weight" -> model.FormData.Weight.ToString()
+                    | "Quant." -> model.FormData.Quantity.ToString()
+                    | "⬆⬆" -> model.FormData.KeepTop.ToString()
+                    | "⬇⬇" -> model.FormData.KeepBottom.ToString()
+                    | "Stack" -> model.FormData.Stackable.ToString()
+                    | "Length" -> model.FormData.Length.ToString()
+                    | other -> failwith other
+
                 Html.div [
                     prop.className "tr"
                     prop.children [
@@ -783,15 +782,20 @@ let viewC =
                                 match row with
                                 | None ->
                                     {
-                                               Width = ""
-                                               Height = ""
-                                               Length = ""
-                                               Weight = "0"
-                                               Color = sprintf "rgb(%i,%i,%i)" (r.Next(40, 256)) (r.Next(40, 256)) (r.Next(40, 256))
-                                               Stackable = true
-                                               KeepTop = false
-                                               KeepBottom = false
-                                               Quantity = ""
+                                        Width = ""
+                                        Height = ""
+                                        Length = ""
+                                        Weight = "0"
+                                        Color =
+                                            sprintf
+                                                "rgb(%i,%i,%i)"
+                                                (r.Next(40, 256))
+                                                (r.Next(40, 256))
+                                                (r.Next(40, 256))
+                                        Stackable = true
+                                        KeepTop = false
+                                        KeepBottom = false
+                                        Quantity = ""
 
                                     }
                                 | Some r ->
@@ -846,7 +850,8 @@ let viewC =
                     prop.text "Enter CONTAINER dimensions:"
                     control.isSmall
                 ]
-                if model.Loading then Html.none
+                if model.Loading then
+                    Html.none
                 else
                     match model.ContainerItem with
                     | None ->
@@ -854,7 +859,13 @@ let viewC =
                             {
                                 ContainerUpdated = fun r -> dispatch (ContainerUpdated(r))
                                 Disabled = isCalculating
-                                ContainerFormData = { Width = ""; Height =""; Weight="0"; Length = "" }
+                                ContainerFormData =
+                                    {
+                                        Width = ""
+                                        Height = ""
+                                        Weight = "0"
+                                        Length = ""
+                                    }
                             }
                     | Some container ->
                         Container.view
@@ -863,10 +874,10 @@ let viewC =
                                 Disabled = isCalculating
                                 ContainerFormData =
                                     {
-                                        Width = container.Width.ToString();
-                                        Height = container.Height.ToString();
-                                        Weight= container.Weight.ToString();
-                                        Length = container.Length.ToString();
+                                        Width = container.Width.ToString()
+                                        Height = container.Height.ToString()
+                                        Weight = container.Weight.ToString()
+                                        Length = container.Length.ToString()
                                     }
                             }
 
@@ -1005,21 +1016,13 @@ let viewC =
                     prop.children [
                         Bulma.label "Calculation mode:"
                         Html.select [
+                            prop.defaultValue
+                                (match model.CalculationMode with
+                                 | MinimizeHeight -> "Minimize Height"
+                                 | _ -> "Minimize Length")
                             prop.children [
-                                Html.option [
-                                    prop.text "Minimize Height"
-                                    prop.selected
-                                        (match model.CalculationMode with
-                                        | MinimizeHeight -> true
-                                        | _ -> false)
-                                ]
-                                Html.option [
-                                    prop.text "Minimize Length"
-                                    prop.selected
-                                        (match model.CalculationMode with
-                                        | MinimizeLength -> true
-                                        | _ -> false)
-                                ]
+                                Html.option "Minimize Height"
+                                Html.option "Minimize Length"
                             ]
                             prop.onChange (fun (e: Event) ->
                                 CalculationModeChanged(!!e.target?value)
@@ -1032,22 +1035,16 @@ let viewC =
                     prop.children [
                         Bulma.label "Container mode:"
                         Html.select [
+                            prop.defaultValue
+                                (match model.ContainerMode with
+                                 | SingleContainer -> "Single Container"
+                                 | _ -> "Multi Container")
+
                             prop.children [
-                                Html.option [
-                                    prop.text "Single Container"
-                                    prop.selected
-                                        (match model.ContainerMode with
-                                        | SingleContainer -> true
-                                        | _ -> false)
-                                ]
-                                Html.option [
-                                    prop.text "Multi Container"
-                                    prop.selected
-                                        (match model.ContainerMode with
-                                        | MultiContainer -> true
-                                        | _ -> false)
-                                ]
+                                Html.option "Single Container"
+                                Html.option "Multi Container"
                             ]
+
                             prop.onChange (fun (e: Event) -> ContainerModeChanged(!!e.target?value) |> dispatch)
                         ]
                     ]
@@ -1089,6 +1086,7 @@ let viewC =
                         | Calculated c ->
                             let itemsPut = c |> List.collect (fun l -> l.ItemsPut)
                             let itemsUnput = (c |> List.last).ItemsUnput
+
                             let label =
                                 match itemsUnput, itemsPut with
                                 | [], _ ->
@@ -1123,12 +1121,14 @@ let viewC =
                                                     ]
                                         ]
 
-                                ]
-                            React.fragment[
+                                    ]
+
+                            React.fragment [
                                 label
                                 Bulma.button.button [
                                     color.isInfo
-                                    prop.text (if model.UrlShown then "Now copy the url and share it" else "Share the result")
+                                    prop.text
+                                        (if model.UrlShown then "Now copy the url and share it" else "Share the result")
                                     prop.disabled (isCalculating || model.UrlShown)
                                     prop.onClick (fun _ -> dispatch ShareRequested)
                                 ]
