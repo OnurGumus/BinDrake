@@ -15,7 +15,7 @@ let THREE = Three.exports
 let scene = THREE.Scene.Create()
 
 let camera =
-    THREE.PerspectiveCamera.Create(30., window.innerWidth / window.innerHeight, 20., 4000.)
+    THREE.PerspectiveCamera.Create(30., window.innerWidth / window.innerHeight, 20., 10000.)
 
 let opt =
     jsOptions<Three.WebGLRendererParameters> (fun x ->
@@ -44,8 +44,8 @@ let renderPlane (container: Container) =
 
     let x =
         if container.Dim.Width + container.Dim.Length > 1000
-        then x / 1.5
-        else x
+        then x / 2.5
+        else x / 1.5
 
     camera.position.set (500. / x, 550. / x, -700. / x)
     |> ignore

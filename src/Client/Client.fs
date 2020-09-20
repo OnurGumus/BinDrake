@@ -151,8 +151,6 @@ let init () =
             Coord = { X = 0; Y = 0; Z = 0 }
             Weight = 0
         }
-    // let read = Browser.Dom.window.location.search.Substring(2) |> Guid.Parse
-    // printf "%A"read
     let cmd,loading =
         match Browser.Dom.window.location.search with
         | null
@@ -265,12 +263,6 @@ let update (msg: Msg) model =
                 { model with
                     Calculation = Calculated c
                 }
-            // let r = Encode.Auto.toString(4, model) |> toBase64String //|> Decode.Auto.fromString<Model>
-            // r |> printf "%A"
-            // let f = r |> fromBase64String
-            // f |> printf "%A"
-            // let ff = f |> Decode.Auto.fromString<Model>
-            // ff |> printf "%A"
             model,
             Cmd.ofSub (fun _ ->
                 CanvasRenderer.renderResult
