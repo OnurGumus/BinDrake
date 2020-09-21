@@ -1016,7 +1016,7 @@ let calcCost rootContainer (calculationMode:CalculationMode) containers items =
         float
             ((unfitItems |> List.sumBy calcVolume)
              * 1000.
-             + 1000. * float (cs |> List.sumBy(fun x->x.Dim |> dimToArea))
+            // + 1000. * float (cs |> List.sumBy(fun x->x.Dim |> dimToArea))
              + 1. * float (sumZ)
              + 1.0 * float (maxZCoord)),
         res,
