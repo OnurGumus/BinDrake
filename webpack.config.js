@@ -82,7 +82,7 @@ module.exports = {
         filename: isProduction ? '[name].[hash].js' : '[name].js'
     },
     mode: isProduction ? 'production' : 'development',
-    devtool: isProduction ? 'source-map' : 'eval-source-map',
+    devtool: isProduction ? 'none' : 'eval-source-map',
     optimization: {
         splitChunks: {
             chunks: 'all'
@@ -91,7 +91,7 @@ module.exports = {
     // Besides the HtmlPlugin, we use the following plugins:
     // PRODUCTION
     //      - MiniCssExtractPlugin: Extracts CSS from bundle to a different file
-    //          To minify CSS, see https://github.com/webpack-contrib/mini-css-extract-plugin#minimizing-for-production    
+    //          To minify CSS, see https://github.com/webpack-contrib/mini-css-extract-plugin#minimizing-for-production
     //      - CopyWebpackPlugin: Copies static assets to output directory
     // DEVELOPMENT
     //      - HotModuleReplacementPlugin: Enables hot reloading when code changes without refreshing
