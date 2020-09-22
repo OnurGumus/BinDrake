@@ -1281,7 +1281,7 @@ let runPerContainer (rootContainer: Container) (calculationMode: CalculationMode
                 results
     try
         let resList =
-            outerLoop (items |> List.map (Rotate.rotateToMinZ calculationMode) |> List.sortByDescending (fun x -> (x.KeepBottom, maxDim x))) 2 []
+            outerLoop (items |> List.map (Rotate.rotateToMinZ calculationMode) |> List.sortByDescending (fun x -> (x.KeepBottom, maxDim x))) 4 []
         let res =
             resList
             |> List.maxBy (fun x ->  x.PutVolume)
