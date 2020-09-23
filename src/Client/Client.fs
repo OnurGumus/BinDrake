@@ -1148,10 +1148,29 @@ let viewC =
                             prop.disabled ((model.CurrentResultIndex = 0) || isCalculating)
                             prop.onClick (fun _ -> dispatch (CurrentResultChanged(model.CurrentResultIndex - 1)))
                         ]
-                        Html.span [
-                            spacing.mx1 ++ text.hasTextWeightSemibold
-                            prop.textf "Showing container: %i/%i" (model.CurrentResultIndex + 1) (c.Length)
-                        ]
+                        let containers =
+                            Html.span [
+                                text.hasTextWeightSemibold
+                                prop.textf "Showing container: %i/%i" (model.CurrentResultIndex + 1) (c.Length)
+                            ]
+                        match model.Calculation with
+                        | Calculated c ->
+                            Html.span[
+                                spacing.mx2
+                                prop.style[ style.display.inlineFlex; style.flexDirection.column ]
+                                prop.children[
+
+                                    containers
+                                    Html.span [
+                                        text.hasTextWeightSemibold
+                                        prop.textf
+                                            "Max item L:%i, H:%i"
+                                                ((c.[model.CurrentResultIndex].ItemsPut |> List.map(fun i -> i.Coord.Z + i.Item.Dim.Length)) |> List.max)
+                                                ((c.[model.CurrentResultIndex].ItemsPut |> List.map(fun i -> i.Coord.Y + i.Item.Dim.Height)) |> List.max)
+                                    ]
+                                ]
+                            ]
+                        | _ -> containers
                         Bulma.button.button [
                             color.isDanger
                             prop.text " >> "
