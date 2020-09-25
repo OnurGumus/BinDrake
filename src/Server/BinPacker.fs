@@ -1312,6 +1312,24 @@ let runPerContainer (rootContainer: Container) (calculationMode: CalculationMode
 let run (rootContainer: Container) (containerMode:ContainerMode) (calculationMode: CalculationMode) (items: Item list) (T: float) (alpha: float) =
     let rec loop results unputItems =
         let res = runPerContainer rootContainer calculationMode unputItems T alpha
+        let res =
+            match res.ItemsUnput with
+            | [] ->
+                let newRootContainer =
+                    match calculationMode with
+                    | MinimizeLength ->
+                        let maxLength = res.ItemsPut |> List.map(fun x -> x.Item.Dim.Length + x.Coord.Z) |> List.max
+                        {rootContainer with Dim = {rootContainer.Dim with Length = maxLength}}
+                    | MinimizeHeight ->
+                        let maxHeight = res.ItemsPut |> List.map(fun x -> x.Item.Dim.Height + x.Coord.Y) |> List.max
+                        {rootContainer with Dim = {rootContainer.Dim with Length = maxHeight}}
+
+                let newRes = runPerContainer newRootContainer calculationMode unputItems T alpha
+                match newRes.ItemsUnput with
+                | [] -> {newRes with Container = rootContainer; ContainerVol =  rootContainer.Dim |> dimToVolume}
+                | _ -> res
+            | _ -> res
+
         let sumRes = res::results
         printf "%A" containerMode
         match containerMode with
