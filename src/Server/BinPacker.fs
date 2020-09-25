@@ -48,13 +48,11 @@ module Rotate =
             let x = item |> rotateX
             let y = item |> rotateY
             let z = item |> rotateZ
-            [ item; x; y ; z]
+            [ item; x; y; z ]
 
         match calculationMode with
-            | MinimizeHeight ->
-                comb |> List.minBy (fun d -> d.Dim.Height)
-            | MinimizeLength ->
-                comb |> List.minBy (fun d -> d.Dim.Length)
+        | MinimizeHeight -> comb |> List.minBy (fun d -> d.Dim.Height)
+        | MinimizeLength -> comb |> List.minBy (fun d -> d.Dim.Length)
 
 
     let inline randomRotate item: Item =
@@ -66,7 +64,12 @@ module Rotate =
 
 
 let dimToVolume (d: Dim) = d.Width * d.Height * d.Length
-let dimToArea (d: Dim) = d.Width * d.Height + (d.Length *d.Width) + (d.Length *d.Height)
+
+let dimToArea (d: Dim) =
+    d.Width
+    * d.Height
+    + (d.Length * d.Width)
+    + (d.Length * d.Height)
 
 module Conflict =
     let checkConflictC (A: Container) (B: Container) =
@@ -227,31 +230,39 @@ let mergeContainers (containers: Container list) =
 
     containers
 
-let containerNestedSort (calcMode : CalculationMode) (containers : Container list) =
-        match calcMode with
-        | MinimizeLength ->
-            let targetContainer = (containers |> List.minBy (fun x -> (float x.Coord.Z, -(x.Dim |> dimToVolume)  )))
-            (float targetContainer.Coord.Z, -(targetContainer.Dim |> dimToVolume)  )
-        | MinimizeHeight ->
-           let targetContainer = (containers |> List.minBy (fun x -> (float x.Coord.Y, -(x.Dim |> dimToVolume)  )))
-           (float targetContainer.Coord.Y, -(targetContainer.Dim |> dimToVolume)  )
+let containerNestedSort (calcMode: CalculationMode) (containers: Container list) =
+    match calcMode with
+    | MinimizeLength ->
+        let targetContainer =
+            (containers
+             |> List.minBy (fun x -> (float x.Coord.Z, -(x.Dim |> dimToVolume))))
+
+        (float targetContainer.Coord.Z, -(targetContainer.Dim |> dimToVolume))
+    | MinimizeHeight ->
+        let targetContainer =
+            (containers
+             |> List.minBy (fun x -> (float x.Coord.Y, -(x.Dim |> dimToVolume))))
+
+        (float targetContainer.Coord.Y, -(targetContainer.Dim |> dimToVolume))
 
 
-let rec putItem (rootContainer: Container) (calculationMode:CalculationMode)  tryCount: PutItem =
-    fun container item (weightPut :int)  ->
+let rec putItem (rootContainer: Container) (calculationMode: CalculationMode) tryCount: PutItem =
+    fun container item (weightPut: int) ->
         let remainingWidth = container.Dim.Width - item.Dim.Width
         let remainingHeight = container.Dim.Height - item.Dim.Height
         let remainingLength = container.Dim.Length - item.Dim.Length
-        let remainingWeight = rootContainer.Weight - weightPut - item.Weight
-        if remainingWeight < 0  then
-           ValueSome ([[container]], ValueNone)
+
+        let remainingWeight =
+            rootContainer.Weight - weightPut - item.Weight
+
+        if remainingWeight < 0 then
+            ValueSome([ [ container ] ], ValueNone)
         elif item.NoTop
-           && container.Coord.Y
-           + container.Dim.Height < rootContainer.Dim.Height then
+             && container.Coord.Y
+             + container.Dim.Height < rootContainer.Dim.Height then
             ValueNone
-        elif item.KeepBottom
-            && container.Coord.Y > 0 then
-             ValueNone
+        elif item.KeepBottom && container.Coord.Y > 0 then
+            ValueNone
         elif (remainingHeight < 0)
              || remainingLength < 0
              || remainingWidth < 0 then
@@ -261,11 +272,11 @@ let rec putItem (rootContainer: Container) (calculationMode:CalculationMode)  tr
 
                     putItem rootContainer calculationMode (tryCount - 1) container item weightPut
                 else if tryCount = 2 then
-                    let item = item |> Rotate.rotateZ |>  Rotate.rotateY
+                    let item = item |> Rotate.rotateZ |> Rotate.rotateY
 
                     putItem rootContainer calculationMode (tryCount - 1) container item weightPut
                 else
-                    let item = item |>  Rotate.rotateY |> Rotate.rotateX
+                    let item = item |> Rotate.rotateY |> Rotate.rotateX
 
                     putItem rootContainer calculationMode (tryCount - 1) container item weightPut
 
@@ -273,21 +284,22 @@ let rec putItem (rootContainer: Container) (calculationMode:CalculationMode)  tr
                 ValueNone
         else
             let calculationMode =
-                if item.NoTop then
-                    CalculationMode.MinimizeHeight
-                else calculationMode
+                if item.NoTop then CalculationMode.MinimizeHeight else calculationMode
 
             let containerSort =
                 match calculationMode with
-                | MinimizeHeight -> (fun (s:Container) -> s.Coord.Y)
+                | MinimizeHeight -> (fun (s: Container) -> s.Coord.Y)
                 | MinimizeLength -> (fun s -> s.Coord.Z)
-            let noTopFilter (s:Container) =
+
+            let noTopFilter (s: Container) =
                 (item.NoTop
-                    && s.Coord.Y = container.Coord.Y + item.Dim.Height
-                    && s.Coord.X = container.Coord.X
-                    && s.Coord.Z = container.Coord.Z
-                    ) |> not
-            let config1,config2,config3,config4 =
+                 && s.Coord.Y = container.Coord.Y
+                 + item.Dim.Height
+                 && s.Coord.X = container.Coord.X
+                 && s.Coord.Z = container.Coord.Z)
+                |> not
+
+            let config1, config2, config3, config4 =
                 match calculationMode with
                 | CalculationMode.MinimizeLength ->
                     let config1 =
@@ -341,6 +353,7 @@ let rec putItem (rootContainer: Container) (calculationMode:CalculationMode)  tr
                                     }
                                 Weight = 0
                             }
+
                         [ topBlock; sideBlock; remainingBlock ]
                         |> List.filter (fun s ->
                             s.Dim.Width > 0
@@ -529,249 +542,251 @@ let rec putItem (rootContainer: Container) (calculationMode:CalculationMode)  tr
                             && s.Dim.Length > 0)
                         |> List.filter noTopFilter
                         |> List.sortBy containerSort
+
                     config1, config2, config3, config4
                 | _ ->
-                let config1 =
-                    let topBlock =
-                        {
-                            Dim =
-                                {
-                                    Width = container.Dim.Width
-                                    Height = item.Dim.Height
-                                    Length = remainingLength
-                                }
-                            Coord =
-                                {
-                                    X = container.Coord.X
-                                    Y = container.Coord.Y
-                                    Z = container.Coord.Z +  item.Dim.Length
-                                }
-                            Weight = 0
-                        }
+                    let config1 =
+                        let topBlock =
+                            {
+                                Dim =
+                                    {
+                                        Width = container.Dim.Width
+                                        Height = item.Dim.Height
+                                        Length = remainingLength
+                                    }
+                                Coord =
+                                    {
+                                        X = container.Coord.X
+                                        Y = container.Coord.Y
+                                        Z = container.Coord.Z + item.Dim.Length
+                                    }
+                                Weight = 0
+                            }
 
-                    let sideBlock =
-                        {
-                            Dim =
-                                {
-                                    Width = remainingWidth
-                                    Height = item.Dim.Height
-                                    Length = item.Dim.Length
-                                }
-                            Coord =
-                                {
-                                    X = container.Coord.X + item.Dim.Width
-                                    Y = container.Coord.Y
-                                    Z = container.Coord.Z
-                                }
-                            Weight = 0
-                        }
+                        let sideBlock =
+                            {
+                                Dim =
+                                    {
+                                        Width = remainingWidth
+                                        Height = item.Dim.Height
+                                        Length = item.Dim.Length
+                                    }
+                                Coord =
+                                    {
+                                        X = container.Coord.X + item.Dim.Width
+                                        Y = container.Coord.Y
+                                        Z = container.Coord.Z
+                                    }
+                                Weight = 0
+                            }
 
-                    let remainingBlock =
-                        {
-                            Dim =
-                                {
-                                    Width = container.Dim.Width
-                                    Height = remainingHeight
-                                    Length = container.Dim.Length
-                                }
-                            Coord =
-                                {
-                                    X = container.Coord.X
-                                    Y = container.Coord.Y + item.Dim.Height
-                                    Z = container.Coord.Z
-                                }
-                            Weight = 0
-                        }
+                        let remainingBlock =
+                            {
+                                Dim =
+                                    {
+                                        Width = container.Dim.Width
+                                        Height = remainingHeight
+                                        Length = container.Dim.Length
+                                    }
+                                Coord =
+                                    {
+                                        X = container.Coord.X
+                                        Y = container.Coord.Y + item.Dim.Height
+                                        Z = container.Coord.Z
+                                    }
+                                Weight = 0
+                            }
 
-                    [ topBlock; sideBlock; remainingBlock ]
-                    |> List.filter (fun s ->
-                        s.Dim.Width > 0
-                        && s.Dim.Height > 0
-                        && s.Dim.Length > 0)
-                    |> List.filter noTopFilter
-                    |> List.sortBy containerSort
+                        [ topBlock; sideBlock; remainingBlock ]
+                        |> List.filter (fun s ->
+                            s.Dim.Width > 0
+                            && s.Dim.Height > 0
+                            && s.Dim.Length > 0)
+                        |> List.filter noTopFilter
+                        |> List.sortBy containerSort
 
-                let config2 =
+                    let config2 =
 
-                    let topBlock =
-                        {
-                            Dim =
-                                {
-                                    Width = item.Dim.Width
-                                    Height = item.Dim.Height
-                                    Length = remainingLength
-                                }
-                            Coord =
-                                {
-                                    X = container.Coord.X
-                                    Y = container.Coord.Y
-                                    Z = container.Coord.Z + item.Dim.Length
-                                }
-                            Weight = 0
-                        }
+                        let topBlock =
+                            {
+                                Dim =
+                                    {
+                                        Width = item.Dim.Width
+                                        Height = item.Dim.Height
+                                        Length = remainingLength
+                                    }
+                                Coord =
+                                    {
+                                        X = container.Coord.X
+                                        Y = container.Coord.Y
+                                        Z = container.Coord.Z + item.Dim.Length
+                                    }
+                                Weight = 0
+                            }
 
-                    let sideBlock =
-                        {
-                            Dim =
-                                {
-                                    Width = remainingWidth
-                                    Height = item.Dim.Height
-                                    Length = container.Dim.Length
-                                }
-                            Coord =
-                                {
-                                    X = container.Coord.X + item.Dim.Width
-                                    Y = container.Coord.Y
-                                    Z = container.Coord.Z
-                                }
-                            Weight = 0
-                        }
+                        let sideBlock =
+                            {
+                                Dim =
+                                    {
+                                        Width = remainingWidth
+                                        Height = item.Dim.Height
+                                        Length = container.Dim.Length
+                                    }
+                                Coord =
+                                    {
+                                        X = container.Coord.X + item.Dim.Width
+                                        Y = container.Coord.Y
+                                        Z = container.Coord.Z
+                                    }
+                                Weight = 0
+                            }
 
-                    let remainingBlock =
-                        {
-                            Dim =
-                                {
-                                    Width = container.Dim.Width
-                                    Height = remainingHeight
-                                    Length = container.Dim.Length
-                                }
-                            Coord =
-                                {
-                                    X = container.Coord.X
-                                    Y = container.Coord.Y + item.Dim.Height
-                                    Z = container.Coord.Z
-                                }
-                            Weight = 0
-                        }
+                        let remainingBlock =
+                            {
+                                Dim =
+                                    {
+                                        Width = container.Dim.Width
+                                        Height = remainingHeight
+                                        Length = container.Dim.Length
+                                    }
+                                Coord =
+                                    {
+                                        X = container.Coord.X
+                                        Y = container.Coord.Y + item.Dim.Height
+                                        Z = container.Coord.Z
+                                    }
+                                Weight = 0
+                            }
 
-                    [ topBlock; sideBlock; remainingBlock ]
-                    |> List.filter (fun s ->
-                        s.Dim.Width > 0
-                        && s.Dim.Height > 0
-                        && s.Dim.Length > 0)
-                    |> List.filter noTopFilter
-                    |> List.sortBy containerSort
+                        [ topBlock; sideBlock; remainingBlock ]
+                        |> List.filter (fun s ->
+                            s.Dim.Width > 0
+                            && s.Dim.Height > 0
+                            && s.Dim.Length > 0)
+                        |> List.filter noTopFilter
+                        |> List.sortBy containerSort
 
-                let config3 =
-                    let topBlock =
-                        {
-                            Dim =
-                                {
-                                    Width = container.Dim.Width
-                                    Height = container.Dim.Height
-                                    Length = remainingLength
-                                }
-                            Coord =
-                                {
-                                    X = container.Coord.X
-                                    Y = container.Coord.Y
-                                    Z = container.Coord.Z + item.Dim.Length
-                                }
-                            Weight = 0
-                        }
+                    let config3 =
+                        let topBlock =
+                            {
+                                Dim =
+                                    {
+                                        Width = container.Dim.Width
+                                        Height = container.Dim.Height
+                                        Length = remainingLength
+                                    }
+                                Coord =
+                                    {
+                                        X = container.Coord.X
+                                        Y = container.Coord.Y
+                                        Z = container.Coord.Z + item.Dim.Length
+                                    }
+                                Weight = 0
+                            }
 
-                    let sideBlock =
-                        {
-                            Dim =
-                                {
-                                    Width = remainingWidth
-                                    Height = container.Dim.Height
-                                    Length = item.Dim.Length
-                                }
-                            Coord =
-                                {
-                                    X = container.Coord.X + item.Dim.Width
-                                    Y = container.Coord.Y
-                                    Z = container.Coord.Z
-                                }
-                            Weight = 0
-                        }
+                        let sideBlock =
+                            {
+                                Dim =
+                                    {
+                                        Width = remainingWidth
+                                        Height = container.Dim.Height
+                                        Length = item.Dim.Length
+                                    }
+                                Coord =
+                                    {
+                                        X = container.Coord.X + item.Dim.Width
+                                        Y = container.Coord.Y
+                                        Z = container.Coord.Z
+                                    }
+                                Weight = 0
+                            }
 
-                    let remainingBlock =
-                        {
-                            Dim =
-                                {
-                                    Width = item.Dim.Width
-                                    Height = remainingHeight
-                                    Length = item.Dim.Length
-                                }
-                            Coord =
-                                {
-                                    X = container.Coord.X
-                                    Y = container.Coord.Y + item.Dim.Height
-                                    Z = container.Coord.Z
-                                }
-                            Weight = 0
-                        }
+                        let remainingBlock =
+                            {
+                                Dim =
+                                    {
+                                        Width = item.Dim.Width
+                                        Height = remainingHeight
+                                        Length = item.Dim.Length
+                                    }
+                                Coord =
+                                    {
+                                        X = container.Coord.X
+                                        Y = container.Coord.Y + item.Dim.Height
+                                        Z = container.Coord.Z
+                                    }
+                                Weight = 0
+                            }
 
-                    [ topBlock; sideBlock; remainingBlock ]
-                    |> List.filter (fun s ->
-                        s.Dim.Width > 0
-                        && s.Dim.Height > 0
-                        && s.Dim.Length > 0)
-                    |> List.filter noTopFilter
-                    |> List.sortBy containerSort
+                        [ topBlock; sideBlock; remainingBlock ]
+                        |> List.filter (fun s ->
+                            s.Dim.Width > 0
+                            && s.Dim.Height > 0
+                            && s.Dim.Length > 0)
+                        |> List.filter noTopFilter
+                        |> List.sortBy containerSort
 
-                let config4 =
-                    let topBlock =
-                        {
-                            Dim =
-                                {
-                                    Width = item.Dim.Width
-                                    Height = container.Dim.Height
-                                    Length = remainingLength
-                                }
-                            Coord =
-                                {
-                                    X = container.Coord.X
-                                    Y = container.Coord.Y
-                                    Z = container.Coord.Z + item.Dim.Length
-                                }
-                            Weight = 0
-                        }
+                    let config4 =
+                        let topBlock =
+                            {
+                                Dim =
+                                    {
+                                        Width = item.Dim.Width
+                                        Height = container.Dim.Height
+                                        Length = remainingLength
+                                    }
+                                Coord =
+                                    {
+                                        X = container.Coord.X
+                                        Y = container.Coord.Y
+                                        Z = container.Coord.Z + item.Dim.Length
+                                    }
+                                Weight = 0
+                            }
 
-                    let sideBlock =
-                        {
-                            Dim =
-                                {
-                                    Width = remainingWidth
-                                    Height = container.Dim.Height
-                                    Length = container.Dim.Length
-                                }
-                            Coord =
-                                {
-                                    X = container.Coord.X + item.Dim.Width
-                                    Y = container.Coord.Y
-                                    Z = container.Coord.Z
-                                }
-                            Weight = 0
-                        }
+                        let sideBlock =
+                            {
+                                Dim =
+                                    {
+                                        Width = remainingWidth
+                                        Height = container.Dim.Height
+                                        Length = container.Dim.Length
+                                    }
+                                Coord =
+                                    {
+                                        X = container.Coord.X + item.Dim.Width
+                                        Y = container.Coord.Y
+                                        Z = container.Coord.Z
+                                    }
+                                Weight = 0
+                            }
 
-                    let remainingBlock =
-                        {
-                            Dim =
-                                {
-                                    Width = item.Dim.Width
-                                    Height = remainingHeight
-                                    Length = item.Dim.Length
-                                }
-                            Coord =
-                                {
-                                    X = container.Coord.X
-                                    Y = container.Coord.Y + item.Dim.Height
-                                    Z = container.Coord.Z
-                                }
-                            Weight = 0
-                        }
+                        let remainingBlock =
+                            {
+                                Dim =
+                                    {
+                                        Width = item.Dim.Width
+                                        Height = remainingHeight
+                                        Length = item.Dim.Length
+                                    }
+                                Coord =
+                                    {
+                                        X = container.Coord.X
+                                        Y = container.Coord.Y + item.Dim.Height
+                                        Z = container.Coord.Z
+                                    }
+                                Weight = 0
+                            }
 
-                    [ topBlock; sideBlock; remainingBlock ]
-                    |> List.filter (fun s ->
-                        s.Dim.Width > 0
-                        && s.Dim.Height > 0
-                        && s.Dim.Length > 0)
-                    |> List.filter noTopFilter
-                    |> List.sortBy containerSort
-                config1, config2, config3, config4
+                        [ topBlock; sideBlock; remainingBlock ]
+                        |> List.filter (fun s ->
+                            s.Dim.Width > 0
+                            && s.Dim.Height > 0
+                            && s.Dim.Length > 0)
+                        |> List.filter noTopFilter
+                        |> List.sortBy containerSort
+
+                    config1, config2, config3, config4
 
 
             let itemPut =
@@ -791,7 +806,7 @@ let rec putItem (rootContainer: Container) (calculationMode:CalculationMode)  tr
                     [ config2; config1; config3; config4 ]
                     |> List.distinct
                 | MinimizeHeight ->
-                    [ config3; config4; config2; config1; ]
+                    [ config3; config4; config2; config1 ]
                     |> List.distinct
 
             let t1 =
@@ -810,10 +825,10 @@ let rec putItem (rootContainer: Container) (calculationMode:CalculationMode)  tr
             let sets =
                 if item.NoTop then
                     match calculationMode with
-                    | CalculationMode.MinimizeLength ->
-                        [ config2; config1 ]
-                    | _ -> [config3;config4]
-                else [ t1; t2 ]
+                    | CalculationMode.MinimizeLength -> [ config2; config1 ]
+                    | _ -> [ config3; config4 ]
+                else
+                    [ t1; t2 ]
 
             let res =
                 ValueSome
@@ -846,7 +861,7 @@ let checkConflictI itemsPut =
                 failwith "wr"
 
 let calculateCost (calculationMode: CalculationMode) =
-    fun putItem containers items  ->
+    fun putItem containers items ->
         let rec loop =
             function
             | struct (containerSet, [], itemPuts) :: _, _ -> ValueSome(containerSet, itemPuts)
@@ -861,23 +876,24 @@ let calculateCost (calculationMode: CalculationMode) =
                         //     Rotate.rotateToMinZ calculationMode item
                         //  else
                         //     item
-                        match (putItem container item (itemPuts |> List.sumBy(fun x->x.Item.Weight))) with
+                        match (putItem container item (itemPuts |> List.sumBy (fun x -> x.Item.Weight))) with
                         | ValueSome (struct (containerTriplets, (itemPut: ItemPut ValueOption))) ->
                             let firstRes: StackItem list =
                                 [
                                     let newItems =
-                                         match itemPut with
-                                         |ValueNone -> itemPuts
-                                         | ValueSome i -> i :: itemPuts
+                                        match itemPut with
+                                        | ValueNone -> itemPuts
+                                        | ValueSome i -> i :: itemPuts
 
 
                                     match containerTriplets with
                                     | [] ->
-                                        yield ((remainingContainers
-                                                @ triedButNotFit
-                                                |> mergeContainers),
-                                               remainingItems,
-                                               newItems)
+                                        yield
+                                            ((remainingContainers
+                                              @ triedButNotFit
+                                              |> mergeContainers),
+                                             remainingItems,
+                                             newItems)
                                     | _ ->
                                         for triplet in containerTriplets do
                                             let rema =
@@ -886,12 +902,11 @@ let calculateCost (calculationMode: CalculationMode) =
                                             // checkConflictI newItems
                                             let containerSort =
                                                 match calculationMode with
-                                                | MinimizeHeight -> (fun (s:Container) -> (s.Coord.Y, -(s.Dim |> dimToVolume)))
+                                                | MinimizeHeight ->
+                                                    (fun (s: Container) -> (s.Coord.Y, -(s.Dim |> dimToVolume)))
                                                 | MinimizeLength -> (fun s -> (s.Coord.Z, -(s.Dim |> dimToVolume)))
-                                            yield (rema
-                                                   |> List.sortBy  containerSort,
-                                                   remainingItems,
-                                                   newItems)
+
+                                            yield (rema |> List.sortBy containerSort, remainingItems, newItems)
                                 ]
 
                             firstRes
@@ -900,9 +915,10 @@ let calculateCost (calculationMode: CalculationMode) =
                     | _ -> []
 
                 let containerSort =
-                        match calculationMode with
-                        | MinimizeHeight -> (fun (s:Container) -> s.Coord.Y)
-                        | MinimizeLength -> (fun s -> s.Coord.Z)
+                    match calculationMode with
+                    | MinimizeHeight -> (fun (s: Container) -> s.Coord.Y)
+                    | MinimizeLength -> (fun s -> s.Coord.Z)
+
                 let sorted =
                     (containerSet |> List.sortBy containerSort)
 
@@ -910,19 +926,19 @@ let calculateCost (calculationMode: CalculationMode) =
                 let totalStack = (stackItems @ remainingStack)
                 loop
                     (totalStack,
-                    //  |> List.sortBy (fun (struct (x, _, _)) ->
-                    //      if x.Length = 0 then
-                    //          struct (Int32.MaxValue, Int32.MaxValue)
-                    //      else
-                    //         let containerSort containers  =
-                    //             match calculationMode with
-                    //             | MinimizeHeight ->  (containers |> containerNestedSort)
-                    //             | MinimizeLength -> (containers |> containerNestedSort)
+                     //  |> List.sortBy (fun (struct (x, _, _)) ->
+                     //      if x.Length = 0 then
+                     //          struct (Int32.MaxValue, Int32.MaxValue)
+                     //      else
+                     //         let containerSort containers  =
+                     //             match calculationMode with
+                     //             | MinimizeHeight ->  (containers |> containerNestedSort)
+                     //             | MinimizeLength -> (containers |> containerNestedSort)
 
-                    //         let z = (x |> List.sortBy containerSort)
-                    //         ),
+                     //         let z = (x |> List.sortBy containerSort)
+                     //         ),
 
-                         counter - 1)
+                     counter - 1)
             | (cs, _, itemPuts) :: _, _ -> ValueSome(cs, itemPuts)
             | _, _ -> ValueSome(containers, [])
 
@@ -937,7 +953,7 @@ let maxDim (item: Item) =
     Math.Max(item.Dim.Width, Math.Max(item.Dim.Height, item.Dim.Length))
 
 let maxVol (item: Item) =
-       item.Dim.Width * item.Dim.Height * item.Dim.Length
+    item.Dim.Width * item.Dim.Height * item.Dim.Length
 
 
 
@@ -954,8 +970,8 @@ let inline mutate (calcMode: CalculationMode) (itemsPut: ItemPut list) (items: I
                     match calcMode with
                     | MinimizeLength -> (fun x -> x.Coord.Z)
                     | MinimizeHeight -> (fun x -> x.Coord.Y)
-                let maxId =
-                    itemsPut |> List.maxBy max
+
+                let maxId = itemsPut |> List.maxBy max
 
                 items
                 |> List.findIndex (fun x -> x.Id = maxId.Item.Id)
@@ -978,8 +994,12 @@ let inline findUnfitItems itemsPut (items: Item list) =
     items
     |> List.filter (fun i -> itemsPutIds |> List.contains i.Id |> not)
 
-let calcCost rootContainer (calculationMode:CalculationMode) containers items =
-    match calculateCost calculationMode (putItem rootContainer calculationMode 3) containers (items |> List.sortByDescending calcVolume) with
+let calcCost rootContainer (calculationMode: CalculationMode) containers items =
+    match calculateCost
+              calculationMode
+              (putItem rootContainer calculationMode 3)
+              containers
+              (items |> List.sortByDescending calcVolume) with
     | ValueSome (cs, res) ->
         let cs = (cs |> mergeContainers)
         let unfitItems = findUnfitItems res items
@@ -994,29 +1014,29 @@ let calcCost rootContainer (calculationMode:CalculationMode) containers items =
                      |> List.sumBy (fun x -> x.Coord.Y + x.Item.Dim.Height))
                 | MinimizeLength ->
                     (res
-                    |> List.sumBy (fun x -> x.Coord.Z + x.Item.Dim.Length))
+                     |> List.sumBy (fun x -> x.Coord.Z + x.Item.Dim.Length))
 
         let maxZCoord =
             if res.Length = 0 then
                 Int32.MaxValue
             else
-                    match calculationMode with
-                    | MinimizeHeight ->
-                        (res
-                         |> List.maxBy (fun x -> x.Coord.Y + x.Item.Dim.Height))
-                         |> fun max -> max.Item.Dim.Height + max.Coord.Y
+                match calculationMode with
+                | MinimizeHeight ->
+                    (res
+                     |> List.maxBy (fun x -> x.Coord.Y + x.Item.Dim.Height))
+                    |> fun max -> max.Item.Dim.Height + max.Coord.Y
 
-                    | MinimizeLength ->
-                        (res
-                        |> List.maxBy (fun x -> x.Coord.Z + x.Item.Dim.Length))
-                        |> fun max -> max.Item.Dim.Length + max.Coord.Z
+                | MinimizeLength ->
+                    (res
+                     |> List.maxBy (fun x -> x.Coord.Z + x.Item.Dim.Length))
+                    |> fun max -> max.Item.Dim.Length + max.Coord.Z
 
 
 
         float
             ((unfitItems |> List.sumBy calcVolume)
              * 1000.
-            // + 1000. * float (cs |> List.sumBy(fun x->x.Dim |> dimToArea))
+             // + 1000. * float (cs |> List.sumBy(fun x->x.Dim |> dimToArea))
              + 1. * float (sumZ)
              + 1.0 * float (maxZCoord)),
         res,
@@ -1031,7 +1051,7 @@ type GlobalBest =
     }
 
 let rec calc (rootContainer: Container)
-             (calculationMode:CalculationMode)
+             (calculationMode: CalculationMode)
              (containers: Container list)
              (itemsWithCost: ItemsWithCost)
              (globalBest: GlobalBest)
@@ -1040,14 +1060,19 @@ let rec calc (rootContainer: Container)
              result
              (sw: Stopwatch)
              =
-    if TMin >= T || sw.ElapsedMilliseconds > 400L || (itemsWithCost.Items.Length = 1 && globalBest.ItemsPut.Length = 1) then
+    if TMin
+       >= T
+       || sw.ElapsedMilliseconds > 400L
+       || (itemsWithCost.Items.Length = 1
+           && globalBest.ItemsPut.Length = 1) then
         globalBest
     else
         let items = itemsWithCost.Items
 
         let calculated, res, globalBest =
             if itemsWithCost.Cost = 0. then
-                let cost, res, cs = calcCost rootContainer calculationMode containers items
+                let cost, res, cs =
+                    calcCost rootContainer calculationMode containers items
 
                 { itemsWithCost with Cost = cost },
                 res,
@@ -1065,6 +1090,7 @@ let rec calc (rootContainer: Container)
             else
                 let items = itemsWC.Items
                 let mutate = mutate calculationMode
+
                 let nbr =
                     items
                     |> mutate res
@@ -1073,7 +1099,8 @@ let rec calc (rootContainer: Container)
                     |> mutate res
                     |> mutate res
 
-                let nbrCost, nbrRes, cs = calcCost rootContainer calculationMode containers nbr
+                let nbrCost, nbrRes, cs =
+                    calcCost rootContainer calculationMode containers nbr
 
                 let nextItem, res, globalBest2 =
                     //printfn "costs: %f-%f" calculated.Cost nbrCost
@@ -1103,14 +1130,24 @@ let rec calc (rootContainer: Container)
 
                 loop (nextItem, res) globalBest2 (count - 1)
 
-        if TMin >= T || sw.ElapsedMilliseconds > 400L || (itemsWithCost.Items.Length = 1 && globalBest.ItemsPut.Length = 1) then
+        if TMin
+           >= T
+           || sw.ElapsedMilliseconds > 400L
+           || (itemsWithCost.Items.Length = 1
+               && globalBest.ItemsPut.Length = 1) then
             globalBest
         else
             let c, r, globalBest = loop (calculated, res) globalBest 1
             calc rootContainer calculationMode containers c globalBest (T * alpha) alpha r sw
 
 
-let runInner (rootContainer: Container) (calculationMode: CalculationMode) (containers: Container list) (items: Item list) (T: float) (alpha: float) =
+let runInner (rootContainer: Container)
+             (calculationMode: CalculationMode)
+             (containers: Container list)
+             (items: Item list)
+             (T: float)
+             (alpha: float)
+             =
     try
         let itemsWithCost =
             {
@@ -1177,17 +1214,27 @@ let shuffle a =
 
 let defaultBatchSize = 20
 
-let runPerContainer (rootContainer: Container) (calculationMode: CalculationMode) (items: Item list) (T: float) (alpha: float) =
+let runPerContainer (rootContainer: Container)
+                    (calculationMode: CalculationMode)
+                    (items: Item list)
+                    (T: float)
+                    (alpha: float)
+                    =
     let sw = Stopwatch.StartNew()
 
-    let rec loop  (rootContainer: Container) (containers: Container list) (items: Item list) (results: CalcResult list) batchCount retryCount =
+    let rec loop (rootContainer: Container)
+                 (containers: Container list)
+                 (items: Item list)
+                 (results: CalcResult list)
+                 batchCount
+                 retryCount
+                 =
         let containerSort =
             match calculationMode with
-            | MinimizeHeight -> (fun (c:Container) -> ((c.Coord.Y), -(c.Dim |> dimToVolume)))
-            | MinimizeLength ->  (fun c -> ((c.Coord.Z), -(c.Dim |> dimToVolume)))
-        let containers =
-            containers
-            |> List.sortBy containerSort
+            | MinimizeHeight -> (fun (c: Container) -> ((c.Coord.Y), -(c.Dim |> dimToVolume)))
+            | MinimizeLength -> (fun c -> ((c.Coord.Z), -(c.Dim |> dimToVolume)))
+
+        let containers = containers |> List.sortBy containerSort
         let oldBatchCount = batchCount
 
         let batchCount =
@@ -1197,9 +1244,17 @@ let runPerContainer (rootContainer: Container) (calculationMode: CalculationMode
             if items.Length > batchCount then items |> List.splitAt batchCount else items, []
 
         let batchCount = oldBatchCount
+
         let res =
             runInner rootContainer calculationMode containers currentItems T alpha
-        let rootContainer = {rootContainer with Weight = rootContainer.Weight - (res.ItemsPut |> List.sumBy(fun s -> s.Item.Weight)) }
+
+        let rootContainer =
+            { rootContainer with
+                Weight =
+                    rootContainer.Weight
+                    - (res.ItemsPut
+                       |> List.sumBy (fun s -> s.Item.Weight))
+            }
 
         let lastunput = res.ItemsUnput
 
@@ -1223,12 +1278,17 @@ let runPerContainer (rootContainer: Container) (calculationMode: CalculationMode
              batchCount)
 
         let rbatchCount = Math.Max(1, (batchCount / 2))
-        let timeOut = sw.Elapsed.TotalSeconds > 90. || items |> List.forall (fun x -> x.Weight > rootContainer.Weight)
+
+        let timeOut =
+            sw.Elapsed.TotalSeconds > 90.
+            || items
+               |> List.forall (fun x -> x.Weight > rootContainer.Weight)
         //printfn "rbatchCount %i" rbatchCount
         match timeOut, newItems, retryCount with
         | false, _ :: _, 1
         | false, _ :: _, 2
-        | false, _ :: _, 3-> loop rootContainer (res.EmptyContainers |> mergeContainers) newItems results rbatchCount retryCount
+        | false, _ :: _, 3 ->
+            loop rootContainer (res.EmptyContainers |> mergeContainers) newItems results rbatchCount retryCount
         | true, _, _
         | _, _, 0
         | _, _, -1
@@ -1265,26 +1325,104 @@ let runPerContainer (rootContainer: Container) (calculationMode: CalculationMode
         let res =
             loop rootContainer [ rootContainer ] (items) [] defaultBatchSize 6
 
+        let res =
+            match res.ItemsUnput with
+            | [] ->
+                let newRootContainer, max =
+                    match calculationMode with
+                    | MinimizeLength ->
+                        let maxLength =
+                            res.ItemsPut
+                            |> List.map (fun x -> x.Item.Dim.Length + x.Coord.Z)
+                            |> List.max
+
+                        { rootContainer with
+                            Dim =
+                                { rootContainer.Dim with
+                                    Length = maxLength
+                                }
+                        },
+                        maxLength
+                    | MinimizeHeight ->
+                        let maxHeight =
+                            res.ItemsPut
+                            |> List.map (fun x -> x.Item.Dim.Height + x.Coord.Y)
+                            |> List.max
+
+                        { rootContainer with
+                            Dim =
+                                { rootContainer.Dim with
+                                    Length = maxHeight
+                                }
+                        },
+                        maxHeight
+
+                let newRes =
+                    loop newRootContainer [ rootContainer ] (items) [] defaultBatchSize 6
+
+                match newRes.ItemsUnput with
+                | [] when max > 0 ->
+                    let newContainer =
+                        match calculationMode with
+                        | MinimizeLength ->
+                            ({
+                                 Dim =
+                                     {
+                                         Width = rootContainer.Dim.Width
+                                         Height = rootContainer.Dim.Height
+                                         Length = rootContainer.Dim.Length - max
+                                     }
+                                 Coord = { X = 0; Y = 0; Z = max }
+                                 Weight = 0
+                             }: Container)
+                        | CalculationMode.MinimizeHeight ->
+                             ({
+                                  Dim =
+                                      {
+                                          Width = rootContainer.Dim.Width
+                                          Height = rootContainer.Dim.Height - max
+                                          Length = rootContainer.Dim.Length
+                                      }
+                                  Coord = { X = 0; Y = max; Z = 0 }
+                                  Weight = 0
+                              }: Container)
+
+                    { newRes with
+                        Container = rootContainer
+                        ContainerVol = rootContainer.Dim |> dimToVolume
+                        EmptyContainers =
+                            newContainer
+                            :: res.EmptyContainers
+                            |> mergeContainers
+                    }
+                | _ -> res
+            | _ -> res
+
         let timeOut = sw.Elapsed.TotalSeconds > 90.
-        let results = res::resList
+        let results = res :: resList
         match timeOut, res.ItemsUnput, retryCount with
         | true, _, _
         | _, _, 0 -> results
         | _, [], _ -> results
         | _, _, _ ->
-            let rec loopMutate items = function
+            let rec loopMutate items =
+                function
                 | 0 -> items
                 | n -> loopMutate (items |> mutate calculationMode res.ItemsPut) (n - 1)
 
-            outerLoop (loopMutate items (items.Length / 10))
-                (retryCount - 1)
-                results
+            outerLoop (loopMutate items (items.Length / 10)) (retryCount - 1) results
+
     try
         let resList =
-            outerLoop (items |> List.map (Rotate.rotateToMinZ calculationMode) |> List.sortByDescending (fun x -> (x.KeepBottom, maxDim x))) 4 []
+            outerLoop
+                (items
+                 |> List.map (Rotate.rotateToMinZ calculationMode)
+                 |> List.sortByDescending (fun x -> (x.KeepBottom, maxDim x)))
+                10
+                []
+
         let res =
-            resList
-            |> List.maxBy (fun x ->  x.PutVolume)
+            resList |> List.maxBy (fun x -> x.PutVolume)
 
         Serilog.Log.Information("Result {@res}", res)
 
@@ -1306,31 +1444,68 @@ let runPerContainer (rootContainer: Container) (calculationMode: CalculationMode
 
         res
     with e ->
-            Serilog.Log.Error( e, "error")
-            reraise()
+        Serilog.Log.Error(e, "error")
+        reraise ()
 
-let run (rootContainer: Container) (containerMode:ContainerMode) (calculationMode: CalculationMode) (items: Item list) (T: float) (alpha: float) =
+let run (rootContainer: Container)
+        (containerMode: ContainerMode)
+        (calculationMode: CalculationMode)
+        (items: Item list)
+        (T: float)
+        (alpha: float)
+        =
     let rec loop results unputItems =
-        let res = runPerContainer rootContainer calculationMode unputItems T alpha
+        let res =
+            runPerContainer rootContainer calculationMode unputItems T alpha
+
         let res =
             match res.ItemsUnput with
             | [] ->
-                let newRootContainer =
+                let newRootContainer, max =
                     match calculationMode with
                     | MinimizeLength ->
-                        let maxLength = res.ItemsPut |> List.map(fun x -> x.Item.Dim.Length + x.Coord.Z) |> List.max
-                        {rootContainer with Dim = {rootContainer.Dim with Length = maxLength}}
-                    | MinimizeHeight ->
-                        let maxHeight = res.ItemsPut |> List.map(fun x -> x.Item.Dim.Height + x.Coord.Y) |> List.max
-                        {rootContainer with Dim = {rootContainer.Dim with Length = maxHeight}}
+                        let maxLength =
+                            res.ItemsPut
+                            |> List.map (fun x -> x.Item.Dim.Length + x.Coord.Z)
+                            |> List.max
 
-                let newRes = runPerContainer newRootContainer calculationMode unputItems T alpha
-                match newRes.ItemsUnput with
-                | [] -> {newRes with Container = rootContainer; ContainerVol =  rootContainer.Dim |> dimToVolume}
-                | _ -> res
+                        { rootContainer with
+                            Dim =
+                                { rootContainer.Dim with
+                                    Length = maxLength
+                                }
+                        },
+                        maxLength
+                    | MinimizeHeight ->
+                        let maxHeight =
+                            res.ItemsPut
+                            |> List.map (fun x -> x.Item.Dim.Height + x.Coord.Y)
+                            |> List.max
+
+                        { rootContainer with
+                            Dim =
+                                { rootContainer.Dim with
+                                    Length = maxHeight
+                                }
+                        },
+                        maxHeight
+
+                if max = 0 then
+                    res
+                else
+                    let newRes =
+                        runPerContainer newRootContainer calculationMode unputItems T alpha
+
+                    match newRes.ItemsUnput with
+                    | [] ->
+                        { newRes with
+                            Container = rootContainer
+                            ContainerVol = rootContainer.Dim |> dimToVolume
+                        }
+                    | _ -> res
             | _ -> res
 
-        let sumRes = res::results
+        let sumRes = res :: results
         printf "%A" containerMode
         match containerMode with
         | SingleContainer -> sumRes
@@ -1341,5 +1516,6 @@ let run (rootContainer: Container) (containerMode:ContainerMode) (calculationMod
                 match res.ItemsUnput with
                 | [] -> sumRes
                 | unput when unput.Length = unputItems.Length -> sumRes
-                | _ ->  loop sumRes res.ItemsUnput
+                | _ -> loop sumRes res.ItemsUnput
+
     (loop [] items) |> List.rev
