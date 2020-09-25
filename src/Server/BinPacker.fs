@@ -1388,8 +1388,8 @@ let runPerContainer (rootContainer: Container)
                         Container = rootContainer
                         ContainerVol = rootContainer.Dim |> dimToVolume
                         EmptyContainers =
-                            newContainer
-                            :: res.EmptyContainers
+                            (newContainer
+                            :: res.EmptyContainers) 
                             |> mergeContainers
                     }
                 | _ -> res
@@ -1482,7 +1482,7 @@ let run (rootContainer: Container)
                         { rootContainer with
                             Dim =
                                 { rootContainer.Dim with
-                                    Length = maxHeight
+                                    Height = maxHeight
                                 }
                         },
                         maxHeight
