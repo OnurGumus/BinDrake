@@ -814,6 +814,7 @@ let viewC =
             ]
 
         let content =
+
             field.div [
                 Html.b "How to use:"
                 Html.ul [
@@ -1191,7 +1192,7 @@ let viewC =
                         spacing.mt1
                         prop.children [
                             Bulma.panelHeading [
-                                Html.span [
+                                Html.h1 [
                                     prop.style [ style.color.white ]
                                     prop.text "3D Bin Packer"
                                 ]

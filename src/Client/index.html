@@ -37,6 +37,7 @@
         gtag('js', new Date());
 
         gtag('config', 'UA-173983774-1');
+
     </script>
 
 </head>
@@ -58,7 +59,18 @@
 
         <canvas id="myCanvas"></canvas>
     </main>
-
+    <script>
+        function inIframe() {
+            try {
+                return window.self !== window.top;
+            } catch (e) {
+                return true;
+            }
+        }
+        if (inIframe()){
+            document.querySelector("header").style.display = 'none';
+        }
+    </script>
 </body>
 
 </html>
