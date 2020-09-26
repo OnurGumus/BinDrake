@@ -155,16 +155,22 @@ let init () =
         }
 
     let cmd, loading =
+        try
         let window = window.top
         match window.location.search with
         | null
         | "" -> Cmd.none, false
-        | s ->
+        | s  when s.StartsWith("?g=")->
+
             let guid =
                 Browser.Dom.window.location.search.Substring(3)
                 |> Guid.Parse
 
             (loadCmd guid), true
+        | _ -> Cmd.none, false
+        with e ->
+            console.log e
+            Cmd.none,false
 
     CanvasRenderer.renderResult container boxes true
     {
