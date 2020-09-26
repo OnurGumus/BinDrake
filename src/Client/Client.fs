@@ -14,6 +14,7 @@ open Feliz.Bulma.Operators
 open Zanaptak.TypedCssClasses
 open Fable.Core
 open Shared.ClientModel
+open Browser.Dom
 
 type FA = CssClasses<"../../node_modules/@fortawesome/fontawesome-free/css/all.css", Naming.Underscores>
 open Thoth.Json
@@ -154,7 +155,8 @@ let init () =
         }
 
     let cmd, loading =
-        match Browser.Dom.window.location.search with
+        let window = window.top
+        match window.location.search with
         | null
         | "" -> Cmd.none, false
         | s ->

@@ -955,8 +955,6 @@ let maxDim (item: Item) =
 let maxVol (item: Item) =
     item.Dim.Width * item.Dim.Height * item.Dim.Length
 
-
-
 let inline mutate (calcMode: CalculationMode) (itemsPut: ItemPut list) (items: Item list) =
     if items |> List.isEmpty then
         []
@@ -994,6 +992,7 @@ let inline findUnfitItems itemsPut (items: Item list) =
     items
     |> List.filter (fun i -> itemsPutIds |> List.contains i.Id |> not)
 
+
 let calcCost rootContainer (calculationMode: CalculationMode) containers items =
     match calculateCost
               calculationMode
@@ -1030,8 +1029,6 @@ let calcCost rootContainer (calculationMode: CalculationMode) containers items =
                     (res
                      |> List.maxBy (fun x -> x.Coord.Z + x.Item.Dim.Length))
                     |> fun max -> max.Item.Dim.Length + max.Coord.Z
-
-
 
         float
             ((unfitItems |> List.sumBy calcVolume)
@@ -1376,16 +1373,16 @@ let runPerContainer (rootContainer: Container)
                                  Weight = 0
                              }: Container)
                         | CalculationMode.MinimizeHeight ->
-                             ({
-                                  Dim =
-                                      {
-                                          Width = rootContainer.Dim.Width
-                                          Height = rootContainer.Dim.Height - max
-                                          Length = rootContainer.Dim.Length
-                                      }
-                                  Coord = { X = 0; Y = max; Z = 0 }
-                                  Weight = 0
-                              }: Container)
+                            ({
+                                 Dim =
+                                     {
+                                         Width = rootContainer.Dim.Width
+                                         Height = rootContainer.Dim.Height - max
+                                         Length = rootContainer.Dim.Length
+                                     }
+                                 Coord = { X = 0; Y = max; Z = 0 }
+                                 Weight = 0
+                             }: Container)
 
                     { newRes with
                         Container = rootContainer
