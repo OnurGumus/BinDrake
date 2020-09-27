@@ -14,6 +14,7 @@ type Dim =
 type CalculationMode =
     | MinimizeLength
     | MinimizeHeight
+    | MinimizeVolume
 
 type ContainerMode =
     | SingleContainer
