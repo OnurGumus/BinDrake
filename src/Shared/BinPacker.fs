@@ -865,11 +865,7 @@ let calculateCost (calculationMode: CalculationMode) =
                 let rec loopContainers: (struct (Container list * Container list)) -> StackItem list =
                     function
                     | (container :: remainingContainers) as cs, triedButNotFit ->
-                        // let item =
-                        //  if remainingItems.Length < 8 then
-                        //     Rotate.rotateToMinZ calculationMode item
-                        //  else
-                        //     item
+
                         match (putItem container item (itemPuts |> List.sumBy (fun x -> x.Item.Weight))) with
                         | ValueSome (struct (containerTriplets, (itemPut: ItemPut ValueOption))) ->
                             let firstRes: StackItem list =
@@ -922,18 +918,6 @@ let calculateCost (calculationMode: CalculationMode) =
 
                 loop
                     (totalStack,
-                     //  |> List.sortBy (fun (struct (x, _, _)) ->
-                     //      if x.Length = 0 then
-                     //          struct (Int32.MaxValue, Int32.MaxValue)
-                     //      else
-                     //         let containerSort containers  =
-                     //             match calculationMode with
-                     //             | MinimizeHeight ->  (containers |> containerNestedSort)
-                     //             | MinimizeLength -> (containers |> containerNestedSort)
-
-                     //         let z = (x |> List.sortBy containerSort)
-                     //         ),
-
                      counter - 1)
             | (cs, _, itemPuts) :: _, _ -> ValueSome(cs, itemPuts)
             | _, _ -> ValueSome(containers, [])
@@ -1146,7 +1130,7 @@ let runInner (sw: IStopwatch)
     try
         let itemsWithCost =
             {
-                Items = items // |> List.map Rotate.rotateToMinZ
+                Items = items
                 Cost = 0.
             }
 
