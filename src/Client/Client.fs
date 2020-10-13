@@ -46,10 +46,10 @@ module Server =
     open Fable.Remoting.Client
 
     /// A proxy you can use to talk to server directly
-    let api: ICounterApi =
+    let api: ICalcApi =
         Remoting.createApi ()
         |> Remoting.withRouteBuilder Route.builder
-        |> Remoting.buildProxy<ICounterApi>
+        |> Remoting.buildProxy<ICalcApi>
 
 let run = Server.api.run
 let save = Server.api.saveModel

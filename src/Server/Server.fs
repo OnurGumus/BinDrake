@@ -38,8 +38,7 @@ let port =
     "SERVER_PORT"
     |> tryGetEnv |> Option.map uint16 |> Option.defaultValue 8085us
 
-let counterApi = {
-    initialCounter = fun () -> async { return { Value = 42 } }
+let calcApi = {
 
     run = fun calcs container items t alpha -> async {return
         BinPacker.run (sw (Stopwatch.StartNew())) logger container  calcs.ContainerMode calcs.CalculationMode items t alpha }
@@ -65,7 +64,7 @@ let counterApi = {
 let webApp =
     Remoting.createApi()
     |> Remoting.withRouteBuilder Route.builder
-    |> Remoting.fromValue counterApi
+    |> Remoting.fromValue calcApi
     |> Remoting.buildHttpHandler
 
 
