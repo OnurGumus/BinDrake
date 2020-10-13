@@ -58,6 +58,7 @@ module Rotate =
 
     let inline randomRotate item: Item =
         let r = random.NextDouble()
+
         if r < 0.333 then rotateZ item
         elif r < 0.666 then rotateY item
         else rotateX item
@@ -67,17 +68,14 @@ module Rotate =
 let dimToVolume (d: Dim) = d.Width * d.Height * d.Length
 
 let dimToArea (d: Dim) =
-    d.Width
-    * d.Height
+    d.Width * d.Height
     + (d.Length * d.Width)
     + (d.Length * d.Height)
 
 module Conflict =
     let checkConflictC (A: Container) (B: Container) =
         not
-            (B.Coord.X
-             >= A.Coord.X
-             + A.Dim.Width
+            (B.Coord.X >= A.Coord.X + A.Dim.Width
              || B.Coord.X + B.Dim.Width <= A.Coord.X
              || B.Coord.Y >= A.Coord.Y + A.Dim.Height
              || B.Coord.Y + B.Dim.Height <= A.Coord.Y
@@ -93,9 +91,7 @@ module Conflict =
 
     let checkConflict (A: ItemPut) (B: ItemPut) =
         not
-            (B.Coord.X
-             >= A.Coord.X
-             + A.Item.Dim.Width
+            (B.Coord.X >= A.Coord.X + A.Item.Dim.Width
              || B.Coord.X + B.Item.Dim.Width <= A.Coord.X
              || B.Coord.Y >= A.Coord.Y + A.Item.Dim.Height
              || B.Coord.Y + B.Item.Dim.Height <= A.Coord.Y
@@ -234,16 +230,19 @@ let mergeContainers (containers: Container list) =
 let containerNestedSort (calcMode: CalculationMode) (containers: Container list) =
     match calcMode with
     | MinimizeLength ->
-            (containers
-             |> List.map (fun x -> x.Coord.Z, ( -(x.Dim |> dimToVolume)))) |> List.min
+        (containers
+         |> List.map (fun x -> x.Coord.Z, (-(x.Dim |> dimToVolume))))
+        |> List.min
 
     | MinimizeHeight ->
-            (containers
-             |> List.map (fun x -> x.Coord.Y, ( -(x.Dim |> dimToVolume)))) |> List.min
+        (containers
+         |> List.map (fun x -> x.Coord.Y, (-(x.Dim |> dimToVolume))))
+        |> List.min
 
     | MinimizeVolume ->
-             (containers
-              |> List.map (fun x -> 0, ( -(x.Dim |> dimToVolume)))) |> List.min
+        (containers
+         |> List.map (fun x -> 0, (-(x.Dim |> dimToVolume))))
+        |> List.min
 
 let rec putItem (rootContainer: Container) (calculationMode: CalculationMode) tryCount: PutItem =
     fun container item (weightPut: int) ->
@@ -257,8 +256,7 @@ let rec putItem (rootContainer: Container) (calculationMode: CalculationMode) tr
         if remainingWeight < 0 then
             ValueSome([ [ container ] ], ValueNone)
         elif item.NoTop
-             && container.Coord.Y
-             + container.Dim.Height < rootContainer.Dim.Height then
+             && container.Coord.Y + container.Dim.Height < rootContainer.Dim.Height then
             ValueNone
         elif item.KeepBottom && container.Coord.Y > 0 then
             ValueNone
@@ -278,7 +276,6 @@ let rec putItem (rootContainer: Container) (calculationMode: CalculationMode) tr
                     let item = item |> Rotate.rotateY |> Rotate.rotateX
 
                     putItem rootContainer calculationMode (tryCount - 1) container item weightPut
-
             else
                 ValueNone
         else
@@ -287,14 +284,13 @@ let rec putItem (rootContainer: Container) (calculationMode: CalculationMode) tr
 
             let containerSort =
                 match calculationMode with
-                | MinimizeVolume -> fun (s:Container)-> -(s.Dim |> dimToVolume)
+                | MinimizeVolume -> fun (s: Container) -> -(s.Dim |> dimToVolume)
                 | MinimizeHeight -> (fun (s: Container) -> s.Coord.Y)
                 | MinimizeLength -> (fun s -> s.Coord.Z)
 
             let noTopFilter (s: Container) =
                 (item.NoTop
-                 && s.Coord.Y = container.Coord.Y
-                 + item.Dim.Height
+                 && s.Coord.Y = container.Coord.Y + item.Dim.Height
                  && s.Coord.X = container.Coord.X
                  && s.Coord.Z = container.Coord.Z)
                 |> not
@@ -844,9 +840,7 @@ let rec putItem (rootContainer: Container) (calculationMode: CalculationMode) tr
 let checkConflictI itemsPut =
     let checkConflict (A: ItemPut) (B: ItemPut) =
         not
-            (B.Coord.X
-             >= A.Coord.X
-             + A.Item.Dim.Width
+            (B.Coord.X >= A.Coord.X + A.Item.Dim.Width
              || B.Coord.X + B.Item.Dim.Width <= A.Coord.X
              || B.Coord.Y >= A.Coord.Y + A.Item.Dim.Height
              || B.Coord.Y + B.Item.Dim.Height <= A.Coord.Y
@@ -855,8 +849,7 @@ let checkConflictI itemsPut =
 
     for item1 in itemsPut do
         for item2 in itemsPut do
-            if item1.Item.Id
-               <> item2.Item.Id
+            if item1.Item.Id <> item2.Item.Id
                && checkConflict item1 item2 then
                 printfn "Items conflc %A %A" item1 item2
                 failwith "wr"
@@ -890,8 +883,7 @@ let calculateCost (calculationMode: CalculationMode) =
                                     match containerTriplets with
                                     | [] ->
                                         yield
-                                            ((remainingContainers
-                                              @ triedButNotFit
+                                            ((remainingContainers @ triedButNotFit
                                               |> mergeContainers),
                                              remainingItems,
                                              newItems)
@@ -927,6 +919,7 @@ let calculateCost (calculationMode: CalculationMode) =
 
                 let stackItems = loopContainers (sorted, [])
                 let totalStack = (stackItems @ remainingStack)
+
                 loop
                     (totalStack,
                      //  |> List.sortBy (fun (struct (x, _, _)) ->
@@ -986,6 +979,7 @@ let inline mutate (calcMode: CalculationMode) (itemsPut: ItemPut list) (items: I
         arr |> List.ofArray
 
 let TMin = 0.01
+
 open System
 open System.Diagnostics
 
@@ -1036,8 +1030,7 @@ let calcCost rootContainer (calculationMode: CalculationMode) containers items =
                     |> fun max -> max.Item.Dim.Length + max.Coord.Z
 
         float
-            ((unfitItems |> List.sumBy calcVolume)
-             * 1000.
+            ((unfitItems |> List.sumBy calcVolume) * 1000.
              // + 1000. * float (cs |> List.sumBy(fun x->x.Dim |> dimToArea))
              + 1. * float (sumZ)
              + 1.0 * float (maxZCoord)),
@@ -1062,8 +1055,7 @@ let rec calc (rootContainer: Container)
              result
              (sw: IStopwatch)
              =
-    if TMin
-       >= T
+    if TMin >= T
        || sw.ElapsedMilliseconds > 2000L
        || (itemsWithCost.Items.Length = 1
            && globalBest.ItemsPut.Length = 1) then
@@ -1120,6 +1112,7 @@ let rec calc (rootContainer: Container)
                     else
                         let diff = (calculated.Cost - nbrCost)
                         let exp = Math.Exp(diff / T)
+
                         if exp < 1.0 && exp > random.NextDouble() then
                             { Items = nbr; Cost = nbrCost }, nbrRes, globalBest
                         else
@@ -1132,8 +1125,7 @@ let rec calc (rootContainer: Container)
 
                 loop (nextItem, res) globalBest2 (count - 1)
 
-        if TMin
-           >= T
+        if TMin >= T
            || sw.ElapsedMilliseconds > 2000L
            || (itemsWithCost.Items.Length = 1
                && globalBest.ItemsPut.Length = 1) then
@@ -1143,8 +1135,7 @@ let rec calc (rootContainer: Container)
             calc rootContainer calculationMode containers c globalBest (T * alpha) alpha r sw
 
 
-let runInner
-             (sw:IStopwatch)
+let runInner (sw: IStopwatch)
              (rootContainer: Container)
              (calculationMode: CalculationMode)
              (containers: Container list)
@@ -1184,10 +1175,10 @@ let runInner
 
         let itemsUnput = findUnfitItems itemsPut items
         let putVolume = itemsUnput |> List.sumBy calcVolume
+
         for item1 in itemsPut do
             for item2 in itemsPut do
-                if item1.Item.Id
-                   <> item2.Item.Id
+                if item1.Item.Id <> item2.Item.Id
                    && Conflict.checkConflict item1 item2 then
                     printfn "Items conflc %A %A" item1 item2
 
@@ -1218,8 +1209,8 @@ let shuffle a =
 
 let defaultBatchSize = 20
 
-let runPerContainer (logger:ILogger)
-                    (sw:IStopwatch)
+let runPerContainer (logger: ILogger)
+                    (sw: IStopwatch)
                     (rootContainer: Container)
                     (calculationMode: CalculationMode)
                     (items: Item list)
@@ -1280,9 +1271,11 @@ let runPerContainer (logger:ILogger)
 
         logger.Log
             "unput items :{@unput} - remaining:{@remaining} -batchCount:{@batchCount}"
-             [|lastunput.Length;
-             remainingItems.Length;
-             batchCount|]
+            [|
+                lastunput.Length
+                remainingItems.Length
+                batchCount
+            |]
 
         let rbatchCount = Math.Max(1, (batchCount / 2))
 
@@ -1295,7 +1288,14 @@ let runPerContainer (logger:ILogger)
         | false, _ :: _, 1
         | false, _ :: _, 2
         | false, _ :: _, 3 ->
-            loop rootContainer (res.EmptyContainers |> mergeContainers) calculationMode newItems results rbatchCount retryCount
+            loop
+                rootContainer
+                (res.EmptyContainers |> mergeContainers)
+                calculationMode
+                newItems
+                results
+                rbatchCount
+                retryCount
         | true, _, _
         | _, _, 0
         | _, _, -1
@@ -1323,9 +1323,17 @@ let runPerContainer (logger:ILogger)
 
             res
 
-        | _ -> loop rootContainer (res.EmptyContainers |> mergeContainers) calculationMode newItems results batchCount retryCount
+        | _ ->
+            loop
+                rootContainer
+                (res.EmptyContainers |> mergeContainers)
+                calculationMode
+                newItems
+                results
+                batchCount
+                retryCount
 
-    let rec outerLoop(calculationMode : CalculationMode) (items: Item list) retryCount resList =
+    let rec outerLoop (calculationMode: CalculationMode) (items: Item list) retryCount resList =
 
         let defaultBatchSize = if items.Length < 100 then 15 else 20
 
@@ -1400,8 +1408,7 @@ let runPerContainer (logger:ILogger)
                         Container = rootContainer
                         ContainerVol = rootContainer.Dim |> dimToVolume
                         EmptyContainers =
-                            (newContainer
-                            :: res.EmptyContainers)
+                            (newContainer :: res.EmptyContainers)
                             |> mergeContainers
                     }
                 | _ -> res
@@ -1409,6 +1416,7 @@ let runPerContainer (logger:ILogger)
 
         let timeOut = sw.ElapsedMilliseconds > 90000L
         let results = res :: resList
+
         match timeOut, res.ItemsUnput, retryCount with
         | true, _, _
         | _, _, 0 -> results
@@ -1423,7 +1431,8 @@ let runPerContainer (logger:ILogger)
 
     try
         let resList =
-            outerLoop calculationMode
+            outerLoop
+                calculationMode
                 (items
                  |> List.map (Rotate.rotateToMinZ calculationMode)
                  |> List.sortByDescending (fun x -> (x.KeepBottom, maxDim x)))
@@ -1433,7 +1442,7 @@ let runPerContainer (logger:ILogger)
         let res =
             resList |> List.maxBy (fun x -> x.PutVolume)
 
-        logger.Log "Result {@res}"  [|res|]
+        logger.Log "Result {@res}" [| res |]
 
         let convertContainerToItemPut (container: Container): ItemPut =
             {
@@ -1456,9 +1465,8 @@ let runPerContainer (logger:ILogger)
         logger.LogError e
         reraise ()
 
-let run
-        (sw:IStopwatch)
-        (logger:ILogger)
+let run (sw: IStopwatch)
+        (logger: ILogger)
         (rootContainer: Container)
         (containerMode: ContainerMode)
         (calculationMode: CalculationMode)
@@ -1520,6 +1528,7 @@ let run
 
         let sumRes = res :: results
         printf "%A" containerMode
+
         match containerMode with
         | SingleContainer -> sumRes
         | _ ->

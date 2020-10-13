@@ -47,12 +47,16 @@ let renderPlane (container: Container) =
         / 1.5
 
     let x =
-        if container.Dim.Width * container.Dim.Length * container.Dim.Height> 4000
-        then x / 3.5
-        else x / 1.5
+        if container.Dim.Width
+           * container.Dim.Length
+           * container.Dim.Height > 4000 then
+            x / 3.5
+        else
+            x / 1.5
 
     camera.position.set (500. / x, 550. / x, -700. / x)
     |> ignore
+
     scene.remove currentContainer |> ignore
 
     let planeGeometry =
@@ -82,8 +86,10 @@ let renderPlane (container: Container) =
     plane.receiveShadow <- true
     plane.rotation.z <- 1. * Math.PI
     plane.rotation.y <- 1. * Math.PI
+
     plane.position.set (0., (float (container.Dim.Height) / 2.), (float (container.Dim.Width) / 2.))
     |> ignore
+
     scene.add plane |> ignore
     currentContainer.Add plane
 
@@ -134,6 +140,7 @@ let renderCube x y z width height length (color: string) L W =
     // let W = cont.z
     cube.position.set (z - (L - length) / 2., y + height / 2., (W - width) / 2. - x)
     |> ignore
+
     scene.add cube |> ignore
     cubes.Add cube
 
@@ -210,10 +217,12 @@ let init () =
     let rec renderScene time =
         let time = time * 0.001
         trackballControls.update (clock.getDelta ())
+
         if (resizeRendererToDisplaySize (renderer)) then
             let canvas = renderer.domElement
             camera.aspect <- canvas.clientWidth / canvas.clientHeight
             camera.updateProjectionMatrix ()
+
         if demoMode2 then
             cubes
             |> Seq.indexed
@@ -222,7 +231,9 @@ let init () =
                 let rot = time * speed
                 ob?rotation?x <- rot
                 ob?rotation?y <- rot)
+
         renderer.render (scene, camera)
+
         window.requestAnimationFrame (renderScene)
         |> ignore
 
@@ -233,6 +244,7 @@ let renderResultInner container items demoMode =
     renderPlane container
     scene.remove cubes |> ignore
     cubes.Clear()
+
     for (item: ItemPut) in items do
         renderCube
             (item.Coord.X |> float)
@@ -249,6 +261,7 @@ let renderResult (container: Container) items demoMode =
     match lastLController with
     | Some c -> gui.remove (c)
     | _ -> ()
+
     let h = {| h_filter = 0 |}
     let v = {| v_filter = 0 |}
 
@@ -261,15 +274,18 @@ let renderResult (container: Container) items demoMode =
 
     lastLController <-
         Some
-            (gui.add(h, "h_filter", 0., float (container.Dim.Length))
+            (gui
+                .add(h, "h_filter", 0., float (container.Dim.Length))
                 .onChange(fun v -> renderResultInner container (items |> callback) demoMode2))
 
     match lastHController with
     | Some c -> gui.remove (c)
     | _ -> ()
+
     lastHController <-
         Some
-            (gui.add(v, "v_filter", 0., float (container.Dim.Height))
+            (gui
+                .add(v, "v_filter", 0., float (container.Dim.Height))
                 .onChange(fun _ -> renderResultInner container (items |> callback) demoMode2))
 
     gui?__closeButton?hidden <- true

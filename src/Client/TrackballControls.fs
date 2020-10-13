@@ -1,5 +1,6 @@
 // ts2fable 0.7.1
 module rec TrackballControls
+
 open System
 open Fable.Core
 open Fable.Core.JS
@@ -8,14 +9,16 @@ open Browser.Types
 module THREE = Three
 
 [<ImportAll("three-trackballcontrols")>]
-let TrackballControls : TrackballControlsStatic = jsNative
+let TrackballControls: TrackballControlsStatic = jsNative
 
-type [<AllowNullLiteral>] IExports =
+[<AllowNullLiteral>]
+type IExports =
     abstract TrackballControls: TrackballControlsStatic
 
-type [<AllowNullLiteral>] TrackballControls =
+[<AllowNullLiteral>]
+type TrackballControls =
     inherit THREE.EventDispatcher
-    abstract ``object``: THREE.Camera with get, set
+    abstract object: THREE.Camera with get, set
     abstract domElement: HTMLElement with get, set
     abstract window: Window with get, set
     abstract enabled: bool with get, set
@@ -43,5 +46,7 @@ type [<AllowNullLiteral>] TrackballControls =
     abstract update: obj -> unit
     abstract reset: unit -> unit
 
-type [<AllowNullLiteral>] TrackballControlsStatic =
-    [<Emit "new $0($1...)">] abstract Create: ``object``: THREE.Camera * domElement: HTMLElement * ?domWindow: Window -> TrackballControls
+[<AllowNullLiteral>]
+type TrackballControlsStatic =
+    [<Emit "new $0($1...)">]
+    abstract Create: object:THREE.Camera * domElement:HTMLElement * ?domWindow:Window -> TrackballControls

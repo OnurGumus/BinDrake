@@ -156,23 +156,25 @@ let init () =
 
     let cmd, loading =
         try
-        let window = window.top
-        match window.location.search with
-        | null
-        | "" -> Cmd.none, false
-        | s  when s.StartsWith("?g=")->
+            let window = window.top
 
-            let guid =
-                Browser.Dom.window.location.search.Substring(3)
-                |> Guid.Parse
+            match window.location.search with
+            | null
+            | "" -> Cmd.none, false
+            | s when s.StartsWith("?g=") ->
 
-            (loadCmd guid), true
-        | _ -> Cmd.none, false
+                let guid =
+                    Browser.Dom.window.location.search.Substring(3)
+                    |> Guid.Parse
+
+                (loadCmd guid), true
+            | _ -> Cmd.none, false
         with e ->
             console.log e
-            Cmd.none,false
+            Cmd.none, false
 
     CanvasRenderer.renderResult container boxes true
+
     {
         Calculation = NotCalculated
         Container = None
@@ -216,6 +218,7 @@ let convertToItems (model: Model) =
     [
         for rowItem, key in model.RowItems do
             let r = rowItem.Value
+
             for i = 1 to r.Quantity do
                 yield
                     {
@@ -416,6 +419,7 @@ module Container =
             let floatCheck = numericCheck t int 0 2000
             let intCheck = numericCheck t int 0 2000
             let weightCheck = numericCheck t int -1 100000
+
             {
                 Width = floatCheck "width" formData.Width
                 Height = floatCheck "height" formData.Height
@@ -484,6 +488,7 @@ module Container =
                         ]
 
                     prop.className "table"
+
                     prop.children [
                         Html.div [
                             prop.className "tr"
@@ -554,6 +559,7 @@ module Row =
             let floatCheck = numericCheck t int 0 2000
             let intCheck = numericCheck t int 0 2000
             let weightCheck = numericCheck t int -1 100000
+
             {
                 Width = floatCheck "width" formData.Width
                 Height = floatCheck "height" formData.Height
@@ -710,7 +716,7 @@ module Row =
                     ]
                 ]
 
-             ),
+                ),
              (fun props -> props.Key))
 
 open Fable.Core
@@ -721,6 +727,7 @@ let thousands n =
     let v = (if n < 0 then -n else n).ToString()
     let r = v.Length % 3
     let s = if r = 0 then 3 else r
+
     [
         yield v.[0..s - 1]
         for i in 0 .. (v.Length - s) / 3 - 1 do
@@ -754,6 +761,7 @@ let viewC =
                                             block = "start"
                                         |})
             | _ -> ()
+
             { new IDisposable with
                 member this.Dispose() = ()
             }
@@ -763,7 +771,6 @@ let viewC =
         let subscribeToTimer () =
             let subscriptionId =
                 JS.setTimeout (fun _ -> if isCalculating then setCounterValue (counterValue - 1)) 1000
-
             { new IDisposable with
                 member this.Dispose() = JS.clearTimeout (subscriptionId)
             }
@@ -818,6 +825,7 @@ let viewC =
                                         KeepBottom = r.KeepBottom
                                         Quantity = r.Quantity.ToString()
                                     }
+
                         }
             ]
 
@@ -853,6 +861,8 @@ let viewC =
                         for item in items do
                             Html.li [ prop.text item ]
                     ]
+
+
                 ]
                 br []
                 Bulma.label [
@@ -992,7 +1002,9 @@ let viewC =
                             |> List.filter (fun x -> x.NoTop)
                             |> function
                             | [] -> 0
-                            | other -> (other |> List.maxBy (fun x -> x.Dim.Height)).Dim.Height
+                            | other ->
+                                (other |> List.maxBy (fun x -> x.Dim.Height))
+                                    .Dim.Height
 
                         (areaItems > containerArea
                          || maxHeight > container.Height)
@@ -1014,12 +1026,14 @@ let viewC =
                             itemDim > cDim
 
                         let items = convertToItems model
+
                         List.exists (checkDim) items
                         || items
-                        |> List.exists (fun i -> i.Weight > container.Weight)
+                           |> List.exists (fun i -> i.Weight > container.Weight)
                     | _ -> false
 
                 Html.br []
+
                 Html.div [
                     helpers.isInlineBlock
                     prop.children [
@@ -1039,6 +1053,7 @@ let viewC =
                         ]
                     ]
                 ]
+
                 Html.div [
                     spacing.ml4 ++ helpers.isInlineBlock
                     prop.children [
@@ -1058,8 +1073,10 @@ let viewC =
                         ]
                     ]
                 ]
+
                 Html.br []
                 Html.br []
+
                 Bulma.button.button [
                     prop.disabled
                         (isinvalid
@@ -1088,6 +1105,7 @@ let viewC =
                         setCounterValue 90
                         dispatch CalculateRequested)
                 ]
+
                 Html.span [
                     spacing.my1
                     prop.children [
@@ -1110,6 +1128,7 @@ let viewC =
                                     ]
                                 | items, _ ->
                                     let g = items |> List.groupBy (fun x -> x.Tag)
+
                                     React.fragment [
                                         Bulma.label "Could not fit the following items:"
                                         Html.ul [
@@ -1144,9 +1163,10 @@ let viewC =
                             ]
                         | _ -> Html.none
 
-
                     ]
+
                 ]
+
                 match model.Calculation with
                 | Calculated c ->
                     Html.div [
@@ -1162,24 +1182,33 @@ let viewC =
                                 text.hasTextWeightSemibold
                                 prop.textf "Showing container: %i/%i" (model.CurrentResultIndex + 1) (c.Length)
                             ]
+
                         match model.Calculation with
                         | Calculated c ->
-                            Html.span[
+                            Html.span [
                                 spacing.mx2
-                                prop.style[ style.display.inlineFlex; style.flexDirection.column ]
-                                prop.children[
+                                prop.style [
+                                    style.display.inlineFlex
+                                    style.flexDirection.column
+                                ]
+                                prop.children [
 
                                     containers
                                     Html.span [
                                         text.hasTextWeightSemibold
                                         prop.textf
                                             "Max item L:%i, H:%i"
-                                                ((c.[model.CurrentResultIndex].ItemsPut |> List.map(fun i -> i.Coord.Z + i.Item.Dim.Length)) |> List.max)
-                                                ((c.[model.CurrentResultIndex].ItemsPut |> List.map(fun i -> i.Coord.Y + i.Item.Dim.Height)) |> List.max)
+                                            ((c.[model.CurrentResultIndex].ItemsPut
+                                              |> List.map (fun i -> i.Coord.Z + i.Item.Dim.Length))
+                                             |> List.max)
+                                            ((c.[model.CurrentResultIndex].ItemsPut
+                                              |> List.map (fun i -> i.Coord.Y + i.Item.Dim.Height))
+                                             |> List.max)
                                     ]
                                 ]
                             ]
                         | _ -> containers
+
                         Bulma.button.button [
                             color.isDanger
                             prop.text " >> "
@@ -1189,8 +1218,11 @@ let viewC =
                             prop.onClick (fun _ -> dispatch (CurrentResultChanged(model.CurrentResultIndex + 1)))
 
                         ]
+
                     ]
                 | _ -> Html.none
+
+
             ]
 
         Bulma.container [
