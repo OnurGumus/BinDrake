@@ -18,6 +18,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		yarn.lock = yarn.lock
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{716B7541-C1B1-480A-A8A8-2191366E913B}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Shared", "src\Shared\Shared.fsproj", "{E9E94B3B-22AB-4B7D-9CFE-832AD61A0458}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -28,6 +32,10 @@ Global
 		{73E8E820-C8AA-47CC-BB2B-152CA4D0B855}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{73E8E820-C8AA-47CC-BB2B-152CA4D0B855}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{73E8E820-C8AA-47CC-BB2B-152CA4D0B855}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E9E94B3B-22AB-4B7D-9CFE-832AD61A0458}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E9E94B3B-22AB-4B7D-9CFE-832AD61A0458}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E9E94B3B-22AB-4B7D-9CFE-832AD61A0458}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E9E94B3B-22AB-4B7D-9CFE-832AD61A0458}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{73E8E820-C8AA-47CC-BB2B-152CA4D0B856}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -40,5 +48,8 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7A0AA30E-4CD9-4359-9513-BA68E2E85245}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{E9E94B3B-22AB-4B7D-9CFE-832AD61A0458} = {716B7541-C1B1-480A-A8A8-2191366E913B}
 	EndGlobalSection
 EndGlobal

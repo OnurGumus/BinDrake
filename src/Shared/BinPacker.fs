@@ -1060,7 +1060,7 @@ let rec calc (rootContainer: Container)
              (T: float)
              (alpha: float)
              result
-             (sw: Stopwatch)
+             (sw: IStopwatch)
              =
     if TMin
        >= T
@@ -1143,7 +1143,9 @@ let rec calc (rootContainer: Container)
             calc rootContainer calculationMode containers c globalBest (T * alpha) alpha r sw
 
 
-let runInner (rootContainer: Container)
+let runInner
+             (sw:IStopwatch)
+             (rootContainer: Container)
              (calculationMode: CalculationMode)
              (containers: Container list)
              (items: Item list)
@@ -1171,7 +1173,7 @@ let runInner (rootContainer: Container)
                  T
                  alpha
                  []
-                 (Stopwatch.StartNew()))
+                 (sw))
 
         let itemsPut = globalBest.ItemsPut
 
@@ -1216,13 +1218,14 @@ let shuffle a =
 
 let defaultBatchSize = 20
 
-let runPerContainer (rootContainer: Container)
+let runPerContainer (logger:ILogger)
+                    (sw:IStopwatch)
+                    (rootContainer: Container)
                     (calculationMode: CalculationMode)
                     (items: Item list)
                     (T: float)
                     (alpha: float)
                     =
-    let sw = Stopwatch.StartNew()
 
     let rec loop (rootContainer: Container)
                  (containers: Container list)
@@ -1250,7 +1253,7 @@ let runPerContainer (rootContainer: Container)
         let batchCount = oldBatchCount
 
         let res =
-            runInner rootContainer calculationMode containers currentItems T alpha
+            runInner sw rootContainer calculationMode containers currentItems T alpha
 
         let rootContainer =
             { rootContainer with
@@ -1275,16 +1278,16 @@ let runPerContainer (rootContainer: Container)
         let retryCount =
             if res.ItemsPut.IsEmpty then retryCount - 1 else retryCount
 
-        Serilog.Log.Information
-            ("unput items :{@unput} - remaining:{@remaining} -batchCount:{@batchCount}",
-             lastunput.Length,
-             remainingItems.Length,
-             batchCount)
+        logger.Log
+            "unput items :{@unput} - remaining:{@remaining} -batchCount:{@batchCount}"
+             [|lastunput.Length;
+             remainingItems.Length;
+             batchCount|]
 
         let rbatchCount = Math.Max(1, (batchCount / 2))
 
         let timeOut =
-            sw.Elapsed.TotalSeconds > 90.
+            sw.ElapsedMilliseconds > 90000L
             || items
                |> List.forall (fun x -> x.Weight > rootContainer.Weight)
         //printfn "rbatchCount %i" rbatchCount
@@ -1404,7 +1407,7 @@ let runPerContainer (rootContainer: Container)
                 | _ -> res
             | _ -> res
 
-        let timeOut = sw.Elapsed.TotalSeconds > 90.
+        let timeOut = sw.ElapsedMilliseconds > 90000L
         let results = res :: resList
         match timeOut, res.ItemsUnput, retryCount with
         | true, _, _
@@ -1430,7 +1433,7 @@ let runPerContainer (rootContainer: Container)
         let res =
             resList |> List.maxBy (fun x -> x.PutVolume)
 
-        Serilog.Log.Information("Result {@res}", res)
+        logger.Log "Result {@res}"  [|res|]
 
         let convertContainerToItemPut (container: Container): ItemPut =
             {
@@ -1450,10 +1453,13 @@ let runPerContainer (rootContainer: Container)
 
         res
     with e ->
-        Serilog.Log.Error(e, "error")
+        logger.LogError e
         reraise ()
 
-let run (rootContainer: Container)
+let run
+        (sw:IStopwatch)
+        (logger:ILogger)
+        (rootContainer: Container)
         (containerMode: ContainerMode)
         (calculationMode: CalculationMode)
         (items: Item list)
@@ -1462,7 +1468,7 @@ let run (rootContainer: Container)
         =
     let rec loop results unputItems =
         let res =
-            runPerContainer rootContainer calculationMode unputItems T alpha
+            runPerContainer logger sw rootContainer calculationMode unputItems T alpha
 
         let res =
             match res.ItemsUnput with
@@ -1501,7 +1507,7 @@ let run (rootContainer: Container)
                     res
                 else
                     let newRes =
-                        runPerContainer newRootContainer calculationMode unputItems T alpha
+                        runPerContainer logger sw newRootContainer calculationMode unputItems T alpha
 
                     match newRes.ItemsUnput with
                     | [] ->

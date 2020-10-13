@@ -18,9 +18,17 @@ open Fable.Remoting.Server
 open Fable.Remoting.Giraffe
 open Thoth.Json.Net
 open System
+open System.Diagnostics
 
 let tryGetEnv = System.Environment.GetEnvironmentVariable >> function null | "" -> None | x -> Some x
-
+let sw (swReal:Stopwatch) =
+    { new IStopwatch with
+        member this.ElapsedMilliseconds = swReal.ElapsedMilliseconds }
+let logger : Shared.ILogger =
+    { new Shared.ILogger with
+        member this.LogError e = Serilog.Log.Error(e,"error")
+        member this.Log str arr = Serilog.Log.Information(str, arr)
+                }
 #if DEBUG
 let publicPath = Path.GetFullPath "../Client/public"
 #else
@@ -32,7 +40,9 @@ let port =
 
 let counterApi = {
     initialCounter = fun () -> async { return { Value = 42 } }
-    run = fun calcs container items t alpha -> async {return  BinPacker.run  container  calcs.ContainerMode calcs.CalculationMode items t alpha }
+
+    run = fun calcs container items t alpha -> async {return
+        BinPacker.run (sw (Stopwatch.StartNew())) logger container  calcs.ContainerMode calcs.CalculationMode items t alpha }
     saveModel = fun model ->
         async{
             let guid = Guid.NewGuid()

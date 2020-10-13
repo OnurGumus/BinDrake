@@ -1,4 +1,4 @@
-namespace Shared
+module Shared
 open System
 [<Struct>]
 type Coordinates = { X: int; Y: int; Z: int }
@@ -39,6 +39,15 @@ type CalcResult = {
     Container : Container
     EmptyContainers : Container list
 }
+[<Interface>]
+type IStopwatch =
+    abstract member ElapsedMilliseconds : Int64
+
+[<Interface>]
+type ILogger =
+    abstract member LogError : Exception -> unit
+    abstract member Log : string -> arr : obj array -> unit
+
 module ClientModel =
     type Calculation =
         | NotCalculated
