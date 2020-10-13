@@ -42,15 +42,40 @@ type Msg =
     | ModelLoaded of Model
 
 module Server =
+    let logger: Shared.ILogger =
+        { new Shared.ILogger with
+            member this.LogError e = printf "%A" e
+            member this.Log str arr = printf "%s" str
+        }
 
+    let sw () =
+        { new IStopwatch with
+            member this.ElapsedMilliseconds = 1L
+        }
     open Fable.Remoting.Client
 
     /// A proxy you can use to talk to server directly
     let api: ICalcApi =
-        Remoting.createApi ()
-        |> Remoting.withRouteBuilder Route.builder
-        |> Remoting.buildProxy<ICalcApi>
-
+        let calcApi =
+            Remoting.createApi ()
+            |> Remoting.withRouteBuilder Route.builder
+            |> Remoting.buildProxy<ICalcApi>
+        // { calcApi with
+        //     run =
+        //     fun calcs container items t alpha ->
+        //         async {
+        //             return
+        //                 BinPacker.run
+        //                     (sw ())
+        //                     logger
+        //                     container
+        //                     calcs.ContainerMode
+        //                     calcs.CalculationMode
+        //                     items
+        //                     t
+        //                     alpha
+        //     } }
+        calcApi
 let run = Server.api.run
 let save = Server.api.saveModel
 let load = Server.api.loadModel
