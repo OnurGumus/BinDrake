@@ -20,8 +20,8 @@ let camera =
 
 let opt =
     jsOptions<Three.WebGLRendererParameters> (fun x ->
-        x.antialias <- Some true
-        x.canvas <- Some(!^(document.getElementById ("myCanvas"))))
+        x.antialias <- true
+        x.canvas <- !^(document.getElementById ("myCanvas")))
 
 let renderer = THREE.WebGLRenderer.Create(opt)
 
@@ -63,7 +63,7 @@ let renderPlane (container: Container) =
         THREE.PlaneGeometry.Create(container.Dim.Length |> float, container.Dim.Width |> float)
 
     let planeMaterial =
-        THREE.MeshLambertMaterial.Create(jsOptions<_> (fun x -> x.color <- Some !^ "red"))
+        THREE.MeshLambertMaterial.Create(jsOptions<_> (fun x -> x.color <- !^ "red"))
 
     let plane =
         THREE.Mesh.Create(planeGeometry, planeMaterial)
@@ -78,7 +78,7 @@ let renderPlane (container: Container) =
         THREE.PlaneGeometry.Create(container.Dim.Length |> float, container.Dim.Height |> float)
 
     let planeMaterial =
-        THREE.MeshLambertMaterial.Create(jsOptions<_> (fun x -> x.color <- Some !^ "red"))
+        THREE.MeshLambertMaterial.Create(jsOptions<_> (fun x -> x.color <-  !^ "red"))
 
     let plane =
         THREE.Mesh.Create(planeGeometry, planeMaterial)
@@ -96,18 +96,18 @@ let renderPlane (container: Container) =
 let cubeMaterial =
     THREE.MeshLambertMaterial.Create
         (jsOptions<Three.MeshLambertMaterialParameters> (fun x ->
-            x.color <- Some !^ "green"
-            x.wireframe <- Some true))
+            x.color <- !^ "green"
+            x.wireframe <- true))
 
 let wireframeMaterial =
     THREE.MeshBasicMaterial.Create
         (jsOptions<Three.MeshBasicMaterialParameters> (fun x ->
-            x.wireframe <- Some true
-            x.transparent <- Some true
-            x.color <- Some !^ "black"))
+            x.wireframe <- true
+            x.transparent <- true
+            x.color <- !^ "black"))
 
 let lineMaterial =
-    THREE.LineBasicMaterial.Create(jsOptions<Three.LineBasicMaterialParameters> (fun x -> x.color <- Some !^ "black"))
+    THREE.LineBasicMaterial.Create(jsOptions<Three.LineBasicMaterialParameters> (fun x -> x.color <- !^ "black"))
 
 let cubes = ResizeArray<Three.Object3D>()
 
@@ -115,8 +115,8 @@ let renderCube x y z width height length (color: string) L W =
     let cubeMaterial =
         THREE.MeshLambertMaterial.Create
             (jsOptions<Three.MeshLambertMaterialParameters> (fun x ->
-                x.color <- Some !^color
-                x.wireframe <- Some false))
+                x.color <- !^color
+                x.wireframe <- false))
 
     let cubeGeometry =
         THREE.BoxGeometry.Create(length, height, width)

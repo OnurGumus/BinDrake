@@ -107,7 +107,7 @@ type AnimationClip =
     abstract blendMode: AnimationBlendMode with get, set
     abstract duration: float with get, set
     abstract uuid: string with get, set
-    abstract results: ResizeArray<obj option> with get, set
+    abstract results: ResizeArray<obj> with get, set
     abstract resetDuration: unit -> AnimationClip
     abstract trim: unit -> AnimationClip
     abstract validate: unit -> bool
@@ -136,9 +136,9 @@ type AnimationClipStatic =
                                                   * noLoop:bool
                                                   -> ResizeArray<AnimationClip>
 
-    abstract parse: json:obj option -> AnimationClip
-    abstract parseAnimation: animation:obj option * bones:ResizeArray<Bone> -> AnimationClip
-    abstract toJSON: unit -> obj option
+    abstract parse: json:obj -> AnimationClip
+    abstract parseAnimation: animation:obj * bones:ResizeArray<Bone> -> AnimationClip
+    abstract toJSON: unit -> obj
 
 
 
@@ -178,14 +178,14 @@ type AnimationObjectGroup =
     abstract uuid: string with get, set
     abstract stats: AnimationObjectGroupStats with get, set
     abstract isAnimationObjectGroup: obj
-    abstract add: [<ParamArray>] args:ResizeArray<obj option> -> unit
-    abstract remove: [<ParamArray>] args:ResizeArray<obj option> -> unit
-    abstract uncache: [<ParamArray>] args:ResizeArray<obj option> -> unit
+    abstract add: [<ParamArray>] args:ResizeArray<obj> -> unit
+    abstract remove: [<ParamArray>] args:ResizeArray<obj> -> unit
+    abstract uncache: [<ParamArray>] args:ResizeArray<obj> -> unit
 
 [<AllowNullLiteral>]
 type AnimationObjectGroupStatic =
     [<Emit "new $0($1...)">]
-    abstract Create: [<ParamArray>] args:ResizeArray<obj option> -> AnimationObjectGroup
+    abstract Create: [<ParamArray>] args:ResizeArray<obj> -> AnimationObjectGroup
 
 [<AllowNullLiteral>]
 type AnimationObjectGroupStatsObjects =
@@ -204,19 +204,19 @@ module AnimationUtils =
 
     [<AllowNullLiteral>]
     type IExports =
-        abstract arraySlice: array:obj option * from:float * ``to``:float -> obj option
-        abstract convertArray: array:obj option * ``type``:obj option * forceClone:bool -> obj option
-        abstract isTypedArray: object:obj option -> bool
+        abstract arraySlice: array:obj * from:float * ``to``:float -> obj
+        abstract convertArray: array:obj * ``type``:obj * forceClone:bool -> obj
+        abstract isTypedArray: object:obj -> bool
         abstract getKeyFrameOrder: times:ResizeArray<float> -> ResizeArray<float>
 
-        abstract sortedArray: values:ResizeArray<obj option>
+        abstract sortedArray: values:ResizeArray<obj>
                               * stride:float
                               * order:ResizeArray<float>
-                              -> ResizeArray<obj option>
+                              -> ResizeArray<obj>
 
         abstract flattenJSON: jsonKeys:ResizeArray<string>
-                              * times:ResizeArray<obj option>
-                              * values:ResizeArray<obj option>
+                              * times:ResizeArray<obj>
+                              * values:ResizeArray<obj>
                               * valuePropertyName:string
                               -> unit
 
@@ -250,9 +250,9 @@ type KeyframeTrack =
     abstract TimeBufferType: Float32Array with get, set
     abstract ValueBufferType: Float32Array with get, set
     abstract DefaultInterpolation: InterpolationModes with get, set
-    abstract InterpolantFactoryMethodDiscrete: result:obj option -> DiscreteInterpolant
-    abstract InterpolantFactoryMethodLinear: result:obj option -> LinearInterpolant
-    abstract InterpolantFactoryMethodSmooth: result:obj option -> CubicInterpolant
+    abstract InterpolantFactoryMethodDiscrete: result:obj -> DiscreteInterpolant
+    abstract InterpolantFactoryMethodLinear: result:obj -> LinearInterpolant
+    abstract InterpolantFactoryMethodSmooth: result:obj -> CubicInterpolant
     abstract setInterpolation: interpolation:InterpolationModes -> KeyframeTrack
     abstract getInterpolation: unit -> InterpolationModes
     abstract getValueSize: unit -> float
@@ -267,12 +267,12 @@ type KeyframeTrack =
 type KeyframeTrackStatic =
     [<Emit "new $0($1...)">]
     abstract Create: name:string
-                     * times:ResizeArray<obj option>
-                     * values:ResizeArray<obj option>
+                     * times:ResizeArray<obj>
+                     * values:ResizeArray<obj>
                      * ?interpolation:InterpolationModes
                      -> KeyframeTrack
 
-    abstract toJSON: track:KeyframeTrack -> obj option
+    abstract toJSON: track:KeyframeTrack -> obj
 
 [<Import("PropertyBinding", "three")>]
 let propertyBinding: PropertyBinding.IExports = jsNative
@@ -289,11 +289,11 @@ type ParseTrackNameResults =
 [<AllowNullLiteral>]
 type PropertyBinding =
     abstract path: string with get, set
-    abstract parsedPath: obj option with get, set
-    abstract node: obj option with get, set
-    abstract rootNode: obj option with get, set
-    abstract getValue: targetArray:obj option * offset:float -> obj option
-    abstract setValue: sourceArray:obj option * offset:float -> unit
+    abstract parsedPath: obj with get, set
+    abstract node: obj with get, set
+    abstract rootNode: obj with get, set
+    abstract getValue: targetArray:obj * offset:float -> obj
+    abstract setValue: sourceArray:obj * offset:float -> unit
     abstract bind: unit -> unit
     abstract unbind: unit -> unit
     abstract BindingType: PropertyBindingBindingType with get, set
@@ -304,16 +304,16 @@ type PropertyBinding =
 [<AllowNullLiteral>]
 type PropertyBindingStatic =
     [<Emit "new $0($1...)">]
-    abstract Create: rootNode:obj option * path:string * ?parsedPath:obj -> PropertyBinding
+    abstract Create: rootNode:obj * path:string * ?parsedPath:obj -> PropertyBinding
 
-    abstract create: root:obj option
-                     * path:obj option
+    abstract create: root:obj
+                     * path:obj
                      * ?parsedPath:obj
                      -> U2<PropertyBinding, PropertyBinding.Composite>
 
     abstract sanitizeNodeName: name:string -> string
     abstract parseTrackName: trackName:string -> ParseTrackNameResults
-    abstract findNode: root:obj option * nodeName:string -> obj option
+    abstract findNode: root:obj * nodeName:string -> obj
 
 module PropertyBinding =
 
@@ -323,15 +323,15 @@ module PropertyBinding =
 
     [<AllowNullLiteral>]
     type Composite =
-        abstract getValue: array:obj option * offset:float -> obj option
-        abstract setValue: array:obj option * offset:float -> unit
+        abstract getValue: array:obj * offset:float -> obj
+        abstract setValue: array:obj * offset:float -> unit
         abstract bind: unit -> unit
         abstract unbind: unit -> unit
 
     [<AllowNullLiteral>]
     type CompositeStatic =
         [<Emit "new $0($1...)">]
-        abstract Create: targetGroup:obj option * path:obj option * ?parsedPath:obj -> Composite
+        abstract Create: targetGroup:obj * path:obj * ?parsedPath:obj -> Composite
 
 [<AllowNullLiteral>]
 type PropertyBindingBindingType =
@@ -346,9 +346,9 @@ type PropertyBindingVersioning =
 
 [<AllowNullLiteral>]
 type PropertyMixer =
-    abstract binding: obj option with get, set
+    abstract binding: obj with get, set
     abstract valueSize: float with get, set
-    abstract buffer: obj option with get, set
+    abstract buffer: obj with get, set
     abstract cumulativeWeight: float with get, set
     abstract cumulativeWeightAdditive: float with get, set
     abstract useCount: float with get, set
@@ -362,7 +362,7 @@ type PropertyMixer =
 [<AllowNullLiteral>]
 type PropertyMixerStatic =
     [<Emit "new $0($1...)">]
-    abstract Create: binding:obj option * typeName:string * valueSize:float -> PropertyMixer
+    abstract Create: binding:obj * typeName:string * valueSize:float -> PropertyMixer
 
 
 
@@ -382,19 +382,19 @@ type Audio<'NodeType> =
     abstract context: AudioContext with get, set
     abstract gain: GainNode with get, set
     abstract autoplay: bool with get, set
-    abstract buffer: AudioBuffer option with get, set
+    abstract buffer: AudioBuffer with get, set
     abstract detune: float with get, set
     abstract loop: bool with get, set
     abstract loopStart: float with get, set
     abstract loopEnd: float with get, set
     abstract offset: float with get, set
-    abstract duration: float option with get, set
+    abstract duration: float with get, set
     abstract playbackRate: float with get, set
     abstract isPlaying: bool with get, set
     abstract hasPlaybackControl: bool with get, set
     abstract sourceType: string with get, set
     abstract source: AudioBufferSourceNode with get, set
-    abstract filters: ResizeArray<obj option> with get, set
+    abstract filters: ResizeArray<obj> with get, set
     abstract getOutput: unit -> 'NodeType
     abstract setNodeSource: audioNode:AudioBufferSourceNode -> Audio<'NodeType>
     abstract setMediaElementSource: mediaElement:HTMLMediaElement -> Audio<'NodeType>
@@ -408,10 +408,10 @@ type Audio<'NodeType> =
     abstract disconnect: unit -> Audio<'NodeType>
     abstract setDetune: value:float -> Audio<'NodeType>
     abstract getDetune: unit -> float
-    abstract getFilters: unit -> ResizeArray<obj option>
-    abstract setFilters: value:ResizeArray<obj option> -> Audio<'NodeType>
-    abstract getFilter: unit -> obj option
-    abstract setFilter: filter:obj option -> Audio<'NodeType>
+    abstract getFilters: unit -> ResizeArray<obj>
+    abstract setFilters: value:ResizeArray<obj> -> Audio<'NodeType>
+    abstract getFilter: unit -> obj
+    abstract setFilter: filter:obj -> Audio<'NodeType>
     abstract setPlaybackRate: value:float -> Audio<'NodeType>
     abstract getPlaybackRate: unit -> float
     abstract getLoop: unit -> bool
@@ -435,7 +435,7 @@ type AudioAnalyser =
     abstract data: Uint8Array with get, set
     abstract getFrequencyData: unit -> Uint8Array
     abstract getAverageFrequency: unit -> float
-    abstract getData: file:obj option -> obj option
+    abstract getData: file:obj -> obj
 
 [<AllowNullLiteral>]
 type AudioAnalyserStatic =
@@ -454,12 +454,12 @@ type AudioListener =
     abstract ``type``: string with get, set
     abstract context: AudioContext with get, set
     abstract gain: GainNode with get, set
-    abstract filter: obj option option with get, set
+    abstract filter: obj with get, set
     abstract timeDelta: float with get, set
     abstract getInput: unit -> GainNode
     abstract removeFilter: unit -> AudioListener
-    abstract setFilter: value:obj option -> AudioListener
-    abstract getFilter: unit -> obj option
+    abstract setFilter: value:obj -> AudioListener
+    abstract getFilter: unit -> obj
     abstract setMasterVolume: value:float -> AudioListener
     abstract getMasterVolume: unit -> float
     /// Updates global transform of the object and its children.
@@ -562,7 +562,7 @@ type OrthographicCamera =
     abstract ``type``: string with get, set
     abstract isOrthographicCamera: obj
     abstract zoom: float with get, set
-    abstract view: OrthographicCameraView option with get, set
+    abstract view: OrthographicCameraView with get, set
     /// Camera frustum left plane.
     abstract left: float with get, set
     /// Camera frustum right plane.
@@ -587,7 +587,7 @@ type OrthographicCamera =
                             -> unit
 
     abstract clearViewOffset: unit -> unit
-    abstract toJSON: ?meta:obj -> obj option
+    abstract toJSON: ?meta:obj -> obj
 
 /// Camera with orthographic projection
 [<AllowNullLiteral>]
@@ -635,7 +635,7 @@ type PerspectiveCamera =
     /// Camera frustum far plane.
     abstract far: float with get, set
     abstract focus: float with get, set
-    abstract view: PerspectiveCameraView option with get, set
+    abstract view: PerspectiveCameraView with get, set
     abstract filmGauge: float with get, set
     abstract filmOffset: float with get, set
     abstract setFocalLength: focalLength:float -> unit
@@ -681,7 +681,7 @@ type PerspectiveCamera =
     abstract clearViewOffset: unit -> unit
     /// Updates the camera projection matrix. Must be called after change of parameters.
     abstract updateProjectionMatrix: unit -> unit
-    abstract toJSON: ?meta:obj -> obj option
+    abstract toJSON: ?meta:obj -> obj
     abstract setLens: focalLength:float * ?frameHeight:float -> unit
 
 /// Camera with perspective projection.
@@ -786,7 +786,7 @@ type Int8Attribute =
 [<AllowNullLiteral>]
 type Int8AttributeStatic =
     [<Emit "new $0($1...)">]
-    abstract Create: array:obj option * itemSize:float -> Int8Attribute
+    abstract Create: array:obj * itemSize:float -> Int8Attribute
 
 [<AllowNullLiteral>]
 type Uint8Attribute =
@@ -795,7 +795,7 @@ type Uint8Attribute =
 [<AllowNullLiteral>]
 type Uint8AttributeStatic =
     [<Emit "new $0($1...)">]
-    abstract Create: array:obj option * itemSize:float -> Uint8Attribute
+    abstract Create: array:obj * itemSize:float -> Uint8Attribute
 
 [<AllowNullLiteral>]
 type Uint8ClampedAttribute =
@@ -804,7 +804,7 @@ type Uint8ClampedAttribute =
 [<AllowNullLiteral>]
 type Uint8ClampedAttributeStatic =
     [<Emit "new $0($1...)">]
-    abstract Create: array:obj option * itemSize:float -> Uint8ClampedAttribute
+    abstract Create: array:obj * itemSize:float -> Uint8ClampedAttribute
 
 [<AllowNullLiteral>]
 type Int16Attribute =
@@ -813,7 +813,7 @@ type Int16Attribute =
 [<AllowNullLiteral>]
 type Int16AttributeStatic =
     [<Emit "new $0($1...)">]
-    abstract Create: array:obj option * itemSize:float -> Int16Attribute
+    abstract Create: array:obj * itemSize:float -> Int16Attribute
 
 [<AllowNullLiteral>]
 type Uint16Attribute =
@@ -822,7 +822,7 @@ type Uint16Attribute =
 [<AllowNullLiteral>]
 type Uint16AttributeStatic =
     [<Emit "new $0($1...)">]
-    abstract Create: array:obj option * itemSize:float -> Uint16Attribute
+    abstract Create: array:obj * itemSize:float -> Uint16Attribute
 
 [<AllowNullLiteral>]
 type Int32Attribute =
@@ -831,7 +831,7 @@ type Int32Attribute =
 [<AllowNullLiteral>]
 type Int32AttributeStatic =
     [<Emit "new $0($1...)">]
-    abstract Create: array:obj option * itemSize:float -> Int32Attribute
+    abstract Create: array:obj * itemSize:float -> Int32Attribute
 
 [<AllowNullLiteral>]
 type Uint32Attribute =
@@ -840,7 +840,7 @@ type Uint32Attribute =
 [<AllowNullLiteral>]
 type Uint32AttributeStatic =
     [<Emit "new $0($1...)">]
-    abstract Create: array:obj option * itemSize:float -> Uint32Attribute
+    abstract Create: array:obj * itemSize:float -> Uint32Attribute
 
 [<AllowNullLiteral>]
 type Float32Attribute =
@@ -849,7 +849,7 @@ type Float32Attribute =
 [<AllowNullLiteral>]
 type Float32AttributeStatic =
     [<Emit "new $0($1...)">]
-    abstract Create: array:obj option * itemSize:float -> Float32Attribute
+    abstract Create: array:obj * itemSize:float -> Float32Attribute
 
 [<AllowNullLiteral>]
 type Float64Attribute =
@@ -858,7 +858,7 @@ type Float64Attribute =
 [<AllowNullLiteral>]
 type Float64AttributeStatic =
     [<Emit "new $0($1...)">]
-    abstract Create: array:obj option * itemSize:float -> Float64Attribute
+    abstract Create: array:obj * itemSize:float -> Float64Attribute
 
 [<AllowNullLiteral>]
 type Int8BufferAttribute =
@@ -1020,13 +1020,13 @@ type BufferGeometry =
     abstract uuid: string with get, set
     abstract name: string with get, set
     abstract ``type``: string with get, set
-    abstract index: BufferAttribute option with get, set
+    abstract index: BufferAttribute with get, set
     abstract attributes: BufferGeometryAttributes with get, set
     abstract morphAttributes: BufferGeometryMorphAttributes with get, set
     abstract morphTargetsRelative: bool with get, set
     abstract groups: ResizeArray<BufferGeometryGroups> with get, set
-    abstract boundingBox: Box3 option with get, set
-    abstract boundingSphere: Sphere option with get, set
+    abstract boundingBox: Box3 with get, set
+    abstract boundingSphere: Sphere with get, set
     abstract drawRange: BufferGeometryDrawRange with get, set
     abstract userData: BufferGeometryUserData with get, set
     abstract isBufferGeometry: obj
@@ -1063,20 +1063,20 @@ type BufferGeometry =
     abstract merge: geometry:BufferGeometry * ?offset:float -> BufferGeometry
     abstract normalizeNormals: unit -> unit
     abstract toNonIndexed: unit -> BufferGeometry
-    abstract toJSON: unit -> obj option
+    abstract toJSON: unit -> obj
     abstract clone: unit -> BufferGeometry
     abstract copy: source:BufferGeometry -> BufferGeometry
     /// Disposes the object from memory.
     /// You need to call this when you want the bufferGeometry removed while the application is running.
     abstract dispose: unit -> unit
-    abstract drawcalls: obj option with get, set
-    abstract offsets: obj option with get, set
-    abstract addIndex: index:obj option -> unit
-    abstract addDrawCall: start:obj option * count:obj option * ?indexOffset:obj -> unit
+    abstract drawcalls: obj with get, set
+    abstract offsets: obj with get, set
+    abstract addIndex: index:obj -> unit
+    abstract addDrawCall: start:obj * count:obj * ?indexOffset:obj -> unit
     abstract clearDrawCalls: unit -> unit
     abstract addAttribute: name:string * attribute:U2<BufferAttribute, InterleavedBufferAttribute> -> BufferGeometry
     abstract removeAttribute: name:string -> BufferGeometry
-    abstract addAttribute: name:obj option * array:obj option * itemSize:obj option -> obj option
+    abstract addAttribute: name:obj * array:obj * itemSize:obj -> obj
 
 /// This is a superefficent class for geometries because it saves all data in buffers.
 /// It reduces memory costs and cpu cycles. But it is not as easy to work with because of all the necessary buffer calculations.
@@ -1103,7 +1103,7 @@ type BufferGeometryMorphAttributes =
 type BufferGeometryGroups =
     abstract start: float with get, set
     abstract count: float with get, set
-    abstract materialIndex: float option with get, set
+    abstract materialIndex: float with get, set
 
 [<AllowNullLiteral>]
 type BufferGeometryDrawRange =
@@ -1113,7 +1113,7 @@ type BufferGeometryDrawRange =
 [<AllowNullLiteral>]
 type BufferGeometryUserData =
     [<Emit "$0[$1]{{=$2}}">]
-    abstract Item: key:string -> obj option with get, set
+    abstract Item: key:string -> obj with get, set
 
 
 /// Object for keeping track of time.
@@ -1173,8 +1173,8 @@ type DirectGeometry =
     abstract morphTargets: ResizeArray<MorphTarget> with get, set
     abstract skinWeights: ResizeArray<Vector4> with get, set
     abstract skinIndices: ResizeArray<Vector4> with get, set
-    abstract boundingBox: Box3 option with get, set
-    abstract boundingSphere: Sphere option with get, set
+    abstract boundingBox: Box3 with get, set
+    abstract boundingSphere: Sphere with get, set
     abstract verticesNeedUpdate: bool with get, set
     abstract normalsNeedUpdate: bool with get, set
     abstract colorsNeedUpdate: bool with get, set
@@ -1201,10 +1201,10 @@ type DirectGeometryGroups =
 [<AllowNullLiteral>]
 type Event =
     abstract ``type``: string with get, set
-    abstract target: obj option with get, set
+    abstract target: obj with get, set
 
     [<Emit "$0[$1]{{=$2}}">]
-    abstract Item: attachment:string -> obj option with get, set
+    abstract Item: attachment:string -> obj with get, set
 
 /// JavaScript events for custom objects
 [<AllowNullLiteral>]
@@ -1229,7 +1229,7 @@ type EventDispatcherDispatchEventEvent =
     abstract ``type``: string with get, set
 
     [<Emit "$0[$1]{{=$2}}">]
-    abstract Item: attachment:string -> obj option with get, set
+    abstract Item: attachment:string -> obj with get, set
 
 /// JavaScript events for custom objects
 [<AllowNullLiteral>]
@@ -1377,9 +1377,9 @@ type Geometry =
     abstract skinIndices: ResizeArray<Vector4> with get, set
     abstract lineDistances: ResizeArray<float> with get, set
     /// Bounding box.
-    abstract boundingBox: Box3 option with get, set
+    abstract boundingBox: Box3 with get, set
     /// Bounding sphere.
-    abstract boundingSphere: Sphere option with get, set
+    abstract boundingSphere: Sphere with get, set
     /// Set to true if the vertices array has been updated.
     abstract verticesNeedUpdate: bool with get, set
     /// Set to true if the faces array has been updated.
@@ -1425,7 +1425,7 @@ type Geometry =
     abstract mergeVertices: unit -> float
     abstract setFromPoints: points:U2<Array<Vector2>, Array<Vector3>> -> Geometry
     abstract sortFacesByMaterialIndex: unit -> unit
-    abstract toJSON: unit -> obj option
+    abstract toJSON: unit -> obj
     /// Creates a new clone of the Geometry.
     abstract clone: unit -> Geometry
     abstract copy: source:Geometry -> Geometry
@@ -1462,8 +1462,8 @@ module GeometryUtils =
 
     [<AllowNullLiteral>]
     type IExports =
-        abstract merge: geometry1:obj option * geometry2:obj option * ?materialIndexOffset:obj -> obj option
-        abstract center: geometry:obj option -> obj option
+        abstract merge: geometry1:obj * geometry2:obj * ?materialIndexOffset:obj -> obj
+        abstract center: geometry:obj -> obj
 
 [<AllowNullLiteral>]
 type InstancedBufferAttribute =
@@ -1640,7 +1640,7 @@ type Object3D =
     abstract name: string with get, set
     abstract ``type``: string with get, set
     /// Object's parent in the scene graph.
-    abstract parent: Object3D option with get, set
+    abstract parent: Object3D with get, set
     /// Array with object's children.
     abstract children: ResizeArray<Object3D> with get, set
     /// Up direction.
@@ -1747,24 +1747,24 @@ type Object3D =
     abstract getWorldScale: target:Vector3 -> Vector3
     abstract getWorldDirection: target:Vector3 -> Vector3
     abstract raycast: raycaster:Raycaster * intersects:ResizeArray<Intersection> -> unit
-    abstract traverse: callback:(Object3D -> obj option) -> unit
-    abstract traverseVisible: callback:(Object3D -> obj option) -> unit
-    abstract traverseAncestors: callback:(Object3D -> obj option) -> unit
+    abstract traverse: callback:(Object3D -> obj) -> unit
+    abstract traverseVisible: callback:(Object3D -> obj) -> unit
+    abstract traverseAncestors: callback:(Object3D -> obj) -> unit
     /// Updates local transform.
     abstract updateMatrix: unit -> unit
     /// Updates global transform of the object and its children.
     abstract updateMatrixWorld: ?force:bool -> unit
     abstract updateWorldMatrix: updateParents:bool * updateChildren:bool -> unit
-    abstract toJSON: ?meta:Object3DToJSONMeta -> obj option
+    abstract toJSON: ?meta:Object3DToJSONMeta -> obj
     abstract clone: ?recursive:bool -> Object3D
     abstract copy: source:Object3D * ?recursive:bool -> Object3D
 
 [<AllowNullLiteral>]
 type Object3DToJSONMeta =
-    abstract geometries: obj option with get, set
-    abstract materials: obj option with get, set
-    abstract textures: obj option with get, set
-    abstract images: obj option with get, set
+    abstract geometries: obj with get, set
+    abstract materials: obj with get, set
+    abstract textures: obj with get, set
+    abstract images: obj with get, set
 
 /// Base class for scene graph objects
 [<AllowNullLiteral>]
@@ -1778,7 +1778,7 @@ type Object3DStatic =
 [<AllowNullLiteral>]
 type Object3DUserData =
     [<Emit "$0[$1]{{=$2}}">]
-    abstract Item: key:string -> obj option with get, set
+    abstract Item: key:string -> obj with get, set
 
 
 
@@ -1791,22 +1791,22 @@ type Object3DUserData =
 [<AllowNullLiteral>]
 type Intersection =
     abstract distance: float with get, set
-    abstract distanceToRay: float option with get, set
+    abstract distanceToRay: float with get, set
     abstract point: Vector3 with get, set
-    abstract index: float option with get, set
-    abstract face: Face3 option with get, set
-    abstract faceIndex: float option with get, set
+    abstract index: float with get, set
+    abstract face: Face3 with get, set
+    abstract faceIndex: float with get, set
     abstract object: Object3D with get, set
-    abstract uv: Vector2 option with get, set
-    abstract instanceId: float option with get, set
+    abstract uv: Vector2 with get, set
+    abstract instanceId: float with get, set
 
 [<AllowNullLiteral>]
 type RaycasterParameters =
-    abstract Mesh: obj option with get, set
-    abstract Line: RaycasterParametersLine option with get, set
-    abstract LOD: obj option with get, set
-    abstract Points: RaycasterParametersLine option with get, set
-    abstract Sprite: obj option with get, set
+    abstract Mesh: obj with get, set
+    abstract Line: RaycasterParametersLine with get, set
+    abstract LOD: obj with get, set
+    abstract Points: RaycasterParametersLine with get, set
+    abstract Sprite: obj with get, set
 
 [<AllowNullLiteral>]
 type Raycaster =
@@ -1872,7 +1872,7 @@ type RaycasterParametersLine =
 [<AllowNullLiteral>]
 type Uniform =
     abstract ``type``: string with get, set
-    abstract value: obj option with get, set
+    abstract value: obj with get, set
     abstract dynamic: bool with get, set
     abstract onUpdateCallback: Function with get, set
     abstract onUpdate: callback:Function -> Uniform
@@ -1880,10 +1880,10 @@ type Uniform =
 [<AllowNullLiteral>]
 type UniformStatic =
     [<Emit "new $0($1...)">]
-    abstract Create: value:obj option -> Uniform
+    abstract Create: value:obj -> Uniform
 
     [<Emit "new $0($1...)">]
-    abstract Create: ``type``:string * value:obj option -> Uniform
+    abstract Create: ``type``:string * value:obj -> Uniform
 
 
 [<Import("ImageUtils", "three")>]
@@ -1893,7 +1893,7 @@ module ImageUtils =
 
     [<AllowNullLiteral>]
     type IExports =
-        abstract getDataURL: image:obj option -> string
+        abstract getDataURL: image:obj -> string
         abstract crossOrigin: string
 
         abstract loadTexture: url:string
@@ -2175,16 +2175,16 @@ type EdgesGeometryStatic =
 
 [<AllowNullLiteral>]
 type ExtrudeGeometryOptions =
-    abstract curveSegments: float option with get, set
-    abstract steps: float option with get, set
-    abstract depth: float option with get, set
-    abstract bevelEnabled: bool option with get, set
-    abstract bevelThickness: float option with get, set
-    abstract bevelSize: float option with get, set
-    abstract bevelOffset: float option with get, set
-    abstract bevelSegments: float option with get, set
-    abstract extrudePath: Curve<Vector3> option with get, set
-    abstract UVGenerator: UVGenerator option with get, set
+    abstract curveSegments: float with get, set
+    abstract steps: float with get, set
+    abstract depth: float with get, set
+    abstract bevelEnabled: bool with get, set
+    abstract bevelThickness: float with get, set
+    abstract bevelSize: float with get, set
+    abstract bevelOffset: float with get, set
+    abstract bevelSegments: float with get, set
+    abstract extrudePath: Curve<Vector3> with get, set
+    abstract UVGenerator: UVGenerator with get, set
 
 [<AllowNullLiteral>]
 type UVGenerator =
@@ -2475,7 +2475,7 @@ type ShapeBufferGeometryStatic =
 [<AllowNullLiteral>]
 type ShapeGeometry =
     inherit Geometry
-    abstract addShapeList: shapes:ResizeArray<Shape> * options:obj option -> ShapeGeometry
+    abstract addShapeList: shapes:ResizeArray<Shape> * options:obj -> ShapeGeometry
     abstract addShape: shape:Shape * ?options:obj -> unit
 
 [<AllowNullLiteral>]
@@ -2571,14 +2571,14 @@ type TetrahedronGeometryStatic =
 [<AllowNullLiteral>]
 type TextGeometryParameters =
     abstract font: Font with get, set
-    abstract size: float option with get, set
-    abstract height: float option with get, set
-    abstract curveSegments: float option with get, set
-    abstract bevelEnabled: bool option with get, set
-    abstract bevelThickness: float option with get, set
-    abstract bevelSize: float option with get, set
-    abstract bevelOffset: float option with get, set
-    abstract bevelSegments: float option with get, set
+    abstract size: float with get, set
+    abstract height: float with get, set
+    abstract curveSegments: float with get, set
+    abstract bevelEnabled: bool with get, set
+    abstract bevelThickness: float with get, set
+    abstract bevelSize: float with get, set
+    abstract bevelOffset: float with get, set
+    abstract bevelSegments: float with get, set
 
 [<AllowNullLiteral>]
 type TextBufferGeometry =
@@ -2861,7 +2861,7 @@ type DirectionalLightHelper =
     abstract light: DirectionalLight with get, set
     abstract lightPlane: Line with get, set
     abstract targetLine: Line with get, set
-    abstract color: U3<Color, string, float> option with get, set
+    abstract color: U3<Color, string, float> with get, set
     /// Local transform.
     abstract matrix: Matrix4 with get, set
     /// When this is set, it calculates the matrix of position, (rotation or quaternion) and scale every frame and also recalculates the matrixWorld property.
@@ -2902,7 +2902,7 @@ type HemisphereLightHelper =
     /// When this is set, it calculates the matrix of position, (rotation or quaternion) and scale every frame and also recalculates the matrixWorld property.
     abstract matrixAutoUpdate: bool with get, set
     abstract material: MeshBasicMaterial with get, set
-    abstract color: U3<Color, string, float> option with get, set
+    abstract color: U3<Color, string, float> with get, set
     abstract dispose: unit -> unit
     abstract update: unit -> unit
 
@@ -2936,7 +2936,7 @@ type PlaneHelperStatic =
 type PointLightHelper =
     inherit Object3D
     abstract light: PointLight with get, set
-    abstract color: U3<Color, string, float> option with get, set
+    abstract color: U3<Color, string, float> with get, set
     /// Local transform.
     abstract matrix: Matrix4 with get, set
     /// When this is set, it calculates the matrix of position, (rotation or quaternion) and scale every frame and also recalculates the matrixWorld property.
@@ -2999,7 +2999,7 @@ type SpotLightHelper =
     abstract matrix: Matrix4 with get, set
     /// When this is set, it calculates the matrix of position, (rotation or quaternion) and scale every frame and also recalculates the matrixWorld property.
     abstract matrixAutoUpdate: bool with get, set
-    abstract color: U3<Color, string, float> option with get, set
+    abstract color: U3<Color, string, float> with get, set
     abstract cone: LineSegments with get, set
     abstract dispose: unit -> unit
     abstract update: unit -> unit
@@ -3125,16 +3125,16 @@ type Light =
     /// Material gets baked in shadow receiving.
     abstract receiveShadow: bool with get, set
     abstract shadow: LightShadow with get, set
-    abstract shadowCameraFov: obj option with get, set
-    abstract shadowCameraLeft: obj option with get, set
-    abstract shadowCameraRight: obj option with get, set
-    abstract shadowCameraTop: obj option with get, set
-    abstract shadowCameraBottom: obj option with get, set
-    abstract shadowCameraNear: obj option with get, set
-    abstract shadowCameraFar: obj option with get, set
-    abstract shadowBias: obj option with get, set
-    abstract shadowMapWidth: obj option with get, set
-    abstract shadowMapHeight: obj option with get, set
+    abstract shadowCameraFov: obj with get, set
+    abstract shadowCameraLeft: obj with get, set
+    abstract shadowCameraRight: obj with get, set
+    abstract shadowCameraTop: obj with get, set
+    abstract shadowCameraBottom: obj with get, set
+    abstract shadowCameraNear: obj with get, set
+    abstract shadowCameraFar: obj with get, set
+    abstract shadowBias: obj with get, set
+    abstract shadowMapWidth: obj with get, set
+    abstract shadowMapHeight: obj with get, set
 
 /// Abstract base class for lights.
 [<AllowNullLiteral>]
@@ -3178,7 +3178,7 @@ type LightShadow =
     abstract needsUpdate: bool with get, set
     abstract copy: source:LightShadow -> LightShadow
     abstract clone: ?recursive:bool -> LightShadow
-    abstract toJSON: unit -> obj option
+    abstract toJSON: unit -> obj
     abstract getFrustum: unit -> float
     abstract updateMatrices: light:Light * ?viewportIndex:float -> unit
     abstract getViewport: viewportIndex:float -> Vector4
@@ -3304,7 +3304,7 @@ type AnimationLoader =
                    * ?onError:(ErrorEvent -> unit)
                    -> unit
 
-    abstract parse: json:obj option -> ResizeArray<AnimationClip>
+    abstract parse: json:obj -> ResizeArray<AnimationClip>
 
 [<AllowNullLiteral>]
 type AnimationLoaderStatic =
@@ -3344,7 +3344,7 @@ type BufferGeometryLoader =
                    * ?onError:(ErrorEvent -> unit)
                    -> unit
 
-    abstract parse: json:obj option -> U2<InstancedBufferGeometry, BufferGeometry>
+    abstract parse: json:obj -> U2<InstancedBufferGeometry, BufferGeometry>
 
 [<AllowNullLiteral>]
 type BufferGeometryLoaderStatic =
@@ -3359,9 +3359,9 @@ module Cache =
     [<AllowNullLiteral>]
     type IExports =
         abstract enabled: bool
-        abstract files: obj option
-        abstract add: key:string * file:obj option -> unit
-        abstract get: key:string -> obj option
+        abstract files: obj
+        abstract add: key:string * file:obj -> unit
+        abstract get: key:string -> obj
         abstract remove: key:string -> unit
         abstract clear: unit -> unit
 
@@ -3428,15 +3428,15 @@ type MimeType = obj
 [<AllowNullLiteral>]
 type FileLoader =
     inherit Loader
-    abstract mimeType: MimeType option with get, set
-    abstract responseType: string option with get, set
-    abstract withCredentials: string option with get, set
+    abstract mimeType: MimeType with get, set
+    abstract responseType: string with get, set
+    abstract withCredentials: string with get, set
 
     abstract load: url:string
                    * ?onLoad:(U2<string, ArrayBuffer> -> unit)
                    * ?onProgress:(ProgressEvent -> unit)
                    * ?onError:(ErrorEvent -> unit)
-                   -> obj option
+                   -> obj
 
     abstract setMimeType: mimeType:MimeType -> FileLoader
     abstract setResponseType: responseType:string -> FileLoader
@@ -3461,7 +3461,7 @@ type FontLoader =
                    * ?onError:(ErrorEvent -> unit)
                    -> unit
 
-    abstract parse: json:obj option -> Font
+    abstract parse: json:obj -> Font
 
 [<AllowNullLiteral>]
 type FontLoaderStatic =
@@ -3475,7 +3475,7 @@ type ImageBitmap = obj
 [<AllowNullLiteral>]
 type ImageBitmapLoader =
     inherit Loader
-    abstract options: obj option with get, set
+    abstract options: obj with get, set
     abstract isImageBitmapLoader: obj
     abstract setOptions: options:obj -> ImageBitmapLoader
 
@@ -3483,7 +3483,7 @@ type ImageBitmapLoader =
                    * ?onLoad:(ImageBitmap -> unit)
                    * ?onProgress:(ProgressEvent -> unit)
                    * ?onError:(ErrorEvent -> unit)
-                   -> obj option
+                   -> obj
 
 [<AllowNullLiteral>]
 type ImageBitmapLoaderStatic =
@@ -3522,7 +3522,7 @@ type Loader =
     abstract resourcePath: string with get, set
     abstract manager: LoadingManager with get, set
     abstract requestHeader: LoaderRequestHeader with get, set
-    abstract loadAsync: url:string * ?onProgress:(ProgressEvent -> unit) -> Promise<obj option>
+    abstract loadAsync: url:string * ?onProgress:(ProgressEvent -> unit) -> Promise<obj>
     abstract setCrossOrigin: crossOrigin:string -> Loader
     abstract setPath: path:string -> Loader
     abstract setResourcePath: resourcePath:string -> Loader
@@ -3567,7 +3567,7 @@ let DefaultLoadingManager: LoadingManager = jsNative
 [<AllowNullLiteral>]
 type LoadingManager =
     /// Will be called when loading of an item starts.
-    abstract onStart: (string -> float -> float -> unit) option with get, set
+    abstract onStart: (string -> float -> float -> unit) with get, set
     /// Will be called when all items finish loading.
     /// The default is a function with empty body.
     abstract onLoad: (unit -> unit) with get, set
@@ -3619,7 +3619,7 @@ type MaterialLoader =
                    -> unit
 
     abstract setTextures: textures:MaterialLoaderSetTexturesTextures -> MaterialLoader
-    abstract parse: json:obj option -> Material
+    abstract parse: json:obj -> Material
 
 [<AllowNullLiteral>]
 type MaterialLoaderSetTexturesTextures =
@@ -3653,13 +3653,13 @@ type ObjectLoader =
                    * ?onError:(U2<Error, ErrorEvent> -> unit)
                    -> unit
 
-    abstract parse: json:obj option * ?onLoad:(Object3D -> unit) -> 'T
-    abstract parseGeometries: json:obj option -> ResizeArray<obj option>
-    abstract parseMaterials: json:obj option * textures:ResizeArray<Texture> -> ResizeArray<Material>
-    abstract parseAnimations: json:obj option -> ResizeArray<AnimationClip>
-    abstract parseImages: json:obj option * onLoad:(unit -> unit) -> ObjectLoaderParseImagesReturn
-    abstract parseTextures: json:obj option * images:obj option -> ResizeArray<Texture>
-    abstract parseObject: data:obj option * geometries:ResizeArray<obj option> * materials:ResizeArray<Material> -> 'T
+    abstract parse: json:obj * ?onLoad:(Object3D -> unit) -> 'T
+    abstract parseGeometries: json:obj -> ResizeArray<obj>
+    abstract parseMaterials: json:obj * textures:ResizeArray<Texture> -> ResizeArray<Material>
+    abstract parseAnimations: json:obj -> ResizeArray<AnimationClip>
+    abstract parseImages: json:obj * onLoad:(unit -> unit) -> ObjectLoaderParseImagesReturn
+    abstract parseTextures: json:obj * images:obj -> ResizeArray<Texture>
+    abstract parseObject: data:obj * geometries:ResizeArray<obj> * materials:ResizeArray<Material> -> 'T
 
 [<AllowNullLiteral>]
 type ObjectLoaderParseImagesReturn =
@@ -3701,11 +3701,11 @@ type TextureLoaderStatic =
 [<AllowNullLiteral>]
 type LineBasicMaterialParameters =
     inherit MaterialParameters
-    abstract color: U3<Color, string, float> option with get, set
-    abstract linewidth: float option with get, set
-    abstract linecap: string option with get, set
-    abstract linejoin: string option with get, set
-    abstract morphTargets: bool option with get, set
+    abstract color: U3<Color, string, float> with get, set
+    abstract linewidth: float with get, set
+    abstract linecap: string with get, set
+    abstract linejoin: string with get, set
+    abstract morphTargets: bool with get, set
 
 [<AllowNullLiteral>]
 type LineBasicMaterial =
@@ -3729,9 +3729,9 @@ type LineBasicMaterialStatic =
 [<AllowNullLiteral>]
 type LineDashedMaterialParameters =
     inherit LineBasicMaterialParameters
-    abstract scale: float option with get, set
-    abstract dashSize: float option with get, set
-    abstract gapSize: float option with get, set
+    abstract scale: float with get, set
+    abstract dashSize: float with get, set
+    abstract gapSize: float with get, set
 
 [<AllowNullLiteral>]
 type LineDashedMaterial =
@@ -3765,45 +3765,45 @@ let MaterialIdCount: float = jsNative
 
 [<AllowNullLiteral>]
 type MaterialParameters =
-    abstract alphaTest: float option with get, set
-    abstract blendDst: BlendingDstFactor option with get, set
-    abstract blendDstAlpha: float option with get, set
-    abstract blendEquation: BlendingEquation option with get, set
-    abstract blendEquationAlpha: float option with get, set
-    abstract blending: Blending option with get, set
-    abstract blendSrc: U2<BlendingSrcFactor, BlendingDstFactor> option with get, set
-    abstract blendSrcAlpha: float option with get, set
-    abstract clipIntersection: bool option with get, set
-    abstract clippingPlanes: ResizeArray<Plane> option with get, set
-    abstract clipShadows: bool option with get, set
-    abstract colorWrite: bool option with get, set
-    abstract defines: obj option with get, set
-    abstract depthFunc: DepthModes option with get, set
-    abstract depthTest: bool option with get, set
-    abstract depthWrite: bool option with get, set
-    abstract fog: bool option with get, set
-    abstract name: string option with get, set
-    abstract opacity: float option with get, set
-    abstract polygonOffset: bool option with get, set
-    abstract polygonOffsetFactor: float option with get, set
-    abstract polygonOffsetUnits: float option with get, set
-    abstract precision: MaterialParametersPrecision option with get, set
-    abstract premultipliedAlpha: bool option with get, set
-    abstract dithering: bool option with get, set
-    abstract flatShading: bool option with get, set
-    abstract side: Side option with get, set
-    abstract shadowSide: Side option with get, set
-    abstract toneMapped: bool option with get, set
-    abstract transparent: bool option with get, set
-    abstract vertexColors: bool option with get, set
-    abstract visible: bool option with get, set
-    abstract stencilWrite: bool option with get, set
-    abstract stencilFunc: StencilFunc option with get, set
-    abstract stencilRef: float option with get, set
-    abstract stencilMask: float option with get, set
-    abstract stencilFail: StencilOp option with get, set
-    abstract stencilZFail: StencilOp option with get, set
-    abstract stencilZPass: StencilOp option with get, set
+    abstract alphaTest: float with get, set
+    abstract blendDst: BlendingDstFactor with get, set
+    abstract blendDstAlpha: float with get, set
+    abstract blendEquation: BlendingEquation with get, set
+    abstract blendEquationAlpha: float with get, set
+    abstract blending: Blending with get, set
+    abstract blendSrc: U2<BlendingSrcFactor, BlendingDstFactor> with get, set
+    abstract blendSrcAlpha: float with get, set
+    abstract clipIntersection: bool with get, set
+    abstract clippingPlanes: ResizeArray<Plane> with get, set
+    abstract clipShadows: bool with get, set
+    abstract colorWrite: bool with get, set
+    abstract defines: obj with get, set
+    abstract depthFunc: DepthModes with get, set
+    abstract depthTest: bool with get, set
+    abstract depthWrite: bool with get, set
+    abstract fog: bool with get, set
+    abstract name: string with get, set
+    abstract opacity: float with get, set
+    abstract polygonOffset: bool with get, set
+    abstract polygonOffsetFactor: float with get, set
+    abstract polygonOffsetUnits: float with get, set
+    abstract precision: MaterialParametersPrecision with get, set
+    abstract premultipliedAlpha: bool with get, set
+    abstract dithering: bool with get, set
+    abstract flatShading: bool with get, set
+    abstract side: Side with get, set
+    abstract shadowSide: Side with get, set
+    abstract toneMapped: bool with get, set
+    abstract transparent: bool with get, set
+    abstract vertexColors: bool with get, set
+    abstract visible: bool with get, set
+    abstract stencilWrite: bool with get, set
+    abstract stencilFunc: StencilFunc with get, set
+    abstract stencilRef: float with get, set
+    abstract stencilMask: float with get, set
+    abstract stencilFail: StencilOp with get, set
+    abstract stencilZFail: StencilOp with get, set
+    abstract stencilZPass: StencilOp with get, set
 
 type Shader = obj
 /// Materials describe the appearance of objects. They are defined in a (mostly) renderer-independent way, so you don't have to rewrite materials if you decide to use a different renderer.
@@ -3815,28 +3815,28 @@ type Material =
     /// Blending destination. It's one of the blending mode constants defined in Three.js. Default is {@link OneMinusSrcAlphaFactor}.
     abstract blendDst: BlendingDstFactor with get, set
     /// The tranparency of the .blendDst. Default is null.
-    abstract blendDstAlpha: float option with get, set
+    abstract blendDstAlpha: float with get, set
     /// Blending equation to use when applying blending. It's one of the constants defined in Three.js. Default is {@link AddEquation}.
     abstract blendEquation: BlendingEquation with get, set
     /// The tranparency of the .blendEquation. Default is null.
-    abstract blendEquationAlpha: float option with get, set
+    abstract blendEquationAlpha: float with get, set
     /// Which blending to use when displaying objects with this material. Default is {@link NormalBlending}.
     abstract blending: Blending with get, set
     /// Blending source. It's one of the blending mode constants defined in Three.js. Default is {@link SrcAlphaFactor}.
     abstract blendSrc: U2<BlendingSrcFactor, BlendingDstFactor> with get, set
     /// The tranparency of the .blendSrc. Default is null.
-    abstract blendSrcAlpha: float option with get, set
+    abstract blendSrcAlpha: float with get, set
     /// Changes the behavior of clipping planes so that only their intersection is clipped, rather than their union. Default is false.
     abstract clipIntersection: bool with get, set
     /// User-defined clipping planes specified as THREE.Plane objects in world space. These planes apply to the objects this material is attached to. Points in space whose signed distance to the plane is negative are clipped (not rendered). See the WebGL / clipping /intersection example. Default is null.
-    abstract clippingPlanes: obj option with get, set
+    abstract clippingPlanes: obj with get, set
     /// Defines whether to clip shadows according to the clipping planes specified on this material. Default is false.
     abstract clipShadows: bool with get, set
     /// Whether to render the material's color. This can be used in conjunction with a mesh's .renderOrder property to create invisible objects that occlude other objects. Default is true.
     abstract colorWrite: bool with get, set
     /// Custom defines to be injected into the shader. These are passed in form of an object literal, with key/value pairs. { MY_CUSTOM_DEFINE: '' , PI2: Math.PI * 2 }.
     /// The pairs are defined in both vertex and fragment shaders. Default is undefined.
-    abstract defines: obj option with get, set
+    abstract defines: obj with get, set
     /// Which depth function to use. Default is {@link LessEqualDepth}. See the depth mode constants for all possible values.
     abstract depthFunc: DepthModes with get, set
     /// Whether to have depth test enabled when rendering this material. Default is true.
@@ -3908,7 +3908,7 @@ type Material =
     /// Defines whether this material is visible. Default is true.
     abstract visible: bool with get, set
     /// An object that can be used to store custom data about the Material. It should not hold references to functions as these will not be cloned.
-    abstract userData: obj option with get, set
+    abstract userData: obj with get, set
     /// This starts at 0 and counts how many times .needsUpdate is set to true.
     abstract version: float with get, set
     /// Return a new material with the same parameters as this material.
@@ -3928,7 +3928,7 @@ type Material =
     abstract setValues: values:MaterialParameters -> unit
     /// <summary>Convert the material to three.js JSON format.</summary>
     /// <param name="meta">Object containing metadata such as textures or images for the material.</param>
-    abstract toJSON: ?meta:obj -> obj option
+    abstract toJSON: ?meta:obj -> obj
 
 /// Materials describe the appearance of objects. They are defined in a (mostly) renderer-independent way, so you don't have to rewrite materials if you decide to use a different renderer.
 [<AllowNullLiteral>]
@@ -3953,34 +3953,34 @@ type MaterialParametersPrecision =
 [<AllowNullLiteral>]
 type MeshBasicMaterialParameters =
     inherit MaterialParameters
-    abstract color: U3<Color, string, float> option with get, set
-    abstract opacity: float option with get, set
-    abstract map: Texture option with get, set
-    abstract aoMap: Texture option with get, set
-    abstract aoMapIntensity: float option with get, set
-    abstract specularMap: Texture option with get, set
-    abstract alphaMap: Texture option with get, set
-    abstract envMap: Texture option with get, set
-    abstract combine: Combine option with get, set
-    abstract reflectivity: float option with get, set
-    abstract refractionRatio: float option with get, set
-    abstract wireframe: bool option with get, set
-    abstract wireframeLinewidth: float option with get, set
-    abstract wireframeLinecap: string option with get, set
-    abstract wireframeLinejoin: string option with get, set
-    abstract skinning: bool option with get, set
-    abstract morphTargets: bool option with get, set
+    abstract color: U3<Color, string, float> with get, set
+    abstract opacity: float with get, set
+    abstract map: Texture with get, set
+    abstract aoMap: Texture with get, set
+    abstract aoMapIntensity: float with get, set
+    abstract specularMap: Texture with get, set
+    abstract alphaMap: Texture with get, set
+    abstract envMap: Texture with get, set
+    abstract combine: Combine with get, set
+    abstract reflectivity: float with get, set
+    abstract refractionRatio: float with get, set
+    abstract wireframe: bool with get, set
+    abstract wireframeLinewidth: float with get, set
+    abstract wireframeLinecap: string with get, set
+    abstract wireframeLinejoin: string with get, set
+    abstract skinning: bool with get, set
+    abstract morphTargets: bool with get, set
 
 [<AllowNullLiteral>]
 type MeshBasicMaterial =
     inherit Material
     abstract color: Color with get, set
-    abstract map: Texture option with get, set
-    abstract aoMap: Texture option with get, set
+    abstract map: Texture with get, set
+    abstract aoMap: Texture with get, set
     abstract aoMapIntensity: float with get, set
-    abstract specularMap: Texture option with get, set
-    abstract alphaMap: Texture option with get, set
-    abstract envMap: Texture option with get, set
+    abstract specularMap: Texture with get, set
+    abstract alphaMap: Texture with get, set
+    abstract envMap: Texture with get, set
     abstract combine: Combine with get, set
     abstract reflectivity: float with get, set
     abstract refractionRatio: float with get, set
@@ -4006,22 +4006,22 @@ type MeshBasicMaterialStatic =
 [<AllowNullLiteral>]
 type MeshDepthMaterialParameters =
     inherit MaterialParameters
-    abstract map: Texture option with get, set
-    abstract alphaMap: Texture option with get, set
-    abstract depthPacking: DepthPackingStrategies option with get, set
-    abstract displacementMap: Texture option with get, set
-    abstract displacementScale: float option with get, set
-    abstract displacementBias: float option with get, set
-    abstract wireframe: bool option with get, set
-    abstract wireframeLinewidth: float option with get, set
+    abstract map: Texture with get, set
+    abstract alphaMap: Texture with get, set
+    abstract depthPacking: DepthPackingStrategies with get, set
+    abstract displacementMap: Texture with get, set
+    abstract displacementScale: float with get, set
+    abstract displacementBias: float with get, set
+    abstract wireframe: bool with get, set
+    abstract wireframeLinewidth: float with get, set
 
 [<AllowNullLiteral>]
 type MeshDepthMaterial =
     inherit Material
-    abstract map: Texture option with get, set
-    abstract alphaMap: Texture option with get, set
+    abstract map: Texture with get, set
+    abstract alphaMap: Texture with get, set
     abstract depthPacking: DepthPackingStrategies with get, set
-    abstract displacementMap: Texture option with get, set
+    abstract displacementMap: Texture with get, set
     abstract displacementScale: float with get, set
     abstract displacementBias: float with get, set
     abstract wireframe: bool with get, set
@@ -4042,21 +4042,21 @@ type MeshDepthMaterialStatic =
 [<AllowNullLiteral>]
 type MeshDistanceMaterialParameters =
     inherit MaterialParameters
-    abstract map: Texture option with get, set
-    abstract alphaMap: Texture option with get, set
-    abstract displacementMap: Texture option with get, set
-    abstract displacementScale: float option with get, set
-    abstract displacementBias: float option with get, set
-    abstract farDistance: float option with get, set
-    abstract nearDistance: float option with get, set
-    abstract referencePosition: Vector3 option with get, set
+    abstract map: Texture with get, set
+    abstract alphaMap: Texture with get, set
+    abstract displacementMap: Texture with get, set
+    abstract displacementScale: float with get, set
+    abstract displacementBias: float with get, set
+    abstract farDistance: float with get, set
+    abstract nearDistance: float with get, set
+    abstract referencePosition: Vector3 with get, set
 
 [<AllowNullLiteral>]
 type MeshDistanceMaterial =
     inherit Material
-    abstract map: Texture option with get, set
-    abstract alphaMap: Texture option with get, set
-    abstract displacementMap: Texture option with get, set
+    abstract map: Texture with get, set
+    abstract alphaMap: Texture with get, set
+    abstract displacementMap: Texture with get, set
     abstract displacementScale: float with get, set
     abstract displacementBias: float with get, set
     abstract farDistance: float with get, set
@@ -4074,28 +4074,28 @@ type MeshDistanceMaterialStatic =
 [<AllowNullLiteral>]
 type MeshLambertMaterialParameters =
     inherit MaterialParameters
-    abstract color: U3<Color, string, float> option with get, set
-    abstract emissive: U3<Color, string, float> option with get, set
-    abstract emissiveIntensity: float option with get, set
-    abstract emissiveMap: Texture option with get, set
-    abstract map: Texture option with get, set
-    abstract lightMap: Texture option with get, set
-    abstract lightMapIntensity: float option with get, set
-    abstract aoMap: Texture option with get, set
-    abstract aoMapIntensity: float option with get, set
-    abstract specularMap: Texture option with get, set
-    abstract alphaMap: Texture option with get, set
-    abstract envMap: Texture option with get, set
-    abstract combine: Combine option with get, set
-    abstract reflectivity: float option with get, set
-    abstract refractionRatio: float option with get, set
-    abstract wireframe: bool option with get, set
-    abstract wireframeLinewidth: float option with get, set
-    abstract wireframeLinecap: string option with get, set
-    abstract wireframeLinejoin: string option with get, set
-    abstract skinning: bool option with get, set
-    abstract morphTargets: bool option with get, set
-    abstract morphNormals: bool option with get, set
+    abstract color: U3<Color, string, float> with get, set
+    abstract emissive: U3<Color, string, float> with get, set
+    abstract emissiveIntensity: float with get, set
+    abstract emissiveMap: Texture with get, set
+    abstract map: Texture with get, set
+    abstract lightMap: Texture with get, set
+    abstract lightMapIntensity: float with get, set
+    abstract aoMap: Texture with get, set
+    abstract aoMapIntensity: float with get, set
+    abstract specularMap: Texture with get, set
+    abstract alphaMap: Texture with get, set
+    abstract envMap: Texture with get, set
+    abstract combine: Combine with get, set
+    abstract reflectivity: float with get, set
+    abstract refractionRatio: float with get, set
+    abstract wireframe: bool with get, set
+    abstract wireframeLinewidth: float with get, set
+    abstract wireframeLinecap: string with get, set
+    abstract wireframeLinejoin: string with get, set
+    abstract skinning: bool with get, set
+    abstract morphTargets: bool with get, set
+    abstract morphNormals: bool with get, set
 
 
 [<AllowNullLiteral>]
@@ -4104,15 +4104,15 @@ type MeshLambertMaterial =
     abstract color: Color with get, set
     abstract emissive: Color with get, set
     abstract emissiveIntensity: float with get, set
-    abstract emissiveMap: Texture option with get, set
-    abstract map: Texture option with get, set
-    abstract lightMap: Texture option with get, set
+    abstract emissiveMap: Texture with get, set
+    abstract map: Texture with get, set
+    abstract lightMap: Texture with get, set
     abstract lightMapIntensity: float with get, set
-    abstract aoMap: Texture option with get, set
+    abstract aoMap: Texture with get, set
     abstract aoMapIntensity: float with get, set
-    abstract specularMap: Texture option with get, set
-    abstract alphaMap: Texture option with get, set
-    abstract envMap: Texture option with get, set
+    abstract specularMap: Texture with get, set
+    abstract alphaMap: Texture with get, set
+    abstract envMap: Texture with get, set
     abstract combine: Combine with get, set
     abstract reflectivity: float with get, set
     abstract refractionRatio: float with get, set
@@ -4141,37 +4141,37 @@ type MeshLambertMaterialStatic =
 [<AllowNullLiteral>]
 type MeshMatcapMaterialParameters =
     inherit MaterialParameters
-    abstract color: U3<Color, string, float> option with get, set
-    abstract matcap: Texture option with get, set
-    abstract map: Texture option with get, set
-    abstract bumpMap: Texture option with get, set
-    abstract bumpScale: float option with get, set
-    abstract normalMap: Texture option with get, set
-    abstract normalMapType: NormalMapTypes option with get, set
-    abstract normalScale: Vector2 option with get, set
-    abstract displacementMap: Texture option with get, set
-    abstract displacementScale: float option with get, set
-    abstract displacementBias: float option with get, set
-    abstract alphaMap: Texture option with get, set
-    abstract skinning: bool option with get, set
-    abstract morphTargets: bool option with get, set
-    abstract morphNormals: bool option with get, set
+    abstract color: U3<Color, string, float> with get, set
+    abstract matcap: Texture with get, set
+    abstract map: Texture with get, set
+    abstract bumpMap: Texture with get, set
+    abstract bumpScale: float with get, set
+    abstract normalMap: Texture with get, set
+    abstract normalMapType: NormalMapTypes with get, set
+    abstract normalScale: Vector2 with get, set
+    abstract displacementMap: Texture with get, set
+    abstract displacementScale: float with get, set
+    abstract displacementBias: float with get, set
+    abstract alphaMap: Texture with get, set
+    abstract skinning: bool with get, set
+    abstract morphTargets: bool with get, set
+    abstract morphNormals: bool with get, set
 
 [<AllowNullLiteral>]
 type MeshMatcapMaterial =
     inherit Material
     abstract color: Color with get, set
-    abstract matcap: Texture option with get, set
-    abstract map: Texture option with get, set
-    abstract bumpMap: Texture option with get, set
+    abstract matcap: Texture with get, set
+    abstract map: Texture with get, set
+    abstract bumpMap: Texture with get, set
     abstract bumpScale: float with get, set
-    abstract normalMap: Texture option with get, set
+    abstract normalMap: Texture with get, set
     abstract normalMapType: NormalMapTypes with get, set
     abstract normalScale: Vector2 with get, set
-    abstract displacementMap: Texture option with get, set
+    abstract displacementMap: Texture with get, set
     abstract displacementScale: float with get, set
     abstract displacementBias: float with get, set
-    abstract alphaMap: Texture option with get, set
+    abstract alphaMap: Texture with get, set
     abstract skinning: bool with get, set
     abstract morphTargets: bool with get, set
     abstract morphNormals: bool with get, set
@@ -4192,29 +4192,29 @@ type MeshMatcapMaterialStatic =
 [<AllowNullLiteral>]
 type MeshNormalMaterialParameters =
     inherit MaterialParameters
-    abstract bumpMap: Texture option with get, set
-    abstract bumpScale: float option with get, set
-    abstract normalMap: Texture option with get, set
-    abstract normalMapType: NormalMapTypes option with get, set
-    abstract normalScale: Vector2 option with get, set
-    abstract displacementMap: Texture option with get, set
-    abstract displacementScale: float option with get, set
-    abstract displacementBias: float option with get, set
-    abstract wireframe: bool option with get, set
-    abstract wireframeLinewidth: float option with get, set
-    abstract skinning: bool option with get, set
-    abstract morphTargets: bool option with get, set
-    abstract morphNormals: bool option with get, set
+    abstract bumpMap: Texture with get, set
+    abstract bumpScale: float with get, set
+    abstract normalMap: Texture with get, set
+    abstract normalMapType: NormalMapTypes with get, set
+    abstract normalScale: Vector2 with get, set
+    abstract displacementMap: Texture with get, set
+    abstract displacementScale: float with get, set
+    abstract displacementBias: float with get, set
+    abstract wireframe: bool with get, set
+    abstract wireframeLinewidth: float with get, set
+    abstract skinning: bool with get, set
+    abstract morphTargets: bool with get, set
+    abstract morphNormals: bool with get, set
 
 [<AllowNullLiteral>]
 type MeshNormalMaterial =
     inherit Material
-    abstract bumpMap: Texture option with get, set
+    abstract bumpMap: Texture with get, set
     abstract bumpScale: float with get, set
-    abstract normalMap: Texture option with get, set
+    abstract normalMap: Texture with get, set
     abstract normalMapType: NormalMapTypes with get, set
     abstract normalScale: Vector2 with get, set
-    abstract displacementMap: Texture option with get, set
+    abstract displacementMap: Texture with get, set
     abstract displacementScale: float with get, set
     abstract displacementBias: float with get, set
     abstract wireframe: bool with get, set
@@ -4242,39 +4242,39 @@ type MeshNormalMaterialStatic =
 type MeshPhongMaterialParameters =
     inherit MaterialParameters
     /// geometry color in hexadecimal. Default is 0xffffff.
-    abstract color: U3<Color, string, float> option with get, set
-    abstract specular: U3<Color, string, float> option with get, set
-    abstract shininess: float option with get, set
-    abstract opacity: float option with get, set
-    abstract map: Texture option with get, set
-    abstract lightMap: Texture option with get, set
-    abstract lightMapIntensity: float option with get, set
-    abstract aoMap: Texture option with get, set
-    abstract aoMapIntensity: float option with get, set
-    abstract emissive: U3<Color, string, float> option with get, set
-    abstract emissiveIntensity: float option with get, set
-    abstract emissiveMap: Texture option with get, set
-    abstract bumpMap: Texture option with get, set
-    abstract bumpScale: float option with get, set
-    abstract normalMap: Texture option with get, set
-    abstract normalMapType: NormalMapTypes option with get, set
-    abstract normalScale: Vector2 option with get, set
-    abstract displacementMap: Texture option with get, set
-    abstract displacementScale: float option with get, set
-    abstract displacementBias: float option with get, set
-    abstract specularMap: Texture option with get, set
-    abstract alphaMap: Texture option with get, set
-    abstract envMap: Texture option with get, set
-    abstract combine: Combine option with get, set
-    abstract reflectivity: float option with get, set
-    abstract refractionRatio: float option with get, set
-    abstract wireframe: bool option with get, set
-    abstract wireframeLinewidth: float option with get, set
-    abstract wireframeLinecap: string option with get, set
-    abstract wireframeLinejoin: string option with get, set
-    abstract skinning: bool option with get, set
-    abstract morphTargets: bool option with get, set
-    abstract morphNormals: bool option with get, set
+    abstract color: U3<Color, string, float> with get, set
+    abstract specular: U3<Color, string, float> with get, set
+    abstract shininess: float with get, set
+    abstract opacity: float with get, set
+    abstract map: Texture with get, set
+    abstract lightMap: Texture with get, set
+    abstract lightMapIntensity: float with get, set
+    abstract aoMap: Texture with get, set
+    abstract aoMapIntensity: float with get, set
+    abstract emissive: U3<Color, string, float> with get, set
+    abstract emissiveIntensity: float with get, set
+    abstract emissiveMap: Texture with get, set
+    abstract bumpMap: Texture with get, set
+    abstract bumpScale: float with get, set
+    abstract normalMap: Texture with get, set
+    abstract normalMapType: NormalMapTypes with get, set
+    abstract normalScale: Vector2 with get, set
+    abstract displacementMap: Texture with get, set
+    abstract displacementScale: float with get, set
+    abstract displacementBias: float with get, set
+    abstract specularMap: Texture with get, set
+    abstract alphaMap: Texture with get, set
+    abstract envMap: Texture with get, set
+    abstract combine: Combine with get, set
+    abstract reflectivity: float with get, set
+    abstract refractionRatio: float with get, set
+    abstract wireframe: bool with get, set
+    abstract wireframeLinewidth: float with get, set
+    abstract wireframeLinecap: string with get, set
+    abstract wireframeLinejoin: string with get, set
+    abstract skinning: bool with get, set
+    abstract morphTargets: bool with get, set
+    abstract morphNormals: bool with get, set
 
 [<AllowNullLiteral>]
 type MeshPhongMaterial =
@@ -4282,25 +4282,25 @@ type MeshPhongMaterial =
     abstract color: Color with get, set
     abstract specular: Color with get, set
     abstract shininess: float with get, set
-    abstract map: Texture option with get, set
-    abstract lightMap: Texture option with get, set
+    abstract map: Texture with get, set
+    abstract lightMap: Texture with get, set
     abstract lightMapIntensity: float with get, set
-    abstract aoMap: Texture option with get, set
+    abstract aoMap: Texture with get, set
     abstract aoMapIntensity: float with get, set
     abstract emissive: Color with get, set
     abstract emissiveIntensity: float with get, set
-    abstract emissiveMap: Texture option with get, set
-    abstract bumpMap: Texture option with get, set
+    abstract emissiveMap: Texture with get, set
+    abstract bumpMap: Texture with get, set
     abstract bumpScale: float with get, set
-    abstract normalMap: Texture option with get, set
+    abstract normalMap: Texture with get, set
     abstract normalMapType: NormalMapTypes with get, set
     abstract normalScale: Vector2 with get, set
-    abstract displacementMap: Texture option with get, set
+    abstract displacementMap: Texture with get, set
     abstract displacementScale: float with get, set
     abstract displacementBias: float with get, set
-    abstract specularMap: Texture option with get, set
-    abstract alphaMap: Texture option with get, set
-    abstract envMap: Texture option with get, set
+    abstract specularMap: Texture with get, set
+    abstract alphaMap: Texture with get, set
+    abstract envMap: Texture with get, set
     abstract combine: Combine with get, set
     abstract reflectivity: float with get, set
     abstract refractionRatio: float with get, set
@@ -4329,24 +4329,24 @@ type MeshPhongMaterialStatic =
 [<AllowNullLiteral>]
 type MeshPhysicalMaterialParameters =
     inherit MeshStandardMaterialParameters
-    abstract reflectivity: float option with get, set
-    abstract clearcoat: float option with get, set
-    abstract clearcoatRoughness: float option with get, set
-    abstract sheen: Color option with get, set
-    abstract clearcoatNormalScale: Vector2 option with get, set
-    abstract clearcoatNormalMap: Texture option with get, set
+    abstract reflectivity: float with get, set
+    abstract clearcoat: float with get, set
+    abstract clearcoatRoughness: float with get, set
+    abstract sheen: Color with get, set
+    abstract clearcoatNormalScale: Vector2 with get, set
+    abstract clearcoatNormalMap: Texture with get, set
 
 [<AllowNullLiteral>]
 type MeshPhysicalMaterial =
     inherit MeshStandardMaterial
     abstract clearcoat: float with get, set
-    abstract clearcoatMap: Texture option with get, set
+    abstract clearcoatMap: Texture with get, set
     abstract clearcoatRoughness: float with get, set
-    abstract clearcoatRoughnessMap: Texture option with get, set
+    abstract clearcoatRoughnessMap: Texture with get, set
     abstract clearcoatNormalScale: Vector2 with get, set
-    abstract clearcoatNormalMap: Texture option with get, set
+    abstract clearcoatNormalMap: Texture with get, set
     abstract reflectivity: float with get, set
-    abstract sheen: Color option with get, set
+    abstract sheen: Color with get, set
     abstract transparency: float with get, set
 
 [<AllowNullLiteral>]
@@ -4364,37 +4364,37 @@ type MeshPhysicalMaterialStatic =
 [<AllowNullLiteral>]
 type MeshStandardMaterialParameters =
     inherit MaterialParameters
-    abstract color: U3<Color, string, float> option with get, set
-    abstract roughness: float option with get, set
-    abstract metalness: float option with get, set
-    abstract map: Texture option with get, set
-    abstract lightMap: Texture option with get, set
-    abstract lightMapIntensity: float option with get, set
-    abstract aoMap: Texture option with get, set
-    abstract aoMapIntensity: float option with get, set
-    abstract emissive: U3<Color, string, float> option with get, set
-    abstract emissiveIntensity: float option with get, set
-    abstract emissiveMap: Texture option with get, set
-    abstract bumpMap: Texture option with get, set
-    abstract bumpScale: float option with get, set
-    abstract normalMap: Texture option with get, set
-    abstract normalMapType: NormalMapTypes option with get, set
-    abstract normalScale: Vector2 option with get, set
-    abstract displacementMap: Texture option with get, set
-    abstract displacementScale: float option with get, set
-    abstract displacementBias: float option with get, set
-    abstract roughnessMap: Texture option with get, set
-    abstract metalnessMap: Texture option with get, set
-    abstract alphaMap: Texture option with get, set
-    abstract envMap: Texture option with get, set
-    abstract envMapIntensity: float option with get, set
-    abstract refractionRatio: float option with get, set
-    abstract wireframe: bool option with get, set
-    abstract wireframeLinewidth: float option with get, set
-    abstract skinning: bool option with get, set
-    abstract vertexTangents: bool option with get, set
-    abstract morphTargets: bool option with get, set
-    abstract morphNormals: bool option with get, set
+    abstract color: U3<Color, string, float> with get, set
+    abstract roughness: float with get, set
+    abstract metalness: float with get, set
+    abstract map: Texture with get, set
+    abstract lightMap: Texture with get, set
+    abstract lightMapIntensity: float with get, set
+    abstract aoMap: Texture with get, set
+    abstract aoMapIntensity: float with get, set
+    abstract emissive: U3<Color, string, float> with get, set
+    abstract emissiveIntensity: float with get, set
+    abstract emissiveMap: Texture with get, set
+    abstract bumpMap: Texture with get, set
+    abstract bumpScale: float with get, set
+    abstract normalMap: Texture with get, set
+    abstract normalMapType: NormalMapTypes with get, set
+    abstract normalScale: Vector2 with get, set
+    abstract displacementMap: Texture with get, set
+    abstract displacementScale: float with get, set
+    abstract displacementBias: float with get, set
+    abstract roughnessMap: Texture with get, set
+    abstract metalnessMap: Texture with get, set
+    abstract alphaMap: Texture with get, set
+    abstract envMap: Texture with get, set
+    abstract envMapIntensity: float with get, set
+    abstract refractionRatio: float with get, set
+    abstract wireframe: bool with get, set
+    abstract wireframeLinewidth: float with get, set
+    abstract skinning: bool with get, set
+    abstract vertexTangents: bool with get, set
+    abstract morphTargets: bool with get, set
+    abstract morphNormals: bool with get, set
 
 [<AllowNullLiteral>]
 type MeshStandardMaterial =
@@ -4402,26 +4402,26 @@ type MeshStandardMaterial =
     abstract color: Color with get, set
     abstract roughness: float with get, set
     abstract metalness: float with get, set
-    abstract map: Texture option with get, set
-    abstract lightMap: Texture option with get, set
+    abstract map: Texture with get, set
+    abstract lightMap: Texture with get, set
     abstract lightMapIntensity: float with get, set
-    abstract aoMap: Texture option with get, set
+    abstract aoMap: Texture with get, set
     abstract aoMapIntensity: float with get, set
     abstract emissive: Color with get, set
     abstract emissiveIntensity: float with get, set
-    abstract emissiveMap: Texture option with get, set
-    abstract bumpMap: Texture option with get, set
+    abstract emissiveMap: Texture with get, set
+    abstract bumpMap: Texture with get, set
     abstract bumpScale: float with get, set
-    abstract normalMap: Texture option with get, set
+    abstract normalMap: Texture with get, set
     abstract normalMapType: NormalMapTypes with get, set
     abstract normalScale: Vector2 with get, set
-    abstract displacementMap: Texture option with get, set
+    abstract displacementMap: Texture with get, set
     abstract displacementScale: float with get, set
     abstract displacementBias: float with get, set
-    abstract roughnessMap: Texture option with get, set
-    abstract metalnessMap: Texture option with get, set
-    abstract alphaMap: Texture option with get, set
-    abstract envMap: Texture option with get, set
+    abstract roughnessMap: Texture with get, set
+    abstract metalnessMap: Texture with get, set
+    abstract alphaMap: Texture with get, set
+    abstract envMap: Texture with get, set
     abstract envMapIntensity: float with get, set
     abstract refractionRatio: float with get, set
     abstract wireframe: bool with get, set
@@ -4449,56 +4449,56 @@ type MeshStandardMaterialStatic =
 type MeshToonMaterialParameters =
     inherit MaterialParameters
     /// geometry color in hexadecimal. Default is 0xffffff.
-    abstract color: U3<Color, string, float> option with get, set
-    abstract opacity: float option with get, set
-    abstract gradientMap: Texture option with get, set
-    abstract map: Texture option with get, set
-    abstract lightMap: Texture option with get, set
-    abstract lightMapIntensity: float option with get, set
-    abstract aoMap: Texture option with get, set
-    abstract aoMapIntensity: float option with get, set
-    abstract emissive: U3<Color, string, float> option with get, set
-    abstract emissiveIntensity: float option with get, set
-    abstract emissiveMap: Texture option with get, set
-    abstract bumpMap: Texture option with get, set
-    abstract bumpScale: float option with get, set
-    abstract normalMap: Texture option with get, set
-    abstract normalMapType: NormalMapTypes option with get, set
-    abstract normalScale: Vector2 option with get, set
-    abstract displacementMap: Texture option with get, set
-    abstract displacementScale: float option with get, set
-    abstract displacementBias: float option with get, set
-    abstract alphaMap: Texture option with get, set
-    abstract wireframe: bool option with get, set
-    abstract wireframeLinewidth: float option with get, set
-    abstract wireframeLinecap: string option with get, set
-    abstract wireframeLinejoin: string option with get, set
-    abstract skinning: bool option with get, set
-    abstract morphTargets: bool option with get, set
-    abstract morphNormals: bool option with get, set
+    abstract color: U3<Color, string, float> with get, set
+    abstract opacity: float with get, set
+    abstract gradientMap: Texture with get, set
+    abstract map: Texture with get, set
+    abstract lightMap: Texture with get, set
+    abstract lightMapIntensity: float with get, set
+    abstract aoMap: Texture with get, set
+    abstract aoMapIntensity: float with get, set
+    abstract emissive: U3<Color, string, float> with get, set
+    abstract emissiveIntensity: float with get, set
+    abstract emissiveMap: Texture with get, set
+    abstract bumpMap: Texture with get, set
+    abstract bumpScale: float with get, set
+    abstract normalMap: Texture with get, set
+    abstract normalMapType: NormalMapTypes with get, set
+    abstract normalScale: Vector2 with get, set
+    abstract displacementMap: Texture with get, set
+    abstract displacementScale: float with get, set
+    abstract displacementBias: float with get, set
+    abstract alphaMap: Texture with get, set
+    abstract wireframe: bool with get, set
+    abstract wireframeLinewidth: float with get, set
+    abstract wireframeLinecap: string with get, set
+    abstract wireframeLinejoin: string with get, set
+    abstract skinning: bool with get, set
+    abstract morphTargets: bool with get, set
+    abstract morphNormals: bool with get, set
 
 [<AllowNullLiteral>]
 type MeshToonMaterial =
     inherit Material
     abstract color: Color with get, set
-    abstract gradientMap: Texture option with get, set
-    abstract map: Texture option with get, set
-    abstract lightMap: Texture option with get, set
+    abstract gradientMap: Texture with get, set
+    abstract map: Texture with get, set
+    abstract lightMap: Texture with get, set
     abstract lightMapIntensity: float with get, set
-    abstract aoMap: Texture option with get, set
+    abstract aoMap: Texture with get, set
     abstract aoMapIntensity: float with get, set
     abstract emissive: Color with get, set
     abstract emissiveIntensity: float with get, set
-    abstract emissiveMap: Texture option with get, set
-    abstract bumpMap: Texture option with get, set
+    abstract emissiveMap: Texture with get, set
+    abstract bumpMap: Texture with get, set
     abstract bumpScale: float with get, set
-    abstract normalMap: Texture option with get, set
+    abstract normalMap: Texture with get, set
     abstract normalMapType: NormalMapTypes with get, set
     abstract normalScale: Vector2 with get, set
-    abstract displacementMap: Texture option with get, set
+    abstract displacementMap: Texture with get, set
     abstract displacementScale: float with get, set
     abstract displacementBias: float with get, set
-    abstract alphaMap: Texture option with get, set
+    abstract alphaMap: Texture with get, set
     abstract wireframe: bool with get, set
     abstract wireframeLinewidth: float with get, set
     abstract wireframeLinecap: string with get, set
@@ -4522,19 +4522,19 @@ type MeshToonMaterialStatic =
 [<AllowNullLiteral>]
 type PointsMaterialParameters =
     inherit MaterialParameters
-    abstract color: U3<Color, string, float> option with get, set
-    abstract map: Texture option with get, set
-    abstract alphaMap: Texture option with get, set
-    abstract size: float option with get, set
-    abstract sizeAttenuation: bool option with get, set
-    abstract morphTargets: bool option with get, set
+    abstract color: U3<Color, string, float> with get, set
+    abstract map: Texture with get, set
+    abstract alphaMap: Texture with get, set
+    abstract size: float with get, set
+    abstract sizeAttenuation: bool with get, set
+    abstract morphTargets: bool with get, set
 
 [<AllowNullLiteral>]
 type PointsMaterial =
     inherit Material
     abstract color: Color with get, set
-    abstract map: Texture option with get, set
-    abstract alphaMap: Texture option with get, set
+    abstract map: Texture with get, set
+    abstract alphaMap: Texture with get, set
     abstract size: float with get, set
     abstract sizeAttenuation: bool with get, set
     abstract morphTargets: bool with get, set
@@ -4565,18 +4565,18 @@ type RawShaderMaterialStatic =
 [<AllowNullLiteral>]
 type ShaderMaterialParameters =
     inherit MaterialParameters
-    abstract uniforms: ShaderMaterialParametersUniforms option with get, set
-    abstract vertexShader: string option with get, set
-    abstract fragmentShader: string option with get, set
-    abstract linewidth: float option with get, set
-    abstract wireframe: bool option with get, set
-    abstract wireframeLinewidth: float option with get, set
-    abstract lights: bool option with get, set
-    abstract clipping: bool option with get, set
-    abstract skinning: bool option with get, set
-    abstract morphTargets: bool option with get, set
-    abstract morphNormals: bool option with get, set
-    abstract extensions: ShaderMaterialParametersExtensions option with get, set
+    abstract uniforms: ShaderMaterialParametersUniforms with get, set
+    abstract vertexShader: string with get, set
+    abstract fragmentShader: string with get, set
+    abstract linewidth: float with get, set
+    abstract wireframe: bool with get, set
+    abstract wireframeLinewidth: float with get, set
+    abstract lights: bool with get, set
+    abstract clipping: bool with get, set
+    abstract skinning: bool with get, set
+    abstract morphTargets: bool with get, set
+    abstract morphNormals: bool with get, set
+    abstract extensions: ShaderMaterialParametersExtensions with get, set
 
 type IUniform = obj
 
@@ -4594,15 +4594,15 @@ type ShaderMaterial =
     abstract skinning: bool with get, set
     abstract morphTargets: bool with get, set
     abstract morphNormals: bool with get, set
-    abstract derivatives: obj option with get, set
+    abstract derivatives: obj with get, set
     abstract extensions: ShaderMaterialExtensions with get, set
-    abstract defaultAttributeValues: obj option with get, set
-    abstract index0AttributeName: string option with get, set
+    abstract defaultAttributeValues: obj with get, set
+    abstract index0AttributeName: string with get, set
     abstract uniformsNeedUpdate: bool with get, set
     /// Sets the properties based on the values.
     abstract setValues: parameters:ShaderMaterialParameters -> unit
     /// Convert the material to three.js JSON format.
-    abstract toJSON: meta:obj option -> obj option
+    abstract toJSON: meta:obj -> obj
 
 [<AllowNullLiteral>]
 type ShaderMaterialStatic =
@@ -4616,10 +4616,10 @@ type ShaderMaterialParametersUniforms =
 
 [<AllowNullLiteral>]
 type ShaderMaterialParametersExtensions =
-    abstract derivatives: bool option with get, set
-    abstract fragDepth: bool option with get, set
-    abstract drawBuffers: bool option with get, set
-    abstract shaderTextureLOD: bool option with get, set
+    abstract derivatives: bool with get, set
+    abstract fragDepth: bool with get, set
+    abstract drawBuffers: bool with get, set
+    abstract shaderTextureLOD: bool with get, set
 
 [<AllowNullLiteral>]
 type ShaderMaterialExtensions =
@@ -4635,7 +4635,7 @@ type ShaderMaterialExtensions =
 [<AllowNullLiteral>]
 type ShadowMaterialParameters =
     inherit MaterialParameters
-    abstract color: U3<Color, string, float> option with get, set
+    abstract color: U3<Color, string, float> with get, set
 
 [<AllowNullLiteral>]
 type ShadowMaterial =
@@ -4655,18 +4655,18 @@ type ShadowMaterialStatic =
 [<AllowNullLiteral>]
 type SpriteMaterialParameters =
     inherit MaterialParameters
-    abstract color: U3<Color, string, float> option with get, set
-    abstract map: Texture option with get, set
-    abstract alphaMap: Texture option with get, set
-    abstract rotation: float option with get, set
-    abstract sizeAttenuation: bool option with get, set
+    abstract color: U3<Color, string, float> with get, set
+    abstract map: Texture with get, set
+    abstract alphaMap: Texture with get, set
+    abstract rotation: float with get, set
+    abstract sizeAttenuation: bool with get, set
 
 [<AllowNullLiteral>]
 type SpriteMaterial =
     inherit Material
     abstract color: Color with get, set
-    abstract map: Texture option with get, set
-    abstract alphaMap: Texture option with get, set
+    abstract map: Texture with get, set
+    abstract alphaMap: Texture with get, set
     abstract rotation: float with get, set
     abstract sizeAttenuation: bool with get, set
     abstract isSpriteMaterial: obj
@@ -4708,8 +4708,8 @@ type Box2 =
     abstract union: box:Box2 -> Box2
     abstract translate: offset:Vector2 -> Box2
     abstract equals: box:Box2 -> bool
-    abstract empty: unit -> obj option
-    abstract isIntersectionBox: b:obj option -> obj option
+    abstract empty: unit -> obj
+    abstract isIntersectionBox: b:obj -> obj
 
 [<AllowNullLiteral>]
 type Box2Static =
@@ -4760,9 +4760,9 @@ type Box3 =
     abstract applyMatrix4: matrix:Matrix4 -> Box3
     abstract translate: offset:Vector3 -> Box3
     abstract equals: box:Box3 -> bool
-    abstract empty: unit -> obj option
-    abstract isIntersectionBox: b:obj option -> obj option
-    abstract isIntersectionSphere: s:obj option -> obj option
+    abstract empty: unit -> obj
+    abstract isIntersectionBox: b:obj -> obj
+    abstract isIntersectionSphere: s:obj -> obj
 
 [<AllowNullLiteral>]
 type Box3Static =
@@ -4917,7 +4917,7 @@ type Euler =
     abstract setFromVector3: v:Vector3 * ?order:string -> Euler
     abstract reorder: newOrder:string -> Euler
     abstract equals: euler:Euler -> bool
-    abstract fromArray: xyzo:ResizeArray<obj option> -> Euler
+    abstract fromArray: xyzo:ResizeArray<obj> -> Euler
     abstract toArray: ?array:ResizeArray<float> * ?offset:float -> ResizeArray<float>
     abstract toVector3: ?optionalResult:Vector3 -> Vector3
     abstract _onChange: callback:Function -> Euler
@@ -4962,17 +4962,17 @@ type FrustumStatic =
 
 [<AllowNullLiteral>]
 type Interpolant =
-    abstract parameterPositions: obj option with get, set
-    abstract sampleValues: obj option with get, set
+    abstract parameterPositions: obj with get, set
+    abstract sampleValues: obj with get, set
     abstract valueSize: float with get, set
-    abstract resultBuffer: obj option with get, set
-    abstract evaluate: time:float -> obj option
+    abstract resultBuffer: obj with get, set
+    abstract evaluate: time:float -> obj
 
 [<AllowNullLiteral>]
 type InterpolantStatic =
     [<Emit "new $0($1...)">]
-    abstract Create: parameterPositions:obj option
-                     * sampleValues:obj option
+    abstract Create: parameterPositions:obj
+                     * sampleValues:obj
                      * sampleSize:float
                      * ?resultBuffer:obj
                      -> Interpolant
@@ -5134,8 +5134,8 @@ type Matrix3 =
     abstract premultiply: m:Matrix3 -> Matrix3
     /// Sets this matrix to a x b.
     abstract multiplyMatrices: a:Matrix3 * b:Matrix3 -> Matrix3
-    abstract multiplyVector3: vector:Vector3 -> obj option
-    abstract multiplyVector3Array: a:obj option -> obj option
+    abstract multiplyVector3: vector:Vector3 -> obj
+    abstract multiplyVector3Array: a:obj -> obj
     /// getInverse(matrix:T):T;
     abstract getInverse: matrix:Matrix4 * ?throwOnDegenerate:bool -> Matrix3
     abstract flattenToArrayOffset: array:ResizeArray<float> * offset:float -> ResizeArray<float>
@@ -5260,11 +5260,11 @@ type Matrix4 =
     abstract toArray: ?array:ArrayLike<float> * ?offset:float -> ArrayLike<float>
     abstract extractPosition: m:Matrix4 -> Matrix4
     abstract setRotationFromQuaternion: q:Quaternion -> Matrix4
-    abstract multiplyVector3: v:obj option -> obj option
-    abstract multiplyVector4: v:obj option -> obj option
+    abstract multiplyVector3: v:obj -> obj
+    abstract multiplyVector4: v:obj -> obj
     abstract multiplyVector3Array: array:ResizeArray<float> -> ResizeArray<float>
-    abstract rotateAxis: v:obj option -> unit
-    abstract crossVector: v:obj option -> unit
+    abstract rotateAxis: v:obj -> unit
+    abstract crossVector: v:obj -> unit
     abstract flattenToArrayOffset: array:ResizeArray<float> * offset:float -> ResizeArray<float>
 
 /// A 4x4 Matrix.
@@ -5305,7 +5305,7 @@ type Plane =
     abstract applyMatrix4: matrix:Matrix4 * ?optionalNormalMatrix:Matrix3 -> Plane
     abstract translate: offset:Vector3 -> Plane
     abstract equals: plane:Plane -> bool
-    abstract isIntersectionLine: l:obj option -> obj option
+    abstract isIntersectionLine: l:obj -> obj
 
 [<AllowNullLiteral>]
 type PlaneStatic =
@@ -5376,7 +5376,7 @@ type Quaternion =
     abstract toArray: array:ArrayLike<float> * ?offset:float -> ArrayLike<float>
     abstract _onChange: callback:Function -> Quaternion
     abstract _onChangeCallback: Function with get, set
-    abstract multiplyVector3: v:obj option -> obj option
+    abstract multiplyVector3: v:obj -> obj
 
 /// Implementation of a quaternion. This is used for rotating things without incurring in the dreaded gimbal lock issue, amongst other advantages.
 [<AllowNullLiteral>]
@@ -5450,9 +5450,9 @@ type Ray =
 
     abstract applyMatrix4: matrix4:Matrix4 -> Ray
     abstract equals: ray:Ray -> bool
-    abstract isIntersectionBox: b:obj option -> obj option
-    abstract isIntersectionPlane: p:obj option -> obj option
-    abstract isIntersectionSphere: s:obj option -> obj option
+    abstract isIntersectionBox: b:obj -> obj
+    abstract isIntersectionPlane: p:obj -> obj
+    abstract isIntersectionSphere: s:obj -> obj
 
 [<AllowNullLiteral>]
 type RayStatic =
@@ -5484,7 +5484,7 @@ type Sphere =
     abstract applyMatrix4: matrix:Matrix4 -> Sphere
     abstract translate: offset:Vector3 -> Sphere
     abstract equals: sphere:Sphere -> bool
-    abstract empty: unit -> obj option
+    abstract empty: unit -> obj
 
 [<AllowNullLiteral>]
 type SphereStatic =
@@ -6141,8 +6141,8 @@ type Line<'TGeometry, 'TMaterial> =
     abstract material: 'TMaterial with get, set
     abstract ``type``: LineType with get, set
     abstract isLine: obj
-    abstract morphTargetInfluences: ResizeArray<float> option with get, set
-    abstract morphTargetDictionary: LineMorphTargetDictionary option with get, set
+    abstract morphTargetInfluences: ResizeArray<float> with get, set
+    abstract morphTargetDictionary: LineMorphTargetDictionary with get, set
     abstract computeLineDistances: unit -> Line<'TGeometry, 'TMaterial>
     abstract raycast: raycaster:Raycaster * intersects:ResizeArray<Intersection> -> unit
     abstract updateMorphTargets: unit -> unit
@@ -6226,8 +6226,8 @@ type LOD =
     abstract getObjectForDistance: distance:float -> Object3D option
     abstract raycast: raycaster:Raycaster * intersects:ResizeArray<Intersection> -> unit
     abstract update: camera:Camera -> unit
-    abstract toJSON: meta:obj option -> obj option
-    abstract objects: ResizeArray<obj option> with get, set
+    abstract toJSON: meta:obj -> obj
+    abstract objects: ResizeArray<obj> with get, set
 
 [<AllowNullLiteral>]
 type LODStatic =
@@ -6255,8 +6255,8 @@ type Mesh<'TGeometry, 'TMaterial> =
     inherit Object3D
     abstract geometry: 'TGeometry with get, set
     abstract material: 'TMaterial with get, set
-    abstract morphTargetInfluences: ResizeArray<float> option with get, set
-    abstract morphTargetDictionary: MeshMorphTargetDictionary option with get, set
+    abstract morphTargetInfluences: ResizeArray<float> with get, set
+    abstract morphTargetDictionary: MeshMorphTargetDictionary with get, set
     abstract isMesh: obj
     abstract ``type``: string with get, set
     abstract updateMorphTargets: unit -> unit
@@ -6288,8 +6288,8 @@ type Points = Points<obj, obj>
 type Points<'TGeometry, 'TMaterial> =
     inherit Object3D
     abstract ``type``: string with get, set
-    abstract morphTargetInfluences: ResizeArray<float> option with get, set
-    abstract morphTargetDictionary: PointsMorphTargetDictionary option with get, set
+    abstract morphTargetInfluences: ResizeArray<float> with get, set
+    abstract morphTargetDictionary: PointsMorphTargetDictionary with get, set
     abstract isPoints: obj
     /// An instance of Geometry or BufferGeometry, where each vertex designates the position of a particle in the system.
     abstract geometry: 'TGeometry with get, set
@@ -6320,7 +6320,7 @@ type Skeleton =
     abstract useVertexTexture: bool with get, set
     abstract bones: ResizeArray<Bone> with get, set
     abstract boneMatrices: Float32Array with get, set
-    abstract boneTexture: DataTexture option with get, set
+    abstract boneTexture: DataTexture with get, set
     abstract boneInverses: ResizeArray<Matrix4> with get, set
     abstract calculateInverses: bone:Bone -> unit
     abstract pose: unit -> unit
@@ -6446,29 +6446,29 @@ type Renderer =
 [<AllowNullLiteral>]
 type WebGLRendererParameters =
     /// A Canvas where the renderer draws its output.
-    abstract canvas: U2<HTMLCanvasElement, OffscreenCanvas> option with get, set
+    abstract canvas: U2<HTMLCanvasElement, OffscreenCanvas> with get, set
     /// A WebGL Rendering Context.
     /// (https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext)
     /// Default is null
-    abstract context: WebGLRenderingContext option with get, set
+    abstract context: WebGLRenderingContext with get, set
     /// shader precision. Can be "highp", "mediump" or "lowp".
-    abstract precision: string option with get, set
+    abstract precision: string with get, set
     /// default is false.
-    abstract alpha: bool option with get, set
+    abstract alpha: bool with get, set
     /// default is true.
-    abstract premultipliedAlpha: bool option with get, set
+    abstract premultipliedAlpha: bool with get, set
     /// default is false.
-    abstract antialias: bool option with get, set
+    abstract antialias: bool with get, set
     /// default is true.
-    abstract stencil: bool option with get, set
+    abstract stencil: bool with get, set
     /// default is false.
-    abstract preserveDrawingBuffer: bool option with get, set
+    abstract preserveDrawingBuffer: bool with get, set
     /// Can be "high-performance", "low-power" or "default"
-    abstract powerPreference: string option with get, set
+    abstract powerPreference: string with get, set
     /// default is true.
-    abstract depth: bool option with get, set
+    abstract depth: bool with get, set
     /// default is false.
-    abstract logarithmicDepthBuffer: bool option with get, set
+    abstract logarithmicDepthBuffer: bool with get, set
 
 [<AllowNullLiteral>]
 type WebGLDebug =
@@ -6510,7 +6510,7 @@ type WebGLRenderer =
     abstract debug: WebGLDebug with get, set
     /// Defines whether the renderer should sort objects. Default is true.
     abstract sortObjects: bool with get, set
-    abstract clippingPlanes: ResizeArray<obj option> with get, set
+    abstract clippingPlanes: ResizeArray<obj> with get, set
     abstract localClippingEnabled: bool with get, set
     abstract extensions: WebGLExtensions with get, set
     /// Default is LinearEncoding.
@@ -6534,7 +6534,7 @@ type WebGLRenderer =
     abstract xr: WebXRManager with get, set
     /// Return the WebGL context.
     abstract getContext: unit -> WebGLRenderingContext
-    abstract getContextAttributes: unit -> obj option
+    abstract getContextAttributes: unit -> obj
     abstract forceContextLoss: unit -> unit
     abstract getMaxAnisotropy: unit -> float
     abstract getPrecision: unit -> string
@@ -6586,7 +6586,7 @@ type WebGLRenderer =
                                  * geometry:U2<Geometry, BufferGeometry>
                                  * material:Material
                                  * object:Object3D
-                                 * geometryGroup:obj option
+                                 * geometryGroup:obj
                                  -> unit
     /// <summary>A build in function that can be used instead of requestAnimationFrame. For WebXR projects this function must be used.</summary>
     /// <param name="callback">The function will be called every available frame. If `null` is passed it will stop any already ongoing animation.</param>
@@ -6629,7 +6629,7 @@ type WebGLRenderer =
                                      * y:float
                                      * width:float
                                      * height:float
-                                     * buffer:obj option
+                                     * buffer:obj
                                      * ?activeCubeFaceIndex:float
                                      -> unit
     /// <summary>Copies a region of the currently bound framebuffer into the selected mipmap level of the selected texture.
@@ -6652,15 +6652,15 @@ type WebGLRenderer =
     abstract shadowMapEnabled: bool with get, set
     abstract shadowMapType: ShadowMapType with get, set
     abstract shadowMapCullFace: CullFace with get, set
-    abstract supportsFloatTextures: unit -> obj option
-    abstract supportsHalfFloatTextures: unit -> obj option
-    abstract supportsStandardDerivatives: unit -> obj option
-    abstract supportsCompressedTextureS3TC: unit -> obj option
-    abstract supportsCompressedTexturePVRTC: unit -> obj option
-    abstract supportsBlendMinMax: unit -> obj option
-    abstract supportsVertexTextures: unit -> obj option
-    abstract supportsInstancedArrays: unit -> obj option
-    abstract enableScissorTest: boolean:obj option -> obj option
+    abstract supportsFloatTextures: unit -> obj
+    abstract supportsHalfFloatTextures: unit -> obj
+    abstract supportsStandardDerivatives: unit -> obj
+    abstract supportsCompressedTextureS3TC: unit -> obj
+    abstract supportsCompressedTexturePVRTC: unit -> obj
+    abstract supportsBlendMinMax: unit -> obj
+    abstract supportsVertexTextures: unit -> obj
+    abstract supportsInstancedArrays: unit -> obj
+    abstract enableScissorTest: boolean:obj -> obj
 
 /// The WebGL renderer displays your beautifully crafted scenes using WebGL, if your device supports it.
 /// This renderer has way better performance than CanvasRenderer.
@@ -6681,18 +6681,18 @@ type WebGLRendererStatic =
 
 [<AllowNullLiteral>]
 type WebGLRenderTargetOptions =
-    abstract wrapS: Wrapping option with get, set
-    abstract wrapT: Wrapping option with get, set
-    abstract magFilter: TextureFilter option with get, set
-    abstract minFilter: TextureFilter option with get, set
-    abstract format: float option with get, set
-    abstract ``type``: TextureDataType option with get, set
-    abstract anisotropy: float option with get, set
-    abstract depthBuffer: bool option with get, set
-    abstract stencilBuffer: bool option with get, set
-    abstract generateMipmaps: bool option with get, set
-    abstract depthTexture: DepthTexture option with get, set
-    abstract encoding: TextureEncoding option with get, set
+    abstract wrapS: Wrapping with get, set
+    abstract wrapT: Wrapping with get, set
+    abstract magFilter: TextureFilter with get, set
+    abstract minFilter: TextureFilter with get, set
+    abstract format: float with get, set
+    abstract ``type``: TextureDataType with get, set
+    abstract anisotropy: float with get, set
+    abstract depthBuffer: bool with get, set
+    abstract stencilBuffer: bool with get, set
+    abstract generateMipmaps: bool with get, set
+    abstract depthTexture: DepthTexture with get, set
+    abstract encoding: TextureEncoding with get, set
 
 [<AllowNullLiteral>]
 type WebGLRenderTarget =
@@ -6708,16 +6708,16 @@ type WebGLRenderTarget =
     abstract stencilBuffer: bool with get, set
     abstract depthTexture: DepthTexture with get, set
     abstract isWebGLRenderTarget: obj
-    abstract wrapS: obj option with get, set
-    abstract wrapT: obj option with get, set
-    abstract magFilter: obj option with get, set
-    abstract minFilter: obj option with get, set
-    abstract anisotropy: obj option with get, set
-    abstract offset: obj option with get, set
-    abstract repeat: obj option with get, set
-    abstract format: obj option with get, set
-    abstract ``type``: obj option with get, set
-    abstract generateMipmaps: obj option with get, set
+    abstract wrapS: obj with get, set
+    abstract wrapT: obj with get, set
+    abstract magFilter: obj with get, set
+    abstract minFilter: obj with get, set
+    abstract anisotropy: obj with get, set
+    abstract offset: obj with get, set
+    abstract repeat: obj with get, set
+    abstract format: obj with get, set
+    abstract ``type``: obj with get, set
+    abstract generateMipmaps: obj with get, set
     abstract setSize: width:float * height:float -> unit
     abstract clone: unit -> WebGLRenderTarget
     abstract copy: source:WebGLRenderTarget -> WebGLRenderTarget
@@ -6735,7 +6735,7 @@ type IFog =
     abstract name: string with get, set
     abstract color: Color with get, set
     abstract clone: unit -> IFog
-    abstract toJSON: unit -> obj option
+    abstract toJSON: unit -> obj
 
 /// This class contains the parameters that define linear fog, i.e., that grows linearly denser with the distance.
 [<AllowNullLiteral>]
@@ -6751,7 +6751,7 @@ type Fog =
     abstract far: float with get, set
     abstract isFog: obj
     abstract clone: unit -> Fog
-    abstract toJSON: unit -> obj option
+    abstract toJSON: unit -> obj
 
 /// This class contains the parameters that define linear fog, i.e., that grows linearly denser with the distance.
 [<AllowNullLiteral>]
@@ -6773,7 +6773,7 @@ type FogExp2 =
     abstract density: float with get, set
     abstract isFogExp2: obj
     abstract clone: unit -> FogExp2
-    abstract toJSON: unit -> obj option
+    abstract toJSON: unit -> obj
 
 /// This class contains the parameters that define linear fog, i.e., that grows exponentially denser with the distance.
 [<AllowNullLiteral>]
@@ -6797,18 +6797,18 @@ type Scene =
     inherit Object3D
     abstract ``type``: string with get, set
     /// A fog instance defining the type of fog that affects everything rendered in the scene. Default is null.
-    abstract fog: IFog option with get, set
+    abstract fog: IFog with get, set
     /// If not null, it will force everything in the scene to be rendered with that material. Default is null.
-    abstract overrideMaterial: Material option with get, set
+    abstract overrideMaterial: Material with get, set
     abstract autoUpdate: bool with get, set
-    abstract background: U3<Color, Texture, WebGLCubeRenderTarget> option with get, set
-    abstract environment: Texture option with get, set
+    abstract background: U3<Color, Texture, WebGLCubeRenderTarget> with get, set
+    abstract environment: Texture with get, set
     abstract isScene: obj
     /// Calls before rendering scene
-    abstract onBeforeRender: (WebGLRenderer -> Scene -> Camera -> U2<WebGLRenderTarget, obj option> -> unit) with get, set
+    abstract onBeforeRender: (WebGLRenderer -> Scene -> Camera -> U2<WebGLRenderTarget, obj> -> unit) with get, set
     /// Calls after rendering scene
     abstract onAfterRender: (WebGLRenderer -> Scene -> Camera -> unit) with get, set
-    abstract toJSON: ?meta:obj -> obj option
+    abstract toJSON: ?meta:obj -> obj
     abstract dispose: unit -> unit
 
 /// Scenes allow you to set up what and where is to be rendered by three.js. This is where you place objects, lights and cameras.
@@ -6888,12 +6888,12 @@ type CompressedTextureImage =
 [<AllowNullLiteral>]
 type CubeTexture =
     inherit Texture
-    abstract images: obj option with get, set
+    abstract images: obj with get, set
 
 [<AllowNullLiteral>]
 type CubeTextureStatic =
     [<Emit "new $0($1...)">]
-    abstract Create: ?images:ResizeArray<obj option>
+    abstract Create: ?images:ResizeArray<obj>
                      * ?mapping:Mapping
                      * ?wrapS:Wrapping
                      * ?wrapT:Wrapping
@@ -7010,8 +7010,8 @@ type Texture =
     abstract uuid: string with get, set
     abstract name: string with get, set
     abstract sourceFile: string with get, set
-    abstract image: obj option with get, set
-    abstract mipmaps: ResizeArray<obj option> with get, set
+    abstract image: obj with get, set
+    abstract mipmaps: ResizeArray<obj> with get, set
     abstract mapping: Mapping with get, set
     abstract wrapS: Wrapping with get, set
     abstract wrapT: Wrapping with get, set
@@ -7019,7 +7019,7 @@ type Texture =
     abstract minFilter: TextureFilter with get, set
     abstract anisotropy: float with get, set
     abstract format: PixelFormat with get, set
-    abstract internalFormat: PixelFormatGPU option with get, set
+    abstract internalFormat: PixelFormatGPU with get, set
     abstract ``type``: TextureDataType with get, set
     abstract matrix: Matrix3 with get, set
     abstract matrixAutoUpdate: bool with get, set
@@ -7038,7 +7038,7 @@ type Texture =
     abstract onUpdate: (unit -> unit) with get, set
     abstract clone: unit -> Texture
     abstract copy: source:Texture -> Texture
-    abstract toJSON: meta:obj option -> obj option
+    abstract toJSON: meta:obj -> obj
     abstract dispose: unit -> unit
     abstract transformUv: uv:Vector2 -> Vector2
     abstract updateMatrix: unit -> unit
@@ -7058,8 +7058,8 @@ type TextureStatic =
                      * ?encoding:TextureEncoding
                      -> Texture
 
-    abstract DEFAULT_IMAGE: obj option with get, set
-    abstract DEFAULT_MAPPING: obj option with get, set
+    abstract DEFAULT_IMAGE: obj with get, set
+    abstract DEFAULT_MAPPING: obj with get, set
 
 
 
