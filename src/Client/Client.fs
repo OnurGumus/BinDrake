@@ -1221,14 +1221,15 @@ let viewC =
                                     containers
                                     Html.span [
                                         text.hasTextWeightSemibold
-                                        prop.textf
-                                            "Max item L:%i, H:%i"
-                                            ((c.[model.CurrentResultIndex].ItemsPut
-                                              |> List.map (fun i -> i.Coord.Z + i.Item.Dim.Length))
-                                             |> List.max)
-                                            ((c.[model.CurrentResultIndex].ItemsPut
-                                              |> List.map (fun i -> i.Coord.Y + i.Item.Dim.Height))
-                                             |> List.max)
+                                        if (c.[model.CurrentResultIndex].ItemsPut).Length > 0 then
+                                            prop.textf
+                                                "Max item L:%i, H:%i"
+                                                ((c.[model.CurrentResultIndex].ItemsPut
+                                                  |> List.map (fun i -> i.Coord.Z + i.Item.Dim.Length))
+                                                 |> List.max)
+                                                ((c.[model.CurrentResultIndex].ItemsPut
+                                                  |> List.map (fun i -> i.Coord.Y + i.Item.Dim.Height))
+                                                 |> List.max)
                                     ]
                                 ]
                             ]

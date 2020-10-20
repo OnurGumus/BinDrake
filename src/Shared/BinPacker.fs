@@ -1040,7 +1040,7 @@ let rec calc (rootContainer: Container)
              (sw: IStopwatch)
              =
     if TMin >= T
-       || sw.ElapsedMilliseconds > 2000L
+       || sw.ElapsedMilliseconds > 4000L
        || (itemsWithCost.Items.Length = 1
            && globalBest.ItemsPut.Length = 1) then
         globalBest
@@ -1110,7 +1110,7 @@ let rec calc (rootContainer: Container)
                 loop (nextItem, res) globalBest2 (count - 1)
 
         if TMin >= T
-           || sw.ElapsedMilliseconds > 2000L
+           || sw.ElapsedMilliseconds > 4000L
            || (itemsWithCost.Items.Length = 1
                && globalBest.ItemsPut.Length = 1) then
             globalBest
@@ -1269,9 +1269,9 @@ let runPerContainer (logger: ILogger)
                |> List.forall (fun x -> x.Weight > rootContainer.Weight)
         //printfn "rbatchCount %i" rbatchCount
         match timeOut, newItems, retryCount with
-        | false, _ :: _, 1
         | false, _ :: _, 2
-        | false, _ :: _, 3 ->
+        | false, _ :: _, 3
+        | false, _ :: _, 4 ->
             loop
                 rootContainer
                 (res.EmptyContainers |> mergeContainers)
