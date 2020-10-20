@@ -27,9 +27,10 @@ let tryGetEnv =
     | "" -> None
     | x -> Some x
 
-let sw (swReal: Stopwatch) =
+let rec sw (swReal: Stopwatch) =
     { new IStopwatch with
         member this.ElapsedMilliseconds = swReal.ElapsedMilliseconds
+        member this.StartNew() = Stopwatch.StartNew() |> sw
     }
 
 let logger: Shared.ILogger =

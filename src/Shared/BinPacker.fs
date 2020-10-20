@@ -1040,7 +1040,7 @@ let rec calc (rootContainer: Container)
              (sw: IStopwatch)
              =
     if TMin >= T
-       || sw.ElapsedMilliseconds > 4000L
+       || sw.ElapsedMilliseconds > 2000L
        || (itemsWithCost.Items.Length = 1
            && globalBest.ItemsPut.Length = 1) then
         globalBest
@@ -1110,7 +1110,7 @@ let rec calc (rootContainer: Container)
                 loop (nextItem, res) globalBest2 (count - 1)
 
         if TMin >= T
-           || sw.ElapsedMilliseconds > 4000L
+           || sw.ElapsedMilliseconds > 2000L
            || (itemsWithCost.Items.Length = 1
                && globalBest.ItemsPut.Length = 1) then
             globalBest
@@ -1148,7 +1148,7 @@ let runInner (sw: IStopwatch)
                  T
                  alpha
                  []
-                 (sw))
+                 (sw.StartNew()))
 
         let itemsPut = globalBest.ItemsPut
 

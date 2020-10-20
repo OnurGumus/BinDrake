@@ -48,10 +48,12 @@ module Server =
             member this.Log str arr = printf "%s" str
         }
 
-    let sw () =
+    let rec sw () =
         { new IStopwatch with
             member this.ElapsedMilliseconds = 1L
+            member this.StartNew() = sw ()
         }
+
     open Fable.Remoting.Client
 
     /// A proxy you can use to talk to server directly

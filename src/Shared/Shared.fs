@@ -66,6 +66,7 @@ type CalcResult =
 [<Interface>]
 type IStopwatch =
     abstract ElapsedMilliseconds: Int64
+    abstract StartNew : unit -> IStopwatch
 
 [<Interface>]
 type ILogger =
