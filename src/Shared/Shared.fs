@@ -3,14 +3,14 @@ module Shared
 open System
 
 [<Struct>]
-type Coordinates = { X: int; Y: int; Z: int }
+type Coordinates = { X: Int64; Y: Int64; Z: Int64 }
 
 [<Struct>]
 type Dim =
     {
-        Width: int
-        Height: int
-        Length: int
+        Width: Int64
+        Height: Int64
+        Length: Int64
     }
 
 type CalculationMode =
@@ -56,9 +56,9 @@ type Counter = { Value: int }
 type CalcResult =
     {
         ItemsPut: ItemPut list
-        ContainerVol: int
+        ContainerVol: Int64
         ItemsUnput: Item list
-        PutVolume: int
+        PutVolume: Int64
         Container: Container
         EmptyContainers: Container list
     }
@@ -81,9 +81,9 @@ module ClientModel =
 
     type RowItem =
         {
-            Width: int
-            Height: int
-            Length: int
+            Width: Int64
+            Height: Int64
+            Length: Int64
             Weight: int
             Color: string
             Quantity: int
@@ -94,9 +94,9 @@ module ClientModel =
 
     type ContainerItem =
         {
-            Width: int
-            Height: int
-            Length: int
+            Width: Int64
+            Height: Int64
+            Length: Int64
             Weight: int
         }
 
@@ -108,7 +108,7 @@ module ClientModel =
             Container: Container option
             ContainerItem: ContainerItem option
             RowItems: (RowItem option * string) list
-            TotalVolume: int option
+            TotalVolume: Int64 option
             CurrentResultIndex: int
             UrlShown: bool
             Loading: bool

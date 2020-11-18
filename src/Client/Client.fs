@@ -129,18 +129,18 @@ let init () =
 
     let boxes: ItemPut list =
         [
-            for i = 0 to 9 do
+            for i = 0L to 9L do
                 {
                     Coord =
                         {
-                            X = i * 10
-                            Y = Math.Abs(5 - i) * 10
-                            Z = Math.Abs(5 - i) * 10
+                            X = i * 10L
+                            Y = Math.Abs(5L - i) * 10L
+                            Z = Math.Abs(5L - i) * 10L
                         }
                     Item =
                         {
-                            Dim = { Width = 10; Height = 10; Length = 10 }
-                            Tag = colors.[i]
+                            Dim = { Width = 10L; Height = 10L; Length = 10L }
+                            Tag = colors.[int i]
                             Id = i.ToString()
                             NoTop = false
                             KeepTop = false
@@ -148,18 +148,18 @@ let init () =
                             KeepBottom = false
                         }
                 }
-            for i = 0 to 9 do
+            for i = 0L to 9L do
                 {
                     Coord =
                         {
-                            X = (i * 10)
-                            Y = Math.Abs(5 - i) * 10
-                            Z = 90 - Math.Abs(5 - i) * 10
+                            X = (i * 10L)
+                            Y = Math.Abs(5L - i) * 10L
+                            Z = 90L - Math.Abs(5L - i) * 10L
                         }
                     Item =
                         {
-                            Dim = { Width = 10; Height = 10; Length = 10 }
-                            Tag = colors.[i]
+                            Dim = { Width = 10L; Height = 10L; Length = 10L }
+                            Tag = colors.[int i]
                             Id = i.ToString()
                             NoTop = false
                             KeepTop = false
@@ -173,11 +173,11 @@ let init () =
         {
             Dim =
                 {
-                    Width = 100
-                    Height = 100
-                    Length = 100
+                    Width = 100L
+                    Height = 100L
+                    Length = 100L
                 }
-            Coord = { X = 0; Y = 0; Z = 0 }
+            Coord = { X = 0L; Y = 0L; Z = 0L }
             Weight = 0
         }
 
@@ -344,7 +344,7 @@ let update (msg: Msg) model =
 
             let container: Container =
                 {
-                    Coord = { X = 0; Y = 0; Z = 0 }
+                    Coord = { X = 0L; Y = 0L; Z = 0L }
                     Dim =
                         {
                             Width = c.Width
@@ -371,7 +371,7 @@ let update (msg: Msg) model =
 
             let vol =
                 rowItems
-                |> List.sumBy (fun x -> x.Width * x.Height * x.Length * (x.Quantity))
+                |> List.sumBy (fun x -> x.Width * x.Height * x.Length * int64(x.Quantity))
 
             Some vol
         | _ -> None
@@ -443,8 +443,8 @@ module Container =
     let validate (formData: ContainerFormData) =
         all
         <| fun t ->
-            let floatCheck = numericCheck t int 0 2000
-            let intCheck = numericCheck t int 0 2000
+            let floatCheck = numericCheck t int64 0L 2000L
+            let intCheck = numericCheck t int64 0L 2000L
             let weightCheck = numericCheck t int -1 100000
 
             {
@@ -583,7 +583,7 @@ module Row =
     let validate (formData: RowFormData) =
         all
         <| fun t ->
-            let floatCheck = numericCheck t int 0 2000
+            let floatCheck = numericCheck t int64 0L 2000L
             let intCheck = numericCheck t int 0 2000
             let weightCheck = numericCheck t int -1 100000
 
@@ -750,8 +750,8 @@ open Fable.Core
 open Browser.Dom
 open Fable.Core.JsInterop
 
-let thousands n =
-    let v = (if n < 0 then -n else n).ToString()
+let thousands (n:Int64) =
+    let v = (if n < 0L then -n else n).ToString()
     let r = v.Length % 3
     let s = if r = 0 then 3 else r
 
@@ -761,7 +761,7 @@ let thousands n =
             yield v.[i * 3 + s..i * 3 + s + 2]
     ]
     |> String.concat ","
-    |> fun s -> if n < 0 then "-" + s else s
+    |> fun s -> if n < 0L then "-" + s else s
 
 let viewC =
     React.functionComponent (fun (props: {| model: Model
@@ -954,7 +954,7 @@ let viewC =
                     ]
                 ]
 
-                let line (title: string) (v: int option) =
+                let line (title: string) (v: Int64 option) =
                     React.fragment [
                         Bulma.label title
                         control.div [
@@ -1028,7 +1028,7 @@ let viewC =
                             |> convertToItems
                             |> List.filter (fun x -> x.NoTop)
                             |> function
-                            | [] -> 0
+                            | [] -> 0L
                             | other ->
                                 (other |> List.maxBy (fun x -> x.Dim.Height))
                                     .Dim.Height

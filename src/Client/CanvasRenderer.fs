@@ -38,10 +38,10 @@ let renderPlane (container: Container) =
 
     let x =
         (System.Math.Max
-            (1,
+            (1L,
              System.Math.Min
-                 (40,
-                  50000
+                 (40L,
+                  50000L
                   / (container.Dim.Width * container.Dim.Length)))
          |> float)
         / 1.5
@@ -49,7 +49,7 @@ let renderPlane (container: Container) =
     let x =
         if container.Dim.Width
            * container.Dim.Length
-           * container.Dim.Height > 4000 then
+           * container.Dim.Height > 4000L then
             x / 3.5
         else
             x / 1.5
