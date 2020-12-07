@@ -92,7 +92,7 @@ let calcApi =
                     let! datas = File.ReadAllTextAsync(path) |> Async.AwaitTask
 
                     let data =
-                        Decode.unsafeFromString decoder datas
+                        Decode.fromString decoder datas
 
                     match data with
                     | Ok data -> return data
