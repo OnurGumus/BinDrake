@@ -1219,8 +1219,8 @@ let runPerContainer (logger: ILogger)
         let containers = containers |> List.sortBy containerSort
         let oldBatchCount = batchCount
 
-        let batchCount =
-            if (items.Length > 0 && items.Head.NoTop) then 1 else batchCount
+        // let batchCount =
+        //     if (items.Length > 0 && items.Head.NoTop) then 1 else batchCount
 
         let currentItems, remainingItems =
             if items.Length > batchCount then items |> List.splitAt batchCount else items, []
