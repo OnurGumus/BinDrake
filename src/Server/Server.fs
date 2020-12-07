@@ -49,6 +49,13 @@ let port =
     |> Option.map uint16
     |> Option.defaultValue 8085us
 
+let myExtraCoders =
+        Extra.empty
+        |> Extra.withInt64
+
+let inline encoder<'T> = Encode.Auto.generateEncoderCached<'T>(caseStrategy = CamelCase, extra = myExtraCoders)
+let inline decoder<'T> = Decode.Auto.generateDecoderCached<'T>(caseStrategy = CamelCase, extra = myExtraCoders)
+
 let calcApi =
     {
 
@@ -71,7 +78,7 @@ let calcApi =
                 async {
                     let guid = Guid.NewGuid()
                     let path = "saved_data_" + guid.ToString() + ".txt"
-                    let data = Encode.Auto.toString (4, model)
+                    let data = encoder model |> Encode.toString 4
 
                     do! File.WriteAllTextAsync(path, data)
                         |> Async.AwaitTask
@@ -85,7 +92,7 @@ let calcApi =
                     let! datas = File.ReadAllTextAsync(path) |> Async.AwaitTask
 
                     let data =
-                        Decode.Auto.fromString<Shared.ClientModel.Model> (datas)
+                        Decode.unsafeFromString decoder datas
 
                     match data with
                     | Ok data -> return data
