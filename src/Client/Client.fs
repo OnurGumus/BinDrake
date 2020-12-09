@@ -1108,7 +1108,7 @@ let viewC =
                     prop.disabled
                         (isinvalid
                          || isCalculating
-                         || nostackExceeds
+                        // || nostackExceeds
                          || volumeExceeds
                          || itemExceeds)
                     color.isPrimary
@@ -1119,8 +1119,8 @@ let viewC =
 
                          elif volumeExceeds then
                              "Items' volume exceeds single container volume."
-                         else if nostackExceeds then
-                             "No stack items won't fit to single container."
+                        //  else if nostackExceeds then
+                        //      "No stack items won't fit to single container."
                          elif isinvalid then
                              "First fill the form correctly!"
                          else if itemExceeds then
